@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi" x-data="{ darkMode: false, userMenuOpen: false, profileModalOpen: false }" :class="{ 'dark': darkMode }">
+<html lang="vi" x-data="{ 
+    darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches), 
+    userMenuOpen: false, 
+    profileModalOpen: false 
+}" 
+x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' : 'light'); if(val) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } })"
+:class="{ 'dark': darkMode }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,6 +14,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>{{ config('app.name', 'Weamis Money') }} - Quản Lý Thu Chi Team</title>
+
+    <!-- Favicon Logo for Browser Tab -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💲</text></svg>">
+    
+    <!-- Prevent Dark Mode FOUC on reload -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -93,7 +111,7 @@
                         💲
                     </div>
                     <div class="min-w-0">
-                        <h1 class="font-black text-base sm:text-xl tracking-tight leading-none text-white truncate">weamis-money</h1>
+                        <h1 class="font-black text-base sm:text-xl tracking-tight leading-none text-white truncate">Weamis Money</h1>
                         <p class="text-[10px] sm:text-xs text-emerald-100 font-semibold hidden xs:block">Quản lý thu chi & Quỹ team</p>
                     </div>
                 </a>
@@ -161,7 +179,7 @@
                                 <!-- Item 1: Update Profile -->
                                 <button @click="userMenuOpen = false; profileModalOpen = true" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2.5 transition cursor-pointer">
                                     <span class="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300">👤</span>
-                                    <span>Cập nhật thông tin cá nhân</span>
+                                    <span>Thông tin cá nhân</span>
                                 </button>
 
                                 <!-- Item 2: Change Password -->
@@ -194,24 +212,50 @@
 
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-1 w-full">
-        <!-- Flash Notifications -->
+        <!-- Auto-Dismissing Floating Toast Notifications (4 seconds) -->
         @if(session('success'))
-            <div x-data="{ show: true }" x-show="show" class="mb-5 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 flex items-center justify-between backdrop-blur">
-                <div class="flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span class="font-bold text-sm">{{ session('success') }}</span>
+            <div x-data="{ show: true }" 
+                 x-init="setTimeout(() => show = false, 4000)" 
+                 x-show="show" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3 scale-95"
+                 x-cloak
+                 class="fixed top-5 right-5 z-50 max-w-md p-4 rounded-2xl bg-emerald-600 text-white shadow-2xl flex items-center space-x-3 border border-emerald-400/40 backdrop-blur-md">
+                <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                    ✓
                 </div>
-                <button @click="show = false" class="text-xs font-bold opacity-70 hover:opacity-100">✕</button>
+                <div class="flex-1 min-w-0">
+                    <p class="font-extrabold text-[10px] uppercase tracking-wider text-emerald-100">Thông báo</p>
+                    <p class="font-bold text-xs sm:text-sm leading-snug">{{ session('success') }}</p>
+                </div>
+                <button @click="show = false" class="text-white/80 hover:text-white text-base font-bold px-1.5 cursor-pointer">✕</button>
             </div>
         @endif
 
         @if(session('error'))
-            <div x-data="{ show: true }" x-show="show" class="mb-5 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-center justify-between backdrop-blur">
-                <div class="flex items-center space-x-2">
-                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span class="font-bold text-sm">{{ session('error') }}</span>
+            <div x-data="{ show: true }" 
+                 x-init="setTimeout(() => show = false, 4000)" 
+                 x-show="show" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3 scale-95"
+                 x-cloak
+                 class="fixed top-5 right-5 z-50 max-w-md p-4 rounded-2xl bg-rose-600 text-white shadow-2xl flex items-center space-x-3 border border-rose-400/40 backdrop-blur-md">
+                <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                    ✕
                 </div>
-                <button @click="show = false" class="text-xs font-bold opacity-70 hover:opacity-100">✕</button>
+                <div class="flex-1 min-w-0">
+                    <p class="font-extrabold text-[10px] uppercase tracking-wider text-rose-100">Cảnh báo</p>
+                    <p class="font-bold text-xs sm:text-sm leading-snug">{{ session('error') }}</p>
+                </div>
+                <button @click="show = false" class="text-white/80 hover:text-white text-base font-bold px-1.5 cursor-pointer">✕</button>
             </div>
         @endif
 
@@ -344,34 +388,28 @@
                 <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4" x-data="{ avatarPreview: '{{ Auth::user()->avatar }}' }">
                     @csrf
                     
-                    <!-- Avatar Preview & Cloud Image Upload -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Ảnh Đại Diện (Lưu Đám Mây Cloud - Không Tốn Dung Lượng Máy)</label>
-                        <div class="flex items-center space-x-3.5 mb-3">
-                            <div class="w-14 h-14 rounded-2xl bg-slate-900 text-emerald-400 font-extrabold text-base flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden border-2 border-emerald-500/30">
-                                <template x-if="avatarPreview && (avatarPreview.startsWith('http') || avatarPreview.startsWith('/uploads/') || avatarPreview.startsWith('data:image'))">
-                                    <img :src="avatarPreview" class="w-full h-full object-cover">
-                                </template>
-                                <template x-if="!avatarPreview || (!avatarPreview.startsWith('http') && !avatarPreview.startsWith('/uploads/') && !avatarPreview.startsWith('data:image'))">
-                                    <span x-text="avatarPreview || '{{ substr(Auth::user()->name, 0, 2) }}'"></span>
-                                </template>
-                            </div>
-                            <div class="flex-1 min-w-0 space-y-2">
-                                <!-- File Upload directly to Cloud -->
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">☁️ Tải tệp ảnh từ máy (Tự lên Cloud)</label>
-                                    <input type="file" name="avatar_file" accept="image/*" 
-                                           @change="const file = $event.target.files[0]; if(file) { const reader = new FileReader(); reader.onload = (e) => avatarPreview = e.target.result; reader.readAsDataURL(file); }"
-                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 dark:file:bg-emerald-900/50 dark:file:text-emerald-300 cursor-pointer">
-                                </div>
+                    <!-- Clickable Avatar Box (Triggers File Picker) -->
+                    <div class="flex flex-col items-center justify-center py-2">
+                        <div @click="$refs.avatarFileInput.click()" 
+                             class="w-24 h-24 rounded-3xl bg-slate-900 text-emerald-400 font-black text-2xl flex items-center justify-center shadow-lg overflow-hidden border-4 border-emerald-500/30 relative group cursor-pointer transition transform hover:scale-105">
+                            
+                            <template x-if="avatarPreview && (avatarPreview.startsWith('http') || avatarPreview.startsWith('/uploads/') || avatarPreview.startsWith('data:image'))">
+                                <img :src="avatarPreview" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!avatarPreview || (!avatarPreview.startsWith('http') && !avatarPreview.startsWith('/uploads/') && !avatarPreview.startsWith('data:image'))">
+                                <span x-text="avatarPreview || '{{ substr(Auth::user()->name, 0, 2) }}'"></span>
+                            </template>
+
+                            <!-- Hover Camera Overlay -->
+                            <div class="absolute inset-0 bg-slate-950/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200 text-white">
+                                <svg class="w-6 h-6 mb-1 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span class="text-[10px] font-extrabold tracking-tight">Tải ảnh lên</span>
                             </div>
                         </div>
 
-                        <!-- Direct Cloud URL or Initials fallback -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">Hoặc dán Link ảnh Cloud / Chữ viết tắt</label>
-                            <input type="text" name="avatar" x-model="avatarPreview" placeholder="https://... hoặc chữ HV" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
-                        </div>
+                        <!-- Hidden File Input -->
+                        <input type="file" x-ref="avatarFileInput" name="avatar_file" accept="image/*" class="hidden"
+                               @change="const file = $event.target.files[0]; if(file) { const reader = new FileReader(); reader.onload = (e) => avatarPreview = e.target.result; reader.readAsDataURL(file); }">
                     </div>
 
                     <!-- Full Name -->
@@ -389,7 +427,7 @@
                     <!-- Buttons -->
                     <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="profileModalOpen = false" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer">Hủy</button>
-                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition cursor-pointer">☁️ Lưu Thay Đổi Đám Mây</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition cursor-pointer">Lưu</button>
                     </div>
                 </form>
             </div>

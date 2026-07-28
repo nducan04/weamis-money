@@ -162,4 +162,24 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticatedAs($user);
     }
+
+    public function test_authenticated_user_can_update_profile_and_avatar(): void
+    {
+        $user = User::factory()->create();
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('avatar.jpg', 100, 'image/jpeg');
+
+        $response = $this->actingAs($user)->post('/profile/update', [
+            'name' => 'Nguyễn Hoàng Việt',
+            'email' => $user->email,
+            'avatar_file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $user->refresh();
+        $this->assertEquals('Nguyễn Hoàng Việt', $user->name);
+        $this->assertNotEmpty($user->avatar);
+    }
 }

@@ -10,6 +10,27 @@
     showFilters: false,
     selectedTx: null,
     distributeAmount: {{ $fund->balance }},
+    filterSearch: '',
+    filterMemberId: '',
+    filterType: '',
+    rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
+    get filteredTransactions() {
+        let search = this.filterSearch.toLowerCase().trim();
+        let memberId = this.filterMemberId;
+        let type = this.filterType;
+
+        return this.rawTransactions.filter(tx => {
+            let matchSearch = !search || (tx.description && tx.description.toLowerCase().includes(search));
+            let matchMember = !memberId || tx.user_id == memberId;
+            let matchType = !type || tx.type == type;
+            return matchSearch && matchMember && matchType;
+        });
+    },
+    resetFilters() {
+        this.filterSearch = '';
+        this.filterMemberId = '';
+        this.filterType = '';
+    },
     get calculatedPayouts() {
         let amount = parseFloat(this.distributeAmount) || 0;
         return [
@@ -26,9 +47,6 @@
             <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Báo Cáo Thu Chi & Quản Lý Quỹ
             </h2>
-            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Theo dõi tổng quan tài chính, danh sách giao dịch thu chi và phân chia tiền theo % cổ phần.
-            </p>
         </div>
 
         <!-- Mobile: full-width stacked buttons / Desktop: inline -->
@@ -155,7 +173,6 @@
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Thống Kê Cá Nhân</h3>
-                <p class="text-[10px] sm:text-xs text-slate-400">Đóng góp, nợ vay và phần chia % cổ phần</p>
             </div>
         </div>
 
@@ -167,8 +184,9 @@
                         <th class="py-3 px-4 rounded-l-xl">Thành viên</th>
                         <th class="py-3 px-4">Cổ phần</th>
                         <th class="py-3 px-4">Đã Góp</th>
-                        <th class="py-3 px-4">Đã Rút/Vay</th>
-                        <th class="py-3 px-4">Dư Nợ</th>
+                        <th class="py-3 px-4">Đã Vay</th>
+                        <th class="py-3 px-4">Đã Trả Nợ</th>
+                        <th class="py-3 px-4">Đang Nợ</th>
                         <th class="py-3 px-4 rounded-r-xl">Khi Chia Quỹ</th>
                     </tr>
                 </thead>
@@ -194,7 +212,8 @@
                             </td>
                             <td class="py-3 px-4 font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">{{ $stat['share'] }}%</td>
                             <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">+{{ number_format($stat['contributed'], 0, ',', '.') }}đ</td>
-                            <td class="py-3 px-4 font-bold text-rose-600 dark:text-rose-400">-{{ number_format($stat['withdrawn'], 0, ',', '.') }}đ</td>
+                            <td class="py-3 px-4 font-bold text-slate-700 dark:text-slate-300">{{ number_format($stat['loans'], 0, ',', '.') }}đ</td>
+                            <td class="py-3 px-4 font-bold text-teal-600 dark:text-teal-400">{{ number_format($stat['repaid'], 0, ',', '.') }}đ</td>
                             <td class="py-3 px-4 font-bold">
                                 @if($stat['debt'] > 0)
                                     <span class="px-2 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 rounded font-bold">{{ number_format($stat['debt'], 0, ',', '.') }}đ</span>
@@ -238,18 +257,22 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2 text-center">
-                        <div class="bg-white dark:bg-slate-800 p-2 rounded-lg">
+                    <div class="grid grid-cols-4 gap-1.5 text-center">
+                        <div class="bg-white dark:bg-slate-800 p-1.5 rounded-lg">
                             <p class="text-[9px] text-slate-400 font-bold uppercase">Đã góp</p>
-                            <p class="text-xs font-extrabold text-emerald-600">+{{ number_format($stat['contributed'], 0, ',', '.') }}</p>
+                            <p class="text-[11px] font-extrabold text-emerald-600">+{{ number_format($stat['contributed'], 0, ',', '.') }}</p>
                         </div>
-                        <div class="bg-white dark:bg-slate-800 p-2 rounded-lg">
-                            <p class="text-[9px] text-slate-400 font-bold uppercase">Đã rút</p>
-                            <p class="text-xs font-extrabold text-rose-600">-{{ number_format($stat['withdrawn'], 0, ',', '.') }}</p>
+                        <div class="bg-white dark:bg-slate-800 p-1.5 rounded-lg">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">Đã vay</p>
+                            <p class="text-[11px] font-extrabold text-slate-700 dark:text-slate-300">{{ number_format($stat['loans'], 0, ',', '.') }}</p>
                         </div>
-                        <div class="bg-white dark:bg-slate-800 p-2 rounded-lg">
-                            <p class="text-[9px] text-slate-400 font-bold uppercase">Dư nợ</p>
-                            <p class="text-xs font-extrabold {{ $stat['debt'] > 0 ? 'text-rose-600' : 'text-slate-400' }}">
+                        <div class="bg-white dark:bg-slate-800 p-1.5 rounded-lg">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">Đã trả</p>
+                            <p class="text-[11px] font-extrabold text-teal-600">{{ number_format($stat['repaid'], 0, ',', '.') }}</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-1.5 rounded-lg">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">Đang nợ</p>
+                            <p class="text-[11px] font-extrabold {{ $stat['debt'] > 0 ? 'text-rose-600' : 'text-slate-400' }}">
                                 {{ $stat['debt'] > 0 ? number_format($stat['debt'], 0, ',', '.') : '0' }}đ
                             </p>
                         </div>
@@ -264,8 +287,7 @@
         <div class="flex flex-col gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Lịch Sử Thu Chi</h3>
-                    <p class="text-[10px] sm:text-xs text-slate-400">Thêm, sửa, xóa lịch sử thu chi tiền của team</p>
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg">Lịch Sử Giao Dịch</h3>
                 </div>
 
                 <!-- Mobile filter toggle -->
@@ -275,35 +297,32 @@
                 </button>
             </div>
 
-            <!-- Filter Bar: always visible on desktop, toggle on mobile -->
-            <form action="{{ route('dashboard') }}" method="GET" class="gap-2 grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap md:items-center" :class="showFilters ? 'grid' : 'hidden md:flex'" x-cloak>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm nội dung..." class="w-full md:w-auto px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500">
+            <!-- Reactive Filter Bar: Zero Reload, Instant Filter -->
+            <div class="gap-2 grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap md:items-center" :class="showFilters ? 'grid' : 'hidden md:flex'">
+                <input type="text" x-model="filterSearch" placeholder="🔍 Tìm kiếm nội dung..." class="w-full md:w-64 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
                 
-                <select name="member_id" class="w-full sm:w-auto px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500">
+                <select x-model="filterMemberId" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả thành viên</option>
                     @foreach($members as $m)
-                        <option value="{{ $m->id }}" {{ request('member_id') == $m->id ? 'selected' : '' }}>{{ $m->name }}</option>
+                        <option value="{{ $m->id }}">{{ $m->name }}</option>
                     @endforeach
                 </select>
 
-                <select name="type" class="w-full sm:w-auto px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500">
+                <select x-model="filterType" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả loại GD</option>
-                    <option value="contribution" {{ request('type') == 'contribution' ? 'selected' : '' }}>Góp quỹ (Thu)</option>
-                    <option value="expense" {{ request('type') == 'expense' ? 'selected' : '' }}>Chi tiêu (Chi)</option>
-                    <option value="loan" {{ request('type') == 'loan' ? 'selected' : '' }}>Vay cá nhân</option>
-                    <option value="repayment" {{ request('type') == 'repayment' ? 'selected' : '' }}>Trả nợ vay</option>
-                    <option value="distribution" {{ request('type') == 'distribution' ? 'selected' : '' }}>Chia tiền %</option>
+                    <option value="contribution">Góp quỹ (Thu)</option>
+                    <option value="expense">Chi tiêu (Chi)</option>
+                    <option value="loan">Vay cá nhân</option>
+                    <option value="repayment">Trả nợ vay</option>
+                    <option value="distribution">Chia tiền %</option>
                 </select>
 
-                <div class="flex items-center gap-2 col-span-full sm:col-span-1">
-                    <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
-                        Lọc
+                <template x-if="filterSearch || filterMemberId || filterType">
+                    <button @click="resetFilters()" class="px-3 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center space-x-1 cursor-pointer">
+                        <span>✕ Xóa lọc</span>
                     </button>
-                    @if(request()->hasAny(['search', 'member_id', 'type', 'status']))
-                        <a href="{{ route('dashboard') }}" class="px-3 py-2 text-xs font-bold text-rose-600 hover:underline">Xóa lọc</a>
-                    @endif
-                </div>
-            </form>
+                </template>
+            </div>
         </div>
 
         <!-- Desktop Data Table (hidden on mobile) -->
@@ -322,126 +341,150 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
-                    @forelse($transactions as $tx)
+                    <template x-for="(tx, index) in filteredTransactions" :key="tx.id">
                         <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
-                            <td class="py-3.5 px-4 font-bold text-slate-400">{{ method_exists($transactions, 'total') ? ($transactions->total() - (($transactions->currentPage() - 1) * $transactions->perPage() + $loop->index)) : $loop->iteration }}</td>
-                            <td class="py-3.5 px-4 whitespace-nowrap text-slate-500">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
+                            <td class="py-3.5 px-4 font-bold text-slate-400" x-text="filteredTransactions.length - index"></td>
+                            <td class="py-3.5 px-4 whitespace-nowrap text-slate-500" x-text="tx.created_at_formatted"></td>
                             <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2">
-                                    <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                        @if($tx->user && $tx->user->avatar && \Illuminate\Support\Str::startsWith($tx->user->avatar, ['http://', 'https://', '/uploads/']))
-                                            <img src="{{ $tx->user->avatar }}" alt="{{ $tx->user->name }}" class="w-full h-full object-cover">
-                                        @else
-                                            {{ $tx->user->avatar ?? substr($tx->user->name ?? '', 0, 2) }}
-                                        @endif
-                                    </span>
-                                    <span>{{ $tx->user->name }}</span>
+                                    <div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                        <template x-if="tx.user_avatar && (tx.user_avatar.startsWith('http') || tx.user_avatar.startsWith('/uploads/'))">
+                                            <img :src="tx.user_avatar" :alt="tx.user_name" class="w-full h-full object-cover">
+                                        </template>
+                                        <template x-if="!tx.user_avatar || (!tx.user_avatar.startsWith('http') && !tx.user_avatar.startsWith('/uploads/'))">
+                                            <span x-text="tx.user_avatar || (tx.user_name ? tx.user_name.substr(0, 2) : 'HV')"></span>
+                                        </template>
+                                    </div>
+                                    <span x-text="tx.user_name"></span>
                                 </div>
                             </td>
                             <td class="py-3.5 px-4 whitespace-nowrap">
-                                @if($tx->type === 'contribution')
+                                <template x-if="tx.type === 'contribution'">
                                     <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded">Góp quỹ</span>
-                                @elseif($tx->type === 'expense')
+                                </template>
+                                <template x-if="tx.type === 'expense'">
                                     <span class="px-2 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-bold rounded">Chi tiêu</span>
-                                @elseif($tx->type === 'loan')
+                                </template>
+                                <template x-if="tx.type === 'loan'">
                                     <span class="px-2 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-bold rounded">Vay</span>
-                                @elseif($tx->type === 'repayment')
+                                </template>
+                                <template x-if="tx.type === 'repayment'">
                                     <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-bold rounded">Trả nợ</span>
-                                @elseif($tx->type === 'distribution')
+                                </template>
+                                <template x-if="tx.type === 'distribution'">
                                     <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-bold rounded">Chia %</span>
-                                @endif
+                                </template>
                             </td>
                             <td class="py-3.5 px-4 font-extrabold whitespace-nowrap">
-                                @if(in_array($tx->type, ['contribution', 'repayment']))
-                                    <span class="text-emerald-600 dark:text-emerald-400">+{{ number_format($tx->amount, 0, ',', '.') }}đ</span>
-                                @else
-                                    <span class="text-slate-900 dark:text-slate-100">-{{ number_format($tx->amount, 0, ',', '.') }}đ</span>
-                                @endif
+                                <template x-if="tx.type === 'contribution' || tx.type === 'repayment'">
+                                    <span class="text-emerald-600 dark:text-emerald-400" x-text="'+' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
+                                </template>
+                                <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment'">
+                                    <span class="text-slate-900 dark:text-slate-100" x-text="'-' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
+                                </template>
                             </td>
-                            <td class="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300 max-w-xs truncate">{{ $tx->description }}</td>
+                            <td class="py-3.5 px-4 font-medium text-slate-800 dark:text-slate-200 max-w-sm break-words whitespace-normal leading-relaxed" :title="tx.description" x-text="tx.description"></td>
                             <td class="py-3.5 px-4 whitespace-nowrap">
-                                @if($tx->status === 'approved')
+                                <template x-if="tx.status === 'approved'">
                                     <span class="text-emerald-600 font-bold">✓ Duyệt</span>
-                                @elseif($tx->status === 'pending')
+                                </template>
+                                <template x-if="tx.status === 'pending'">
                                     <span class="text-amber-600 font-bold">⏳ Chờ</span>
-                                @else
+                                </template>
+                                <template x-if="tx.status === 'rejected'">
                                     <span class="text-slate-400 font-bold line-through">Hủy</span>
-                                @endif
+                                </template>
                             </td>
                             <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-1">
-                                <button @click="selectedTx = {{ json_encode($tx) }}; showEditModal = true" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded font-bold transition">✏️ Sửa</button>
-                                <button @click="selectedTx = {{ json_encode($tx) }}; showDeleteModal = true" class="px-2.5 py-1 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-600 hover:text-white text-rose-600 font-bold rounded transition">🗑️ Xóa</button>
+                                <button @click="selectedTx = tx; showEditModal = true" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded font-bold transition cursor-pointer">✏️ Sửa</button>
+                                <button @click="selectedTx = tx; showDeleteModal = true" class="px-2.5 py-1 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-600 hover:text-white text-rose-600 font-bold rounded transition cursor-pointer">🗑️ Xóa</button>
                             </td>
                         </tr>
-                    @empty
+                    </template>
+
+                    <template x-if="filteredTransactions.length === 0">
                         <tr>
-                            <td colspan="8" class="text-center py-8 text-slate-400">Không tìm thấy giao dịch nào.</td>
+                            <td colspan="8" class="text-center py-8 text-slate-400">Không tìm thấy giao dịch nào phù hợp.</td>
                         </tr>
-                    @endforelse
+                    </template>
                 </tbody>
             </table>
         </div>
 
         <!-- Mobile Transaction Cards (hidden on desktop) -->
         <div class="lg:hidden space-y-2.5">
-            @forelse($transactions as $tx)
+            <template x-for="(tx, index) in filteredTransactions" :key="tx.id">
                 <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700">
                     <!-- Row 1: User + Amount -->
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center space-x-2.5 min-w-0">
-                            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center flex-shrink-0">
-                                {{ $tx->user->avatar ?? substr($tx->user->name, 0, 2) }}
+                            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                <template x-if="tx.user_avatar && (tx.user_avatar.startsWith('http') || tx.user_avatar.startsWith('/uploads/'))">
+                                    <img :src="tx.user_avatar" :alt="tx.user_name" class="w-full h-full object-cover">
+                                </template>
+                                <template x-if="!tx.user_avatar || (!tx.user_avatar.startsWith('http') && !tx.user_avatar.startsWith('/uploads/'))">
+                                    <span x-text="tx.user_avatar || (tx.user_name ? tx.user_name.substr(0, 2) : 'HV')"></span>
+                                </template>
                             </div>
                             <div class="min-w-0">
-                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $tx->user->name }}</p>
-                                <p class="text-[10px] text-slate-400">{{ $tx->created_at->format('d/m/Y H:i') }}</p>
+                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="tx.user_name"></p>
+                                <p class="text-[10px] text-slate-400" x-text="tx.created_at_formatted"></p>
                             </div>
                         </div>
                         <div class="text-right flex-shrink-0 ml-2">
-                            @if(in_array($tx->type, ['contribution', 'repayment']))
-                                <p class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">+{{ number_format($tx->amount, 0, ',', '.') }}đ</p>
-                            @else
-                                <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100">-{{ number_format($tx->amount, 0, ',', '.') }}đ</p>
-                            @endif
+                            <template x-if="tx.type === 'contribution' || tx.type === 'repayment'">
+                                <p class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400" x-text="'+' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></p>
+                            </template>
+                            <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment'">
+                                <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100" x-text="'-' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></p>
+                            </template>
                         </div>
                     </div>
 
                     <!-- Row 2: Badge + Description -->
                     <div class="flex items-start space-x-2 mb-2.5">
-                        @if($tx->type === 'contribution')
+                        <template x-if="tx.type === 'contribution'">
                             <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded text-[10px] flex-shrink-0">Góp quỹ</span>
-                        @elseif($tx->type === 'expense')
+                        </template>
+                        <template x-if="tx.type === 'expense'">
                             <span class="px-1.5 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-bold rounded text-[10px] flex-shrink-0">Chi tiêu</span>
-                        @elseif($tx->type === 'loan')
+                        </template>
+                        <template x-if="tx.type === 'loan'">
                             <span class="px-1.5 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-bold rounded text-[10px] flex-shrink-0">Vay</span>
-                        @elseif($tx->type === 'repayment')
+                        </template>
+                        <template x-if="tx.type === 'repayment'">
                             <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-bold rounded text-[10px] flex-shrink-0">Trả nợ</span>
-                        @elseif($tx->type === 'distribution')
+                        </template>
+                        <template x-if="tx.type === 'distribution'">
                             <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-bold rounded text-[10px] flex-shrink-0">Chia %</span>
-                        @endif
-                        <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium line-clamp-2">{{ $tx->description }}</p>
+                        </template>
+                        <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed" x-text="tx.description"></p>
                     </div>
 
                     <!-- Row 3: Status + Actions -->
                     <div class="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-slate-600/40">
                         <div>
-                            @if($tx->status === 'approved')
+                            <template x-if="tx.status === 'approved'">
                                 <span class="text-[10px] text-emerald-600 font-bold">✓ Đã duyệt</span>
-                            @elseif($tx->status === 'pending')
+                            </template>
+                            <template x-if="tx.status === 'pending'">
                                 <span class="text-[10px] text-amber-600 font-bold">⏳ Chờ duyệt</span>
-                            @else
+                            </template>
+                            <template x-if="tx.status === 'rejected'">
                                 <span class="text-[10px] text-slate-400 font-bold line-through">Từ chối</span>
-                            @endif
+                            </template>
                         </div>
                         <div class="flex items-center space-x-1.5">
-                            <button @click="selectedTx = {{ json_encode($tx) }}; showEditModal = true" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-bold active:scale-95 transition">✏️ Sửa</button>
-                            <button @click="selectedTx = {{ json_encode($tx) }}; showDeleteModal = true" class="px-3 py-1.5 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-lg text-[10px] font-bold active:scale-95 transition">🗑️ Xóa</button>
+                            <button @click="selectedTx = tx; showEditModal = true" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-bold active:scale-95 transition cursor-pointer">✏️ Sửa</button>
+                            <button @click="selectedTx = tx; showDeleteModal = true" class="px-3 py-1.5 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-lg text-[10px] font-bold active:scale-95 transition cursor-pointer">🗑️ Xóa</button>
                         </div>
                     </div>
                 </div>
-            @empty
-                <p class="text-center py-8 text-xs text-slate-400">Không tìm thấy giao dịch nào.</p>
-            @endforelse
+            </template>
+
+            <template x-if="filteredTransactions.length === 0">
+                <p class="text-center py-8 text-xs text-slate-400">Không tìm thấy giao dịch nào phù hợp.</p>
+            </template>
         </div>
 
         <!-- Pagination -->
@@ -595,12 +638,19 @@
                     <h4 class="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Bảng phân bổ:</h4>
                     <template x-for="payout in calculatedPayouts" :key="payout.id">
                         <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/40 dark:border-slate-600/40 last:border-0">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0" x-text="payout.avatar"></span>
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs" x-text="payout.name"></span>
-                                <span class="text-[10px] text-slate-400">(<span x-text="payout.share"></span>%)</span>
+                            <div class="flex items-center space-x-2 min-w-0">
+                                <div class="w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                    <template x-if="payout.avatar && (payout.avatar.startsWith('http') || payout.avatar.startsWith('/uploads/'))">
+                                        <img :src="payout.avatar" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!payout.avatar || (!payout.avatar.startsWith('http') && !payout.avatar.startsWith('/uploads/'))">
+                                        <span x-text="payout.avatar || payout.name.substr(0, 2)"></span>
+                                    </template>
+                                </div>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs truncate" x-text="payout.name"></span>
+                                <span class="text-[10px] text-slate-400 flex-shrink-0">(<span x-text="payout.share"></span>%)</span>
                             </div>
-                            <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs" x-text="new Intl.NumberFormat('vi-VN').format(payout.amount) + 'đ'"></span>
+                            <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs flex-shrink-0 ml-2" x-text="new Intl.NumberFormat('vi-VN').format(payout.amount) + 'đ'"></span>
                         </div>
                     </template>
                 </div>
@@ -625,8 +675,12 @@
                         @method('PUT')
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                    {{ $m->avatar ?? substr($m->name, 0, 2) }}
+                                <div class="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                    @if($m->avatar && \Illuminate\Support\Str::startsWith($m->avatar, ['http://', 'https://', '/uploads/']))
+                                        <img src="{{ $m->avatar }}" alt="{{ $m->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        {{ $m->avatar ?? substr($m->name, 0, 2) }}
+                                    @endif
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $m->name }}</p>
@@ -646,14 +700,28 @@
 
             <!-- Form Add Member -->
             <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
-                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">+ Thêm Thành Viên Mới</h4>
-                <form action="{{ route('members.store') }}" method="POST" class="space-y-2">
+                <h4 class="text-xs font-extrabold text-slate-900 dark:text-white mb-3">➕ Thêm Thành Viên Mới</h4>
+                <form action="{{ route('members.store') }}" method="POST" class="space-y-3">
                     @csrf
-                    <input type="text" name="name" required placeholder="Họ và tên" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs">
-                    <input type="email" name="email" required placeholder="Email" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs">
-                    <div class="flex items-center space-x-2">
-                        <input type="number" name="share_percentage" required value="0" step="0.1" placeholder="% cổ phần" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold">
-                        <button type="submit" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold flex-shrink-0">Thêm</button>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Họ và Tên</label>
+                        <input type="text" name="name" required placeholder="Nhập họ và tên thành viên..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Địa Chỉ Email</label>
+                        <input type="email" name="email" required placeholder="example@weamis.com" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">% Cổ Phần Ban Đầu</label>
+                        <div class="flex items-center space-x-2">
+                            <div class="relative flex-1">
+                                <input type="number" name="share_percentage" required placeholder="Ví dụ: 12.5" step="0.1" min="0" max="100" class="w-full px-3.5 py-2 pr-7 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+                                <span class="absolute right-3 top-2 text-xs font-bold text-slate-400">%</span>
+                            </div>
+                            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold flex-shrink-0 shadow-md transition cursor-pointer">Thêm</button>
+                        </div>
                     </div>
                 </form>
             </div>

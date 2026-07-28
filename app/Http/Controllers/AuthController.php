@@ -185,7 +185,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'avatar' => ['nullable', 'string', 'max:1000'],
-            'avatar_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
+            'avatar_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:10240'],
         ], [
             'name.required' => 'Vui lòng nhập họ và tên.',
             'email.required' => 'Vui lòng nhập địa chỉ email.',
@@ -195,25 +195,27 @@ class AuthController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
 
-        // If image file is chosen, upload directly to Free Cloud Storage (ImgBB) - Zero local disk usage!
+        // Pure Cloud Upload: Upload directly to Catbox Cloud CDN (Zero Local Storage)
         if ($request->hasFile('avatar_file')) {
+            $file = $request->file('avatar_file');
+            
             try {
-                $file = $request->file('avatar_file');
-                $response = \Illuminate\Support\Facades\Http::asMultipart()->post('https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5', [
-                    'image' => base64_encode(file_get_contents($file->getRealPath())),
-                ]);
+                $response = \Illuminate\Support\Facades\Http::withOptions(['verify' => false, 'timeout' => 15])
+                    ->attach('fileToUpload', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName())
+                    ->post('https://catbox.moe/user/api.php', [
+                        'reqtype' => 'fileupload',
+                    ]);
 
-                if ($response->successful() && isset($response->json()['data']['url'])) {
-                    $user->avatar = $response->json()['data']['url'];
+                $cloudUrl = trim($response->body());
+
+                if ($response->successful() && \Illuminate\Support\Str::startsWith($cloudUrl, 'http')) {
+                    // Save ONLY the Cloud CDN URL (Zero Local Disk Usage)
+                    $user->avatar = $cloudUrl;
                 } else {
-                    // Fallback to free public endpoint if API key limit reached
-                    $user->avatar = trim($validated['avatar']) ?: strtoupper(substr($validated['name'], 0, 2));
+                    $user->avatar = strtoupper(substr($validated['name'], 0, 2));
                 }
             } catch (\Exception $e) {
-                // If offline or network error, fallback gracefully
-                if (!empty($validated['avatar'])) {
-                    $user->avatar = trim($validated['avatar']);
-                }
+                $user->avatar = strtoupper(substr($validated['name'], 0, 2));
             }
         } elseif (!empty($validated['avatar'])) {
             $user->avatar = trim($validated['avatar']);
@@ -223,6 +225,6 @@ class AuthController extends Controller
 
         $user->save();
 
-        return redirect()->back()->with('success', 'Cập nhật thông tin cá nhân và ảnh Đám mây thành công!');
+        return redirect()->back()->with('success', 'Cập nhật ảnh đại diện thành công!');
     }
 }
