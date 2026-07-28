@@ -13,7 +13,7 @@ class FundController extends Controller
     {
         $fund = Fund::firstOrCreate(
             ['id' => 1],
-            ['name' => 'Quỹ Nhóm Weamis', 'balance' => 7028106.00, 'total_profit' => 126160.00]
+            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7028106.00, 'total_profit' => 126160.00]
         );
 
         $members = User::orderBy('id')->get();

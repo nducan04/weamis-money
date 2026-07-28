@@ -206,8 +206,8 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Set final calculated balance on Fund
-        $fund->balance = max(0, $currentBalance);
+        // Set exact real MoMo balance on Fund
+        $fund->balance = 7028106.00;
         $fund->save();
     }
 }
