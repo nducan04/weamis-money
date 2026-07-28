@@ -1,0 +1,48 @@
+stages:
+  - test
+  - deploy
+
+# 🧪 Stage 1: Chạy tự động Unit & Feature Tests khi tạo Merge Request hoặc Push vào develop
+run_tests:
+  stage: test
+  image: php:8.2-cli
+  before_script:
+    - apt-get update -yqq
+    - apt-get install -yqq git unzip libpng-dev libzip-dev libsqlite3-dev
+    - docker-php-ext-install pdo_mysql pdo_sqlite zip gd
+    - curl -sS https://getcomposer.org/installer | php
+    - php composer.phar install --no-interaction --prefer-dist
+  script:
+    - cp .env.example .env
+    - php artisan key:generate
+    - php artisan test
+  only:
+    - develop
+    - merge_requests
+  allow_failure: true
+
+# 🚀 Stage 2: Tự động Deploy lên https://money.vietnh.io.vn khi Merge vào main
+deploy_production:
+  stage: deploy
+  only:
+    - main
+  script:
+    - echo "--------------------------------------------------"
+    - echo "🚀 Bắt đầu quá trình Deploy tự động lên money.vietnh.io.vn..."
+    - echo "--------------------------------------------------"
+    - if [ -d "/var/www/money.vietnh.io.vn" ]; then cd /var/www/money.vietnh.io.vn; elif [ -d "/var/www/html/money.vietnh.io.vn" ]; then cd /var/www/html/money.vietnh.io.vn; fi
+    - git fetch --all
+    - git checkout main
+    - git pull origin main || git pull gitlab main || git pull
+    - composer install --no-dev --optimize-autoloader
+    - php artisan migrate --force
+    - php artisan config:clear
+    - php artisan cache:clear
+    - php artisan route:clear
+    - php artisan view:clear
+    - php artisan config:cache
+    - php artisan route:cache
+    - php artisan view:cache
+    - echo "--------------------------------------------------"
+    - echo "✅ Đã Deploy thành công lên https://money.vietnh.io.vn!"
+    - echo "--------------------------------------------------"
