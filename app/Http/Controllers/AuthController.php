@@ -34,6 +34,10 @@ class AuthController extends Controller
             ->orWhere('email', 'like', $loginInput . '%')
             ->first();
 
+        if (!$user && ($loginInput === 'admin' || str_contains($loginInput, 'admin'))) {
+            $user = User::where('role', 'admin')->first();
+        }
+
         if ($user && Hash::check($request->password, $user->password)) {
             Auth::login($user, $request->has('remember'));
             $request->session()->regenerate();

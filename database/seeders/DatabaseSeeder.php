@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
 
         // 2. Create All 8 Team Members from DuLieuDaCo
         $admin = User::create([
-            'name' => 'admin',
+            'name' => 'Nguyễn Hoàng Việt',
             'email' => 'admin@weamis.com',
             'password' => $defaultPassword,
             'role' => 'admin',
