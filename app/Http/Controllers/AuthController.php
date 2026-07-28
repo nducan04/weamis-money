@@ -22,6 +22,11 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        // Fail-safe auto recovery: if users table is empty, auto seed database!
+        if (User::count() === 0) {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        }
+
         $loginInput = strtolower(trim($request->email));
 
         $user = User::where('email', $loginInput)
