@@ -58,6 +58,9 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     
     <style>
         body {

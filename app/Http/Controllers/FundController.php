@@ -45,22 +45,6 @@ class FundController extends Controller
             ];
         });
 
-        // 3. Filtered Transaction Query
-        $query = Transaction::with(['user', 'approver'])->latest();
-
-        if ($request->filled('search')) {
-            $query->where('description', 'like', '%' . $request->search . '%');
-        }
-
-        if ($request->filled('member_id')) {
-            $query->where('user_id', $request->member_id);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        $transactions = $query->paginate(50)->withQueryString();
 
         $allTransactions = Transaction::with(['user', 'approver'])->latest()->get()->map(function($tx) {
             return [
@@ -88,7 +72,6 @@ class FundController extends Controller
             'fund',
             'members',
             'memberStats',
-            'transactions',
             'allTransactions',
             'pendingTransactions',
             'totalIncome',

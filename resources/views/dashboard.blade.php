@@ -13,6 +13,8 @@
     filterSearch: '',
     filterMemberId: '',
     filterType: '',
+    currentPage: 1,
+    perPage: 10,
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
     get filteredTransactions() {
         let search = this.filterSearch.toLowerCase().trim();
@@ -26,10 +28,36 @@
             return matchSearch && matchMember && matchType;
         });
     },
+    get totalPages() {
+        return Math.max(1, Math.ceil(this.filteredTransactions.length / this.perPage));
+    },
+    get paginatedTransactions() {
+        let start = (this.currentPage - 1) * this.perPage;
+        return this.filteredTransactions.slice(start, start + this.perPage);
+    },
+    get pageNumbers() {
+        let pages = [];
+        let tp = this.totalPages;
+        let cp = this.currentPage;
+        if (tp <= 7) {
+            for (let i = 1; i <= tp; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (cp > 3) pages.push('...');
+            for (let i = Math.max(2, cp - 1); i <= Math.min(tp - 1, cp + 1); i++) pages.push(i);
+            if (cp < tp - 2) pages.push('...');
+            pages.push(tp);
+        }
+        return pages;
+    },
+    goToPage(n) { if (n >= 1 && n <= this.totalPages) this.currentPage = n; },
+    prevPage() { if (this.currentPage > 1) this.currentPage--; },
+    nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; },
     resetFilters() {
         this.filterSearch = '';
         this.filterMemberId = '';
         this.filterType = '';
+        this.currentPage = 1;
     },
     get calculatedPayouts() {
         let amount = parseFloat(this.distributeAmount) || 0;
@@ -39,7 +67,8 @@
             @endforeach
         ];
     }
-}">
+}"
+x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', () => currentPage = 1); $watch('filterType', () => currentPage = 1)">
 
     <!-- Page Header & Action Bar -->
     <div class="flex flex-col gap-3 mb-6">
@@ -71,7 +100,7 @@
     <!-- 1. Top Stat Cards Row (2 cols on mobile, 4 cols on desktop) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <!-- Card 1: Số Dư Quỹ -->
-        <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden">
+        <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Số Dư Quỹ</span>
                 <span class="p-1.5 sm:p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300">💵</span>
@@ -85,7 +114,7 @@
         </div>
 
         <!-- Card 2: Tổng Thu -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Thu</span>
                 <span class="p-1.5 sm:p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300">📥</span>
@@ -97,7 +126,7 @@
         </div>
 
         <!-- Card 3: Tổng Chi -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Chi</span>
                 <span class="p-1.5 sm:p-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300">📤</span>
@@ -109,7 +138,7 @@
         </div>
 
         <!-- Card 4: Tổng Cho Vay -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
             <div class="flex items-center justify-between">
                 <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Đang Cho Vay</span>
                 <span class="p-1.5 sm:p-2 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300">🤝</span>
@@ -118,6 +147,180 @@
                 {{ number_format($totalLoans, 0, ',', '.') }}<span class="text-sm sm:text-lg font-bold">đ</span>
             </p>
             <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Nợ cá nhân chưa trả</p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 mb-6"
+         x-data="{
+        isDark: document.documentElement.classList.contains('dark'),
+        donutChart: null,
+        barChart: null,
+        updateTheme() {
+            this.isDark = document.documentElement.classList.contains('dark');
+            const textColor = this.isDark ? '#94a3b8' : '#64748b';
+            const valueColor = this.isDark ? '#f8fafc' : '#0f172a';
+            const foreColor = this.isDark ? '#f1f5f9' : '#1e293b';
+            const bgColor = this.isDark ? '#1e293b' : '#ffffff';
+            const gridColor = this.isDark ? '#334155' : '#e2e8f0';
+
+            if (this.donutChart) {
+                this.donutChart.updateOptions({
+                    chart: { foreColor: foreColor },
+                    stroke: { colors: [bgColor] },
+                    legend: { labels: { colors: foreColor } },
+                    tooltip: { theme: this.isDark ? 'dark' : 'light' },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    name: { color: textColor },
+                                    value: { color: valueColor },
+                                    total: { color: textColor }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (this.barChart) {
+                this.barChart.updateOptions({
+                    chart: { foreColor: foreColor },
+                    xaxis: { labels: { style: { colors: foreColor } } },
+                    yaxis: { labels: { style: { colors: foreColor } } },
+                    grid: { borderColor: gridColor },
+                    tooltip: { theme: this.isDark ? 'dark' : 'light' }
+                });
+            }
+        },
+        initCharts() {
+            this.isDark = document.documentElement.classList.contains('dark');
+            const textColor = this.isDark ? '#94a3b8' : '#64748b';
+            const valueColor = this.isDark ? '#f8fafc' : '#0f172a';
+            const foreColor = this.isDark ? '#f1f5f9' : '#1e293b';
+            const bgColor = this.isDark ? '#1e293b' : '#ffffff';
+            const gridColor = this.isDark ? '#334155' : '#e2e8f0';
+
+            // 1. Donut Chart: Thu / Chi / Vay
+            this.donutChart = new ApexCharts(this.$refs.donutChart, {
+                chart: { type: 'donut', height: 280, background: 'transparent', fontFamily: 'Plus Jakarta Sans, sans-serif', foreColor: foreColor },
+                series: [{{ $totalIncome }}, {{ $totalExpense }}, {{ $totalLoans }}],
+                labels: ['Tổng Thu (Góp + Trả nợ)', 'Tổng Chi', 'Đang Cho Vay'],
+                colors: ['#10b981', '#f43f5e', '#f59e0b'],
+                stroke: { width: 3, colors: [bgColor] },
+                dataLabels: {
+                    enabled: true,
+                    style: { fontSize: '11px', fontWeight: 700, colors: ['#ffffff'] },
+                    dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.5 }
+                },
+                legend: {
+                    position: 'bottom',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    labels: { colors: foreColor },
+                    markers: { width: 10, height: 10, radius: 3 }
+                },
+                tooltip: {
+                    y: { formatter: (val) => new Intl.NumberFormat('vi-VN').format(val) + 'đ' },
+                    theme: this.isDark ? 'dark' : 'light'
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '62%',
+                            labels: {
+                                show: true,
+                                name: { fontSize: '12px', fontWeight: 700, color: textColor },
+                                value: { fontSize: '18px', fontWeight: 800, color: valueColor, formatter: (val) => new Intl.NumberFormat('vi-VN').format(val) + 'đ' },
+                                total: {
+                                    show: true,
+                                    showAlways: true,
+                                    label: 'Số Dư Quỹ',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    color: textColor,
+                                    formatter: () => new Intl.NumberFormat('vi-VN').format({{ $fund->balance }}) + 'đ'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            this.donutChart.render();
+
+            // 2. Bar Chart: Member Shares
+            const memberNames = [@foreach($members as $m)'{{ $m->name }}',@endforeach];
+            const memberShares = [@foreach($members as $m){{ $m->share_percentage }},@endforeach];
+
+            this.barChart = new ApexCharts(this.$refs.barChart, {
+                chart: { type: 'bar', height: 280, background: 'transparent', fontFamily: 'Plus Jakarta Sans, sans-serif', toolbar: { show: false }, foreColor: foreColor },
+                series: [{ name: 'Cổ phần (%)', data: memberShares }],
+                xaxis: {
+                    categories: memberNames,
+                    labels: {
+                        style: { fontSize: '11px', fontWeight: 600, colors: foreColor },
+                        formatter: (val) => val + '%'
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: { fontSize: '11px', fontWeight: 700, colors: foreColor }
+                    },
+                    max: Math.max(...memberShares) + 5
+                },
+                plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
+                colors: ['#6366f1', '#8b5cf6', '#a78bfa', '#c084fc', '#e879f9', '#f472b6', '#fb7185', '#f87171'],
+                dataLabels: {
+                    enabled: true,
+                    formatter: (val) => val + '%',
+                    style: { fontSize: '11px', fontWeight: 700, colors: ['#ffffff'] },
+                    dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.5 }
+                },
+                legend: { show: false },
+                grid: { borderColor: gridColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+                tooltip: {
+                    y: { formatter: (val) => val + '% cổ phần' },
+                    theme: this.isDark ? 'dark' : 'light'
+                }
+            });
+            this.barChart.render();
+
+            // Auto-update charts when theme toggles
+            const observer = new MutationObserver(() => {
+                this.updateTheme();
+            });
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        }
+     }"
+         x-init="$nextTick(() => initCharts())"
+    >
+        <!-- Donut Chart Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                <div class="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Tỷ Lệ Dòng Tiền</h3>
+                    <p class="text-[10px] text-slate-400 font-medium">Thu / Chi / Cho Vay</p>
+                </div>
+            </div>
+            <div x-ref="donutChart"></div>
+        </div>
+
+        <!-- Bar Chart Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                <div class="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Cổ Phần Thành Viên</h3>
+                    <p class="text-[10px] text-slate-400 font-medium">Tỷ lệ % góp vốn của từng thành viên</p>
+                </div>
+            </div>
+            <div x-ref="barChart"></div>
         </div>
     </div>
 
@@ -171,15 +374,21 @@
     <!-- 2. Member Breakdown: Desktop=Table, Mobile=Cards -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm mb-6">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-            <div>
-                <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Thống Kê Cá Nhân</h3>
+            <div class="flex items-center space-x-3">
+                <div class="p-2 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Thống Kê Cá Nhân</h3>
+                    <p class="text-[10px] text-slate-400 font-medium">Chi tiết cổ phần & tài chính từng thành viên</p>
+                </div>
             </div>
         </div>
 
         <!-- Desktop Table (hidden on mobile) -->
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
+                <thead class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-700/30 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                     <tr>
                         <th class="py-3 px-4 rounded-l-xl">Thành viên</th>
                         <th class="py-3 px-4">Cổ phần</th>
@@ -286,8 +495,19 @@
     <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
         <div class="flex flex-col gap-3 mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
             <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg">Lịch Sử Giao Dịch</h3>
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg">Lịch Sử Giao Dịch</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">
+                            <span x-text="filteredTransactions.length"></span> giao dịch
+                            <template x-if="filterSearch || filterMemberId || filterType">
+                                <span class="text-indigo-500 font-bold"> (đang lọc)</span>
+                            </template>
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Mobile filter toggle -->
@@ -328,7 +548,7 @@
         <!-- Desktop Data Table (hidden on mobile) -->
         <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
+                <thead class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-700/30 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                     <tr>
                         <th class="py-3 px-4 rounded-l-xl">STT</th>
                         <th class="py-3 px-4">Thời Gian</th>
@@ -341,9 +561,9 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
-                    <template x-for="(tx, index) in filteredTransactions" :key="tx.id">
-                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
-                            <td class="py-3.5 px-4 font-bold text-slate-400" x-text="filteredTransactions.length - index"></td>
+                    <template x-for="(tx, index) in paginatedTransactions" :key="tx.id">
+                        <tr class="hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-colors duration-150">
+                            <td class="py-3.5 px-4 font-bold text-slate-400" x-text="filteredTransactions.length - ((currentPage - 1) * perPage + index)"></td>
                             <td class="py-3.5 px-4 whitespace-nowrap text-slate-500" x-text="tx.created_at_formatted"></td>
                             <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2">
@@ -413,8 +633,8 @@
 
         <!-- Mobile Transaction Cards (hidden on desktop) -->
         <div class="lg:hidden space-y-2.5">
-            <template x-for="(tx, index) in filteredTransactions" :key="tx.id">
-                <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700">
+            <template x-for="(tx, index) in paginatedTransactions" :key="tx.id">
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow duration-150">
                     <!-- Row 1: User + Amount -->
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center space-x-2.5 min-w-0">
@@ -487,10 +707,41 @@
             </template>
         </div>
 
-        <!-- Pagination -->
-        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-            {{ $transactions->links() }}
-        </div>
+        <!-- Alpine.js Client-Side Pagination -->
+        <template x-if="totalPages > 1">
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <!-- Info -->
+                    <p class="text-[11px] text-slate-400 font-medium">
+                        Hiển thị <span class="font-bold text-slate-600 dark:text-slate-300" x-text="((currentPage - 1) * perPage + 1)"></span>–<span class="font-bold text-slate-600 dark:text-slate-300" x-text="Math.min(currentPage * perPage, filteredTransactions.length)"></span> / <span class="font-bold text-slate-600 dark:text-slate-300" x-text="filteredTransactions.length"></span> giao dịch
+                    </p>
+
+                    <!-- Page Controls -->
+                    <div class="flex items-center space-x-1">
+                        <button @click="prevPage()" :disabled="currentPage <= 1" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer" :class="currentPage <= 1 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+
+                        <template x-for="page in pageNumbers" :key="page">
+                            <button
+                                @click="typeof page === 'number' && goToPage(page)"
+                                class="min-w-[32px] h-8 rounded-lg text-xs font-bold transition-all duration-150"
+                                :class="{
+                                    'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25': page === currentPage,
+                                    'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer': page !== currentPage && typeof page === 'number',
+                                    'text-slate-400 cursor-default': typeof page !== 'number'
+                                }"
+                                x-text="page"
+                            ></button>
+                        </template>
+
+                        <button @click="nextPage()" :disabled="currentPage >= totalPages" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer" :class="currentPage >= totalPages ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 
     <!-- MODAL: THÊM GIAO DỊCH MỚI -->
