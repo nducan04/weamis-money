@@ -105,64 +105,68 @@ class DatabaseSeeder extends Seeder
             'current_debt' => 0.00,
         ]);
 
-        // 3. Create Real Transactions Extracted From DuLieuDaCo MoMo Screenshots
+        // 3. Create Real Chronological Transactions from anh1.jpg to anh13.jpg
         $now = Carbon::now();
 
         $transactionsData = [
-            // 6-5 months ago (Older activity)
+            // anh1.jpg & anh4.jpg (6 - 5 tháng trước)
             ['user' => $viet, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Góp vào quỹ chung', 'days' => 180],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 5000000, 'desc' => 'Tiền Everbloom', 'days' => 155],
             ['user' => $son, 'type' => 'contribution', 'amount' => 2000000, 'desc' => 'đóng bát năm mới', 'days' => 150],
-            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'thèm bánh mì que cay', 'days' => 150],
-            ['user' => $son, 'type' => 'contribution', 'amount' => 247766, 'desc' => 'Góp vào quỹ chung', 'days' => 150],
-            ['user' => $duc, 'type' => 'contribution', 'amount' => 200000, 'desc' => 'Góp vào quỹ chung', 'days' => 150],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'CTO vắt cổ chày ra nước ủng hộ kèo 360', 'days' => 150],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 5000000, 'desc' => 'Tiền Everbloom', 'days' => 150],
-            ['user' => $kien, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'Trả nợ vay ngày 08/03', 'days' => 150],
-            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Kin vay', 'days' => 150],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 390000, 'desc' => 'Chi tiền mặt + nước: Minh, Hưng, Việt', 'days' => 150],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 920000, 'desc' => 'Tiền đớp ăn vặt hp', 'days' => 150],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 2250000, 'desc' => 'Rút tiền lương', 'days' => 150],
-            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Chí phèo cào mặt ăn vạ vay quỹ', 'days' => 150],
+            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'thèm bánh mì que cay', 'days' => 148],
+            ['user' => $duc, 'type' => 'contribution', 'amount' => 200000, 'desc' => 'Góp vào quỹ chung', 'days' => 146],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'CTO vắt cổ chày ra nước ủng hộ kèo 360', 'days' => 144],
 
-            // 4 months ago
-            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'loc dau thang', 'days' => 120],
-            ['user' => $duc, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Giả lọ quỹ. Cảm ơn ae', 'days' => 120],
+            // anh10.jpg & anh5.jpg (5 tháng trước)
+            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Chí phèo cào mặt ăn vạ vay quỹ', 'days' => 142],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 2250000, 'desc' => 'Rút tiền lương', 'days' => 140],
+            ['user' => $son, 'type' => 'contribution', 'amount' => 247766, 'desc' => 'Góp vào quỹ chung', 'days' => 138],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 920000, 'desc' => 'Tiền đớp ăn vặt hp', 'days' => 136],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 390000, 'desc' => 'Chi tiền mặt + nước: Minh, Hưng, Việt', 'days' => 134],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Kin vay', 'days' => 132],
+            ['user' => $kien, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ vay ngày 08/03', 'days' => 130],
+
+            // anh10.jpg & anh2.jpg (4 - 3 tháng trước)
+            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'loc dau thang', 'days' => 125],
             ['user' => $duc, 'type' => 'contribution', 'amount' => 600000, 'desc' => 'Góp vào quỹ chung', 'days' => 120],
+            ['user' => $duc, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Giả lọ quỹ. Cảm ơn ae', 'days' => 118],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 1000000, 'desc' => 'tiền chí phèo bao thịt chó', 'days' => 116],
 
-            // 3 months ago
-            ['user' => $hung, 'type' => 'expense', 'amount' => 1700000, 'desc' => 'Mmb villa', 'days' => 90],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 60000, 'desc' => 'Góp vào quỹ chung', 'days' => 90],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Chộ nhận sứng', 'days' => 90],
-            ['user' => $viet, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ tiền răng cho chí phèo', 'days' => 90],
-            ['user' => $son, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'trang trải cuộc sống cuối tháng', 'days' => 90],
-            ['user' => $kien, 'type' => 'contribution', 'amount' => 560000, 'desc' => 'Góp vào quỹ chung', 'days' => 90],
-            ['user' => $kien, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Góp vào quỹ chung', 'days' => 90],
-            ['user' => $son, 'type' => 'repayment', 'amount' => 710000, 'desc' => 'bat ca', 'days' => 90],
+            // anh2.jpg, anh8.jpg, anh7.jpg, anh3.jpg (3 tháng trước)
+            ['user' => $hung, 'type' => 'expense', 'amount' => 1700000, 'desc' => 'Mmb villa', 'days' => 100],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 1400000, 'desc' => 'Dư cọc villa', 'days' => 98],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 5477300, 'desc' => 'Bú tiền ứng cát bà', 'days' => 96],
+            ['user' => $kien, 'type' => 'loan', 'amount' => 500000, 'desc' => 'Mượn đi đánh lô', 'days' => 94],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp vào quỹ chung', 'days' => 92],
             ['user' => $hung, 'type' => 'contribution', 'amount' => 650000, 'desc' => 'Góp vào quỹ chung', 'days' => 90],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp vào quỹ chung', 'days' => 90],
-            ['user' => $kien, 'type' => 'loan', 'amount' => 500000, 'desc' => 'Mượn đi đánh lô', 'days' => 90],
-            ['user' => $viet, 'type' => 'loan', 'amount' => 5477300, 'desc' => 'Bú tiền ứng cát bà', 'days' => 90],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 1400000, 'desc' => 'Dư cọc villa', 'days' => 90],
-            ['user' => $duc, 'type' => 'expense', 'amount' => 1000000, 'desc' => 'Đi rửa chân', 'days' => 90],
+            ['user' => $son, 'type' => 'repayment', 'amount' => 710000, 'desc' => 'bat ca', 'days' => 88],
+            ['user' => $kien, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Góp vào quỹ chung', 'days' => 86],
+            ['user' => $kien, 'type' => 'contribution', 'amount' => 560000, 'desc' => 'Góp vào quỹ chung', 'days' => 84],
+            ['user' => $son, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'trang trải cuộc sống cuối tháng', 'days' => 82],
+            ['user' => $viet, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ tiền răng cho chí phèo', 'days' => 80],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Chộ nhận sứng', 'days' => 78],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 60000, 'desc' => 'Góp vào quỹ chung', 'days' => 76],
+            ['user' => $duc, 'type' => 'expense', 'amount' => 1000000, 'desc' => 'Đi rửa chân', 'days' => 74],
 
-            // 2 months ago
+            // anh12.jpg, anh11.jpg, anh6.jpg (2 tháng trước)
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Wifi lalot', 'days' => 65],
             ['user' => $thanhan, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'ngon ngay', 'days' => 60],
-            ['user' => $viet, 'type' => 'repayment', 'amount' => 1700000, 'desc' => 'Trả nợ + tiền cát bà chí phèo', 'days' => 60],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Chộ nhận sứng', 'days' => 60],
-            ['user' => $hung, 'type' => 'expense', 'amount' => 170000, 'desc' => 'Gac', 'days' => 60],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Góp vào quỹ chung', 'days' => 60],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Wifi lalot', 'days' => 60],
+            ['user' => $viet, 'type' => 'repayment', 'amount' => 1700000, 'desc' => 'Trả nợ + tiền cát bà chí phèo', 'days' => 58],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Chộ nhận sứng', 'days' => 56],
+            ['user' => $hung, 'type' => 'expense', 'amount' => 170000, 'desc' => 'Gac', 'days' => 54],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Góp vào quỹ chung', 'days' => 50],
 
-            // 1 month ago
-            ['user' => $viet, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'vay 3 củ đóng học phí', 'days' => 30],
-            ['user' => $duc, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Giai cuu Chi Pheo mua World cup 😭', 'days' => 30],
-            ['user' => $hoanganh, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Đói kém, xin lương :(((', 'days' => 30],
-            ['user' => $kien, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'Mua ram, đói kém', 'days' => 30],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 3233520, 'desc' => 'Chuyển tiền đến BBBTHANGLONG CN Lau Phan Dao Duy Anh (PVComBank Pay) thanh toan don hang 634248107', 'days' => 30],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp 10% cns', 'days' => 30],
+            // anh6.jpg & anh9.jpg (1 tháng trước)
+            ['user' => $hoanganh, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Đói kém, xin lương :(((', 'days' => 35],
+            ['user' => $duc, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Giai cuu Chi Pheo mua World cup 😭', 'days' => 34],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'vay 3 củ đóng học phí', 'days' => 32],
             ['user' => $viet, 'type' => 'repayment', 'amount' => 3000000, 'desc' => 'CTO trả nợ tiền học', 'days' => 30],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp 10% cns', 'days' => 28],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 3233520, 'desc' => 'Chuyển tiền đến BBBTHANGLONG CN Lau Phan Dao Duy Anh (PVComBank Pay) thanh toan don hang 634248107', 'days' => 25],
+            ['user' => $kien, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'Mua ram, đói kém', 'days' => 22],
 
-            // Recent (18 - 1 days ago)
+            // anh13.jpg (Gần đây nhất: 19 ngày -> 1 ngày trước)
+            ['user' => $kien, 'type' => 'repayment', 'amount' => 3000000, 'desc' => 'Trả nợ mua ram', 'days' => 19],
             ['user' => $hung, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Tán lộc', 'days' => 18],
             ['user' => $minh, 'type' => 'expense', 'amount' => 150000, 'desc' => 'mua kìm đấu wifi', 'days' => 10],
             ['user' => $kien, 'type' => 'expense', 'amount' => 535000, 'desc' => 'Quỹ networking với anh 3T - Tri ân vi da den', 'days' => 1],
