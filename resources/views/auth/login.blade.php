@@ -13,7 +13,7 @@
                 💲
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Đăng Nhập</h2>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Hệ thống Quản lý Thu Chi & Quỹ Team Weamis</p>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Hệ thống quản lý thu chi & Quản lý quỹ weamis</p>
         </div>
 
         <!-- Login Form -->
@@ -23,12 +23,7 @@
             <!-- Email Field -->
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Địa chỉ Email</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                        📧
-                    </span>
-                    <input type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="name@weamis.com" class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
-                </div>
+                <input type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="name@weamis.com" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
                 @error('email')
                     <p class="text-xs text-rose-500 font-bold mt-1.5 flex items-center space-x-1">
                         <span>⚠️</span>
@@ -40,12 +35,7 @@
             <!-- Password Field -->
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Mật khẩu</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                        🔒
-                    </span>
-                    <input type="password" name="password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
-                </div>
+                <input type="password" name="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
                 @error('password')
                     <p class="text-xs text-rose-500 font-bold mt-1.5 flex items-center space-x-1">
                         <span>⚠️</span>

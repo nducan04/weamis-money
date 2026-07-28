@@ -85,7 +85,7 @@
 <body class="text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- Top Navigation Header (Vibrant Emerald Brand Navbar) -->
-    <header class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 text-white sticky top-0 z-30 shadow-md border-b border-emerald-800/50 safe-top transition-colors">
+    <header class="bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-700 text-white sticky top-0 z-30 shadow-md border-b border-emerald-800/50 safe-top transition-colors">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between">
             <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">

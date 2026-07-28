@@ -17,10 +17,15 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        $credentials = [
+            'email' => strtolower(trim($request->email)),
+            'password' => $request->password,
+        ];
 
         $remember = $request->has('remember');
 
