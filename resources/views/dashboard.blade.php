@@ -2,12 +2,12 @@
 
 @section('content')
 <div x-data="{ 
-    showContributionModal: false, 
-    showWithdrawModal: false, 
+    showAddModal: false,
+    showEditModal: false,
+    showDeleteModal: false,
     showDistributionModal: false,
-    showAddMemberModal: false,
-    showEditShareModal: false,
-    selectedUser: null,
+    showMemberModal: false,
+    selectedTx: null,
     distributeAmount: {{ $fund->balance }},
     get calculatedPayouts() {
         let amount = parseFloat(this.distributeAmount) || 0;
@@ -19,73 +19,99 @@
     }
 }">
 
-    <!-- Top Card: MoMo Styled Fund Header -->
-    <div class="momo-gradient text-white rounded-3xl p-6 shadow-xl mb-6 relative overflow-hidden momo-card-shadow">
-        <!-- Background Decorative Blobs -->
-        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="absolute right-20 -top-10 w-32 h-32 bg-pink-400/20 rounded-full blur-xl pointer-events-none"></div>
-
-        <!-- Fund Name & Avatars -->
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center font-bold text-white shadow-inner">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold tracking-tight">{{ $fund->name }}</h2>
-                    <div class="flex items-center space-x-1 mt-0.5">
-                        @foreach($members as $m)
-                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-[10px] font-bold border border-white/40">
-                                {{ $m->avatar ?? substr($m->name, 0, 2) }}
-                            </span>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            <span class="text-xs px-3 py-1 bg-white/20 backdrop-blur rounded-full font-semibold border border-white/30">
-                MoMo Team Fund
-            </span>
+    <!-- Page Header & Action Bar -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <div>
+            <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                Báo Cáo Thu Chi & Quản Lý Quỹ
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Theo dõi tổng quan tài chính, danh sách giao dịch thu chi và công cụ phân chia tiền theo % cổ phần.
+            </p>
         </div>
 
-        <!-- Fund Balance & Profit -->
-        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 mb-5">
-            <p class="text-xs text-pink-100 font-semibold uppercase tracking-wider mb-1">Số dư quỹ hiện tại</p>
-            <div class="flex items-baseline space-x-2">
-                <span class="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                    {{ number_format($fund->balance, 0, ',', '.') }}<span class="text-2xl font-bold ml-0.5">đ</span>
-                </span>
-            </div>
-
-            <div class="mt-3 pt-3 border-t border-white/15 flex items-center justify-between text-xs text-pink-100">
-                <div class="flex items-center space-x-1.5 bg-white/15 px-3 py-1 rounded-full">
-                    <span>🌸 Tổng lợi nhuận: <strong class="text-white">{{ number_format($fund->total_profit, 0, ',', '.') }}đ</strong></span>
-                </div>
-                <span class="opacity-90">Cập nhật realtime</span>
-            </div>
-        </div>
-
-        <!-- Quick Action Buttons -->
-        <div class="grid grid-cols-3 gap-3">
-            <button @click="showContributionModal = true" class="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-white text-momo-700 font-bold text-sm shadow-md hover:bg-pink-50 transition-all active:scale-95">
+        <div class="flex flex-wrap items-center gap-2.5">
+            <button @click="showAddModal = true" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                <span>Góp quỹ</span>
+                <span>Thêm Thu Chi Mới</span>
             </button>
 
-            <button @click="showWithdrawModal = true" class="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-white/20 backdrop-blur text-white font-bold text-sm border border-white/30 hover:bg-white/30 transition-all active:scale-95">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                <span>Yêu cầu rút</span>
-            </button>
-
-            <button @click="showDistributionModal = true" class="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-amber-400 text-slate-900 font-bold text-sm shadow-md hover:bg-amber-300 transition-all active:scale-95">
+            <button @click="showDistributionModal = true" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                <span>Chia tiền %</span>
+                <span>Phân Chia % Quỹ</span>
+            </button>
+
+            <button @click="showMemberModal = true" class="px-3.5 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition flex items-center space-x-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span>Thành Viên ({{ $members->count() }})</span>
             </button>
         </div>
     </div>
 
-    <!-- Admin Approval Bar (If Pending Transactions Exist) -->
+    <!-- 1. Top Stat Cards Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Card 1: Số Dư Quỹ -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Số Dư Quỹ Hiện Tại</span>
+                <span class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300">
+                    💵
+                </span>
+            </div>
+            <p class="text-2xl font-extrabold text-slate-900 dark:text-white mt-2">
+                {{ number_format($fund->balance, 0, ',', '.') }}<span class="text-lg font-bold">đ</span>
+            </p>
+            <p class="text-[11px] text-slate-400 mt-1">
+                Lợi nhuận tích lũy: <strong class="text-emerald-600 dark:text-emerald-400">{{ number_format($fund->total_profit, 0, ',', '.') }}đ</strong>
+            </p>
+        </div>
+
+        <!-- Card 2: Tổng Thu -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Thu (Góp + Trả)</span>
+                <span class="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300">
+                    📥
+                </span>
+            </div>
+            <p class="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-2">
+                +{{ number_format($totalIncome, 0, ',', '.') }}<span class="text-lg font-bold">đ</span>
+            </p>
+            <p class="text-[11px] text-slate-400 mt-1">Tất cả nguồn tiền đã nạp</p>
+        </div>
+
+        <!-- Card 3: Tổng Chi -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Chi Nhóm</span>
+                <span class="p-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300">
+                    📤
+                </span>
+            </div>
+            <p class="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-2">
+                -{{ number_format($totalExpense, 0, ',', '.') }}<span class="text-lg font-bold">đ</span>
+            </p>
+            <p class="text-[11px] text-slate-400 mt-1">Các khoản chi tiêu tập thể</p>
+        </div>
+
+        <!-- Card 4: Tổng Cho Vay -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Tiền Đang Cho Vay</span>
+                <span class="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300">
+                    🤝
+                </span>
+            </div>
+            <p class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-2">
+                {{ number_format($totalLoans, 0, ',', '.') }}<span class="text-lg font-bold">đ</span>
+            </p>
+            <p class="text-[11px] text-slate-400 mt-1">Dư nợ cá nhân chưa hoàn trả</p>
+        </div>
+    </div>
+
+    <!-- Admin Pending Requests Alert Bar -->
     @if($pendingTransactions->count() > 0)
-        <div class="mb-6 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-4 dark:bg-amber-500/5">
+        <div class="mb-6 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center space-x-2">
                     <span class="relative flex h-3 w-3">
@@ -98,40 +124,30 @@
                 </div>
             </div>
 
-            <div class="space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 @foreach($pendingTransactions as $pending)
                     <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-amber-200 dark:border-amber-900/40">
                         <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 font-bold text-xs flex items-center justify-center">
+                            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center">
                                 {{ $pending->user->avatar ?? substr($pending->user->name, 0, 2) }}
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                <p class="text-xs font-bold text-slate-900 dark:text-white">
                                     {{ $pending->user->name }}
-                                    <span class="text-[11px] font-normal text-slate-500">
-                                        ({{ $pending->type === 'expense' ? 'Chi tiêu chung' : 'Vay cá nhân' }})
-                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-normal">({{ $pending->type === 'expense' ? 'Chi chung' : 'Vay cá nhân' }})</span>
                                 </p>
-                                <p class="text-xs text-slate-600 dark:text-slate-400 font-medium">"{{ $pending->description }}"</p>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">"{{ $pending->description }}"</p>
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span class="font-extrabold text-sm text-rose-600 dark:text-rose-400">
-                                -{{ number_format($pending->amount, 0, ',', '.') }}đ
-                            </span>
-                            
+                            <span class="font-extrabold text-sm text-rose-600">-{{ number_format($pending->amount, 0, ',', '.') }}đ</span>
                             <form action="{{ route('transactions.approve', $pending) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition">
-                                    Duyệt
-                                </button>
+                                <button type="submit" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition">Duyệt</button>
                             </form>
-
                             <form action="{{ route('transactions.reject', $pending) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="px-3 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold transition">
-                                    Từ chối
-                                </button>
+                                <button type="submit" class="px-3 py-1 bg-slate-200 hover:bg-rose-600 hover:text-white text-slate-700 rounded-lg text-xs font-bold transition">Hủy</button>
                             </form>
                         </div>
                     </div>
@@ -140,225 +156,206 @@
         </div>
     @endif
 
-    <!-- Main Grid: Left Activities & Right Team Shares -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- 2. Member Breakdown Table -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm mb-6">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+            <div>
+                <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Thống Kê Thu Chi Theo Cá Nhân</h3>
+                <p class="text-xs text-slate-400">Tổng quan tình hình đóng góp, nợ nần và số tiền nhận khi chia quỹ theo % cổ phần</p>
+            </div>
+        </div>
 
-        <!-- Left Column: Activity Feed (2 Cols) -->
-        <div class="lg:col-span-2 space-y-4">
-            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                    <h3 class="font-extrabold text-slate-900 dark:text-white text-base tracking-tight flex items-center space-x-2">
-                        <span>Hoạt động gần đây</span>
-                    </h3>
-                    <span class="text-xs font-medium text-slate-400">Tất cả giao dịch</span>
-                </div>
-
-                <div class="divide-y divide-slate-100 dark:divide-slate-700/50">
-                    @forelse($transactions as $tx)
-                        <div class="py-3.5 flex items-start justify-between group hover:bg-slate-50/50 dark:hover:bg-slate-700/20 -mx-2 px-2 rounded-xl transition">
-                            <div class="flex items-start space-x-3">
-                                <!-- User Avatar -->
-                                <div class="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/30 text-momo-600 dark:text-pink-300 font-extrabold text-sm flex items-center justify-center flex-shrink-0 mt-0.5 border border-pink-200 dark:border-pink-800/40">
-                                    {{ $tx->user->avatar ?? substr($tx->user->name, 0, 2) }}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 rounded-l-xl">Thành viên</th>
+                        <th class="py-3 px-4">Tỷ lệ % Cổ phần</th>
+                        <th class="py-3 px-4">Tổng Đã Góp (Nạp)</th>
+                        <th class="py-3 px-4">Tổng Đã Rút/Vay</th>
+                        <th class="py-3 px-4">Dư Nợ Cá Nhân</th>
+                        <th class="py-3 px-4 rounded-r-xl">Tiền Nhận Khi Chia Quỹ</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                    @foreach($memberStats as $stat)
+                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
+                            <td class="py-3 px-4 font-bold text-slate-900 dark:text-white flex items-center space-x-2.5">
+                                <div class="w-7 h-7 rounded-full bg-slate-800 text-emerald-400 font-bold text-xs flex items-center justify-center">
+                                    {{ $stat['user']->avatar ?? substr($stat['user']->name, 0, 2) }}
                                 </div>
-
-                                <div class="space-y-0.5">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-xs font-medium text-slate-400">
-                                            {{ $tx->created_at->diffForHumans() }}
-                                        </span>
-                                    </div>
-                                    <h4 class="font-bold text-sm text-slate-900 dark:text-white">
-                                        {{ $tx->user->name }}
-                                    </h4>
-                                    
-                                    <!-- Badge Type -->
-                                    <div class="flex items-center space-x-2 mt-1">
-                                        @if($tx->type === 'contribution')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                                Góp quỹ
-                                            </span>
-                                        @elseif($tx->type === 'expense')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
-                                                Rút quỹ (Chi chung)
-                                            </span>
-                                        @elseif($tx->type === 'loan')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
-                                                Vay cá nhân
-                                            </span>
-                                        @elseif($tx->type === 'repayment')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-                                                Trả nợ tiền vay
-                                            </span>
-                                        @elseif($tx->type === 'distribution')
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                                                Chia tiền %
-                                            </span>
-                                        @endif
-
-                                        @if($tx->status === 'pending')
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">
-                                                Chờ duyệt
-                                            </span>
-                                        @elseif($tx->status === 'rejected')
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600 line-through">
-                                                Từ chối
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    <p class="text-xs text-slate-600 dark:text-slate-300 font-medium pt-0.5">
-                                        {{ $tx->description }}
-                                    </p>
+                                <div>
+                                    <span>{{ $stat['user']->name }}</span>
+                                    @if($stat['user']->role === 'admin')
+                                        <span class="ml-1 text-[9px] bg-amber-400 text-slate-950 font-extrabold px-1.5 py-0.2 rounded">Chủ quỹ</span>
+                                    @endif
                                 </div>
-                            </div>
-
-                            <!-- Amount -->
-                            <div class="text-right flex-shrink-0">
-                                @if(in_array($tx->type, ['contribution', 'repayment']))
-                                    <span class="font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400">
-                                        +{{ number_format($tx->amount, 0, ',', '.') }}đ
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">
+                                    {{ $stat['share'] }}%
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">
+                                +{{ number_format($stat['contributed'], 0, ',', '.') }}đ
+                            </td>
+                            <td class="py-3 px-4 font-bold text-rose-600 dark:text-rose-400">
+                                -{{ number_format($stat['withdrawn'], 0, ',', '.') }}đ
+                            </td>
+                            <td class="py-3 px-4 font-bold">
+                                @if($stat['debt'] > 0)
+                                    <span class="px-2 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 rounded font-bold">
+                                        {{ number_format($stat['debt'], 0, ',', '.') }}đ
                                     </span>
                                 @else
-                                    <span class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-slate-100">
-                                        -{{ number_format($tx->amount, 0, ',', '.') }}đ
-                                    </span>
+                                    <span class="text-slate-400">0đ</span>
                                 @endif
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-center py-6 text-xs text-slate-400">Chưa có giao dịch nào.</p>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Members & Shares (1 Col) -->
-        <div class="space-y-4">
-            <!-- Team Members Card -->
-            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                    <div>
-                        <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Thành viên & Cổ phần</h3>
-                        <p class="text-[11px] text-slate-400">Tỷ lệ % chia tiền khi xuất quỹ</p>
-                    </div>
-                    <button @click="showAddMemberModal = true" class="p-1.5 bg-pink-50 text-momo-600 dark:bg-pink-900/30 dark:text-pink-300 rounded-xl hover:bg-pink-100 transition text-xs font-bold">
-                        + Thêm
-                    </button>
-                </div>
-
-                <div class="space-y-4">
-                    @foreach($members as $m)
-                        <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2.5">
-                                    <div class="w-8 h-8 rounded-full bg-momo-500 text-white font-extrabold text-xs flex items-center justify-center">
-                                        {{ $m->avatar ?? substr($m->name, 0, 2) }}
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-xs text-slate-900 dark:text-white flex items-center space-x-1">
-                                            <span>{{ $m->name }}</span>
-                                            @if($m->role === 'admin')
-                                                <span class="text-[9px] bg-amber-400 text-slate-900 font-extrabold px-1.5 py-0.2 rounded">Chủ quỹ</span>
-                                            @endif
-                                        </h4>
-                                        <p class="text-[10px] text-slate-400">{{ $m->email }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="text-right">
-                                    <span class="font-extrabold text-sm text-momo-600 dark:text-pink-400">
-                                        {{ $m->share_percentage }}%
-                                    </span>
-                                    <button @click="selectedUser = {{ json_encode($m) }}; showEditShareModal = true" class="block text-[10px] text-slate-400 hover:text-momo-600 underline">
-                                        Sửa %
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Share Progress Bar -->
-                            <div class="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 overflow-hidden">
-                                <div class="bg-momo-500 h-1.5 rounded-full" style="width: {{ min(100, $m->share_percentage) }}%"></div>
-                            </div>
-
-                            <!-- Personal Debt status -->
-                            @if($m->current_debt > 0)
-                                <div class="flex items-center justify-between text-[11px] pt-1 text-rose-600 dark:text-rose-400 font-semibold">
-                                    <span>⚠️ Dư nợ vay quỹ:</span>
-                                    <span>{{ number_format($m->current_debt, 0, ',', '.') }}đ</span>
-                                </div>
-                            @endif
-                        </div>
+                            </td>
+                            <td class="py-3 px-4 font-extrabold text-amber-600 dark:text-amber-400 text-sm">
+                                {{ number_format($stat['estimated_payout'], 0, ',', '.') }}đ
+                            </td>
+                        </tr>
                     @endforeach
-                </div>
-
-                <!-- Total share verification -->
-                <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500">
-                    <span>Tổng % cổ phần team:</span>
-                    <span class="font-bold {{ $totalShare == 100 ? 'text-emerald-600' : 'text-amber-600' }}">
-                        {{ $totalShare }}% {{ $totalShare == 100 ? '✓ Thuận lợi' : '(Chưa đủ 100%)' }}
-                    </span>
-                </div>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- MODAL 1: GÓP QUỸ / TRẢ NỢ -->
-    <div x-show="showContributionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
-        <div @click.away="showContributionModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
-                <span>📥 Nạp tiền / Trả nợ Quỹ</span>
-            </h3>
+    <!-- 3. Transaction Data Table with Filter & Full CRUD -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100 dark:border-slate-700">
+            <div>
+                <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Lịch Sử Thu Chi & Giao Dịch</h3>
+                <p class="text-xs text-slate-400">Quản lý, tìm kiếm, chỉnh sửa và xóa lịch sử thu chi tiền của team</p>
+            </div>
 
-            <form action="{{ route('transactions.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thành viên nạp tiền</label>
-                    <select name="user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-momo-500">
-                        @foreach($members as $m)
-                            <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->role === 'admin' ? 'Chủ quỹ' : 'Thành viên' }})</option>
-                        @endforeach
-                    </select>
-                </div>
+            <!-- Filter Bar -->
+            <form action="{{ route('dashboard') }}" method="GET" class="flex flex-wrap items-center gap-2">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm nội dung..." class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500">
+                
+                <select name="member_id" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500">
+                    <option value="">Tất cả thành viên</option>
+                    @foreach($members as $m)
+                        <option value="{{ $m->id }}" {{ request('member_id') == $m->id ? 'selected' : '' }}>{{ $m->name }}</option>
+                    @endforeach
+                </select>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Loại nạp</label>
-                    <select name="type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-momo-500">
-                        <option value="contribution">Góp quỹ (Ví dụ: Góp % CNS / Góp hàng tháng)</option>
-                        <option value="repayment">Trả nợ vay cá nhân (Trừ dư nợ)</option>
-                    </select>
-                </div>
+                <select name="type" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500">
+                    <option value="">Tất cả loại GD</option>
+                    <option value="contribution" {{ request('type') == 'contribution' ? 'selected' : '' }}>Góp quỹ (Thu)</option>
+                    <option value="expense" {{ request('type') == 'expense' ? 'selected' : '' }}>Chi tiêu (Chi)</option>
+                    <option value="loan" {{ request('type') == 'loan' ? 'selected' : '' }}>Vay cá nhân</option>
+                    <option value="repayment" {{ request('type') == 'repayment' ? 'selected' : '' }}>Trả nợ vay</option>
+                    <option value="distribution" {{ request('type') == 'distribution' ? 'selected' : '' }}>Chia tiền %</option>
+                </select>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền (VNĐ)</label>
-                    <input type="number" name="amount" required step="1000" min="1000" placeholder="VD: 900000" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-momo-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nội dung ghi chú</label>
-                    <input type="text" name="description" required placeholder="VD: CTO góp cns tháng 7..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-momo-500">
-                </div>
-
-                <div class="flex items-center justify-end space-x-3 pt-3">
-                    <button type="button" @click="showContributionModal = false" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">Hủy</button>
-                    <button type="submit" class="px-5 py-2.5 bg-momo-500 hover:bg-momo-600 text-white rounded-xl text-xs font-bold shadow-md">Xác nhận Nạp</button>
-                </div>
+                <button type="submit" class="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+                    Lọc
+                </button>
+                
+                @if(request()->hasAny(['search', 'member_id', 'type', 'status']))
+                    <a href="{{ route('dashboard') }}" class="px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:underline">Xóa lọc</a>
+                @endif
             </form>
         </div>
+
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4 rounded-l-xl">#</th>
+                        <th class="py-3 px-4">Thời Gian</th>
+                        <th class="py-3 px-4">Thành Viên</th>
+                        <th class="py-3 px-4">Phân Loại GD</th>
+                        <th class="py-3 px-4">Số Tiền (VNĐ)</th>
+                        <th class="py-3 px-4">Nội Dung / Mô Tả</th>
+                        <th class="py-3 px-4">Trạng Thái</th>
+                        <th class="py-3 px-4 text-right rounded-r-xl">Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                    @forelse($transactions as $tx)
+                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
+                            <td class="py-3.5 px-4 font-semibold text-slate-400">{{ $tx->id }}</td>
+                            <td class="py-3.5 px-4 whitespace-nowrap text-slate-500">
+                                {{ $tx->created_at->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                                <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center">
+                                    {{ $tx->user->avatar ?? substr($tx->user->name, 0, 2) }}
+                                </span>
+                                <span>{{ $tx->user->name }}</span>
+                            </td>
+                            <td class="py-3.5 px-4 whitespace-nowrap">
+                                @if($tx->type === 'contribution')
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded">Góp quỹ</span>
+                                @elseif($tx->type === 'expense')
+                                    <span class="px-2 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-bold rounded">Chi tiêu team</span>
+                                @elseif($tx->type === 'loan')
+                                    <span class="px-2 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-bold rounded">Vay cá nhân</span>
+                                @elseif($tx->type === 'repayment')
+                                    <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-bold rounded">Trả nợ vay</span>
+                                @elseif($tx->type === 'distribution')
+                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-bold rounded">Chia tiền %</span>
+                                @endif
+                            </td>
+                            <td class="py-3.5 px-4 font-extrabold whitespace-nowrap">
+                                @if(in_array($tx->type, ['contribution', 'repayment']))
+                                    <span class="text-emerald-600 dark:text-emerald-400">+{{ number_format($tx->amount, 0, ',', '.') }}đ</span>
+                                @else
+                                    <span class="text-slate-900 dark:text-slate-100">-{{ number_format($tx->amount, 0, ',', '.') }}đ</span>
+                                @endif
+                            </td>
+                            <td class="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300 max-w-xs truncate">
+                                {{ $tx->description }}
+                            </td>
+                            <td class="py-3.5 px-4 whitespace-nowrap">
+                                @if($tx->status === 'approved')
+                                    <span class="text-emerald-600 font-bold">✓ Đã duyệt</span>
+                                @elseif($tx->status === 'pending')
+                                    <span class="text-amber-600 font-bold">⏳ Chờ duyệt</span>
+                                @else
+                                    <span class="text-slate-400 font-bold line-through">Từ chối</span>
+                                @endif
+                            </td>
+                            <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-1">
+                                <!-- Edit Button -->
+                                <button @click="selectedTx = {{ json_encode($tx) }}; showEditModal = true" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded font-bold transition">
+                                    ✏️ Sửa
+                                </button>
+
+                                <!-- Delete Button -->
+                                <button @click="selectedTx = {{ json_encode($tx) }}; showDeleteModal = true" class="px-2.5 py-1 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-600 hover:text-white text-rose-600 font-bold rounded transition">
+                                    🗑️ Xóa
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-8 text-slate-400">Không tìm thấy giao dịch nào.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+            {{ $transactions->links() }}
+        </div>
     </div>
 
-    <!-- MODAL 2: YÊU CẦU RÚT / VAY QUỸ -->
-    <div x-show="showWithdrawModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
-        <div @click.away="showWithdrawModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
-                <span>🔔 Yêu cầu Rút quỹ / Vay tiền</span>
-            </h3>
+    <!-- MODAL: THÊM GIAO DỊCH MỚI -->
+    <div x-show="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div @click.away="showAddModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">➕ Thêm Giao Dịch Thu Chi</h3>
 
             <form action="{{ route('transactions.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Người yêu cầu</label>
-                    <select name="user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-momo-500">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thành viên thực hiện</label>
+                    <select name="user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-emerald-500">
                         @foreach($members as $m)
                             <option value="{{ $m->id }}">{{ $m->name }}</option>
                         @endforeach
@@ -366,63 +363,136 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Hình thức rút</label>
-                    <select name="type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-momo-500">
-                        <option value="expense">Chi tiêu chung của Team (Rút quỹ chi networking, mua đồ...)</option>
-                        <option value="loan">Vay cá nhân từ Quỹ (Tính vào Dư nợ cá nhân)</option>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Phân loại Giao dịch</label>
+                    <select name="type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-emerald-500">
+                        <option value="contribution">🟢 Góp Quỹ (Tiền thu vào quỹ)</option>
+                        <option value="expense">🔴 Chi Tiêu Nhóm (Rút quỹ chi chung)</option>
+                        <option value="loan">🟣 Vay Cá Nhân (Tạo nợ cá nhân)</option>
+                        <option value="repayment">🔵 Trả Nợ Vay (Hoàn nợ cho quỹ)</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền rút (VNĐ)</label>
-                    <input type="number" name="amount" required step="1000" min="1000" placeholder="VD: 535000" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-momo-500">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền (VNĐ)</label>
+                    <input type="number" name="amount" required step="1000" min="1000" placeholder="VD: 500000" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Mục đích rút tiền</label>
-                    <input type="text" name="description" required placeholder="VD: Quỹ networking với anh 3T..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-momo-500">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nội dung / Lí do</label>
+                    <input type="text" name="description" required placeholder="VD: Tiền mua nước uống họp team..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500">
                 </div>
 
-                <div class="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-[11px] text-amber-800 dark:text-amber-200">
-                    ℹ️ Yêu cầu này sẽ được gửi tới <strong>Chủ quỹ (Admin)</strong> phê duyệt trước khi trừ số dư.
-                </div>
-
-                <div class="flex items-center justify-end space-x-3 pt-2">
-                    <button type="button" @click="showWithdrawModal = false" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">Hủy</button>
-                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md">Gửi yêu cầu</button>
+                <div class="flex items-center justify-end space-x-3 pt-3">
+                    <button type="button" @click="showAddModal = false" class="px-4 py-2 text-xs font-bold text-slate-500">Hủy</button>
+                    <button type="submit" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-emerald-700">Lưu Giao Dịch</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL 3: CHIA TIỀN / PHÂN BỔ LỢI NHUẬN THEO % (LIVE CALCULATOR) -->
+    <!-- MODAL: CHỈNH SỬA GIAO DỊCH -->
+    <div x-show="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div @click.away="showEditModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">✏️ Chỉnh Sửa Giao Dịch</h3>
+
+            <template x-if="selectedTx">
+                <form :action="`/transactions/${selectedTx.id}`" method="POST" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thành viên</label>
+                        <select name="user_id" x-model="selectedTx.user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
+                            @foreach($members as $m)
+                                <option value="{{ $m->id }}">{{ $m->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
+                        <select name="type" x-model="selectedTx.type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
+                            <option value="contribution">Góp quỹ (Thu)</option>
+                            <option value="expense">Chi tiêu chung (Chi)</option>
+                            <option value="loan">Vay cá nhân</option>
+                            <option value="repayment">Trả nợ vay</option>
+                            <option value="distribution">Chia tiền %</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền (VNĐ)</label>
+                        <input type="number" name="amount" x-model="selectedTx.amount" required step="1000" min="1000" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nội dung</label>
+                        <input type="text" name="description" x-model="selectedTx.description" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm">
+                    </div>
+
+                    <div class="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-[11px] text-amber-800 dark:text-amber-200">
+                        ⚠️ Việc chỉnh sửa giao dịch đã duyệt sẽ tự động điều chỉnh lại Số dư quỹ và Dư nợ cá nhân tương ứng.
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-3 pt-2">
+                        <button type="button" @click="showEditModal = false" class="px-4 py-2 text-xs font-bold text-slate-500">Hủy</button>
+                        <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700">Cập Nhật</button>
+                    </div>
+                </form>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL: XÓA GIAO DỊCH -->
+    <div x-show="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div @click.away="showDeleteModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-rose-600 mb-2">🗑️ Xác Nhận Xóa Giao Dịch</h3>
+            
+            <template x-if="selectedTx">
+                <div class="space-y-3">
+                    <p class="text-xs text-slate-600 dark:text-slate-300">
+                        Bạn có chắc chắn muốn xóa giao dịch: <strong x-text="selectedTx.description"></strong> (<span x-text="new Intl.NumberFormat('vi-VN').format(selectedTx.amount) + 'đ'"></span>)?
+                    </p>
+                    <p class="text-[11px] text-slate-400">
+                        Hệ thống sẽ hoàn tác tác động của giao dịch này đối với số dư quỹ.
+                    </p>
+
+                    <form :action="`/transactions/${selectedTx.id}`" method="POST" class="flex items-center justify-end space-x-2 pt-3">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" @click="showDeleteModal = false" class="px-3 py-1.5 text-xs font-bold text-slate-500">Hủy</button>
+                        <button type="submit" class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700">Xóa Giao Dịch</button>
+                    </form>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL: PHÂN CHIA LỢI NHUẬN % (CALCULATOR) -->
     <div x-show="showDistributionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
         <div @click.away="showDistributionModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-100 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 flex items-center space-x-2">
-                <span>📊 Phân Chia Quỹ / Lợi Nhuận Theo % Cổ Phần</span>
-            </h3>
-            <p class="text-xs text-slate-500 mb-4">Nhập tổng số tiền cần rút chia, hệ thống sẽ tự động phân bổ cho từng thành viên theo tỷ lệ % đã quy định.</p>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">📊 Phân Chia Quỹ / Lợi Nhuận Theo % Cổ Phần</h3>
+            <p class="text-xs text-slate-500 mb-4">Nhập tổng số tiền cần rút chia, hệ thống sẽ tự động phân bổ cho từng thành viên theo tỷ lệ % đã gán.</p>
 
             <form action="{{ route('distributions.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền đem chia (VNĐ)</label>
-                    <input type="number" name="total_amount" x-model="distributeAmount" required step="1000" min="1000" max="{{ $fund->balance }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-base font-extrabold text-momo-600 dark:text-pink-400 focus:ring-2 focus:ring-momo-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Số dư tối đa có thể chia: {{ number_format($fund->balance, 0, ',', '.') }}đ</p>
+                    <input type="number" name="total_amount" x-model="distributeAmount" required step="1000" min="1000" max="{{ $fund->balance }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-base font-extrabold text-emerald-600 focus:ring-2 focus:ring-emerald-500">
+                    <p class="text-[11px] text-slate-400 mt-1">Số dư quỹ tối đa: {{ number_format($fund->balance, 0, ',', '.') }}đ</p>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Ghi chú đợt chia</label>
-                    <input type="text" name="note" placeholder="VD: Chia lợi nhuận quý 3 / Chia tiền dư dự án..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-momo-500">
+                    <input type="text" name="note" placeholder="VD: Chia lợi nhuận quý 3..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500">
                 </div>
 
-                <!-- Live Preview Breakdown Table -->
+                <!-- Live Preview -->
                 <div class="bg-slate-50 dark:bg-slate-700/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-600/60 space-y-2">
-                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Bảng dự toán thực nhận:</h4>
+                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Bảng phân bổ thực nhận:</h4>
                     <template x-for="payout in calculatedPayouts" :key="payout.id">
                         <div class="flex items-center justify-between text-xs py-1 border-b border-slate-200/40 dark:border-slate-600/40 last:border-0">
                             <div class="flex items-center space-x-2">
-                                <span class="w-6 h-6 rounded-full bg-momo-500 text-white font-bold text-[10px] flex items-center justify-center" x-text="payout.avatar"></span>
+                                <span class="w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center" x-text="payout.avatar"></span>
                                 <span class="font-semibold text-slate-800 dark:text-slate-200" x-text="payout.name"></span>
                                 <span class="text-[10px] text-slate-400">('<span x-text="payout.share"></span>%')</span>
                             </div>
@@ -432,68 +502,59 @@
                 </div>
 
                 <div class="flex items-center justify-end space-x-3 pt-2">
-                    <button type="button" @click="showDistributionModal = false" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">Hủy</button>
-                    <button type="submit" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-xl text-xs font-extrabold shadow-md">Thực hiện Chia tiền</button>
+                    <button type="button" @click="showDistributionModal = false" class="px-4 py-2 text-xs font-bold text-slate-500">Hủy</button>
+                    <button type="submit" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-extrabold shadow-md">Thực Hiện Chia Tiền</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL 4: EDIT MEMBER SHARE % -->
-    <div x-show="showEditShareModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
-        <div @click.away="showEditShareModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-700" x-data="{ shareVal: 0 }" x-effect="if (selectedUser) shareVal = selectedUser.share_percentage">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3">
-                Cập nhật Tỷ lệ % Cổ phần
-            </h3>
-            
-            <template x-if="selectedUser">
-                <form :action="`/members/${selectedUser.id}/share`" method="POST" class="space-y-3">
-                    @csrf
-                    @method('PUT')
-                    <div>
-                        <p class="text-xs text-slate-500 mb-2">Thành viên: <strong class="text-slate-800 dark:text-white" x-text="selectedUser.name"></strong></p>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tỷ lệ % sở hữu cổ phần</label>
-                        <input type="number" name="share_percentage" x-model="shareVal" step="0.1" min="0" max="100" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold text-momo-600 focus:ring-2 focus:ring-momo-500">
-                    </div>
+    <!-- MODAL: QUẢN LÝ THÀNH VIÊN & % CỔ PHẦN -->
+    <div x-show="showMemberModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div @click.away="showMemberModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-100 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">👥 Quản Lý Thành Viên & % Cổ Phần</h3>
 
-                    <div class="flex items-center justify-end space-x-2 pt-2">
-                        <button type="button" @click="showEditShareModal = false" class="px-3 py-1.5 text-xs font-bold text-slate-500">Hủy</button>
-                        <button type="submit" class="px-4 py-2 bg-momo-500 text-white rounded-xl text-xs font-bold">Lưu thay đổi</button>
+            <div class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1">
+                @foreach($members as $m)
+                    <form action="{{ route('members.updateShare', $m) }}" method="POST" class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                        @csrf
+                        @method('PUT')
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center">
+                                {{ $m->avatar ?? substr($m->name, 0, 2) }}
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-900 dark:text-white">{{ $m->name }}</p>
+                                <p class="text-[10px] text-slate-400">{{ $m->email }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="number" name="share_percentage" value="{{ $m->share_percentage }}" step="0.1" min="0" max="100" class="w-20 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-xs font-bold text-center">
+                            <span class="text-xs font-bold text-slate-500">%</span>
+                            <button type="submit" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700">Lưu</button>
+                        </div>
+                    </form>
+                @endforeach
+            </div>
+
+            <!-- Form Add Member -->
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">+ Thêm Thành Viên Mới</h4>
+                <form action="{{ route('members.store') }}" method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    @csrf
+                    <input type="text" name="name" required placeholder="Họ và tên" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs">
+                    <input type="email" name="email" required placeholder="Email" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs">
+                    <div class="flex items-center space-x-1">
+                        <input type="number" name="share_percentage" required value="0" step="0.1" placeholder="% cổ phần" class="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold">
+                        <button type="submit" class="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-bold flex-shrink-0">Thêm</button>
                     </div>
                 </form>
-            </template>
-        </div>
-    </div>
+            </div>
 
-    <!-- MODAL 5: ADD MEMBER -->
-    <div x-show="showAddMemberModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
-        <div @click.away="showAddMemberModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-700">
-            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3">
-                Thêm Thành Viên Mới
-            </h3>
-            
-            <form action="{{ route('members.store') }}" method="POST" class="space-y-3">
-                @csrf
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Họ và tên</label>
-                    <input type="text" name="name" required placeholder="VD: Lê Văn A" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-momo-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email</label>
-                    <input type="email" name="email" required placeholder="a.le@weamis.com" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-momo-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tỷ lệ % cổ phần ban đầu</label>
-                    <input type="number" name="share_percentage" required step="0.1" min="0" max="100" value="0" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold focus:ring-2 focus:ring-momo-500">
-                </div>
-
-                <div class="flex items-center justify-end space-x-2 pt-2">
-                    <button type="button" @click="showAddMemberModal = false" class="px-3 py-1.5 text-xs font-bold text-slate-500">Hủy</button>
-                    <button type="submit" class="px-4 py-2 bg-momo-500 text-white rounded-xl text-xs font-bold">Thêm thành viên</button>
-                </div>
-            </form>
+            <div class="flex items-center justify-end pt-4">
+                <button type="button" @click="showMemberModal = false" class="px-4 py-2 text-xs font-bold text-slate-500">Đóng</button>
+            </div>
         </div>
     </div>
 

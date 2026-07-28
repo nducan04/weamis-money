@@ -23,7 +23,7 @@ class FundManagementTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('Trả nợ thuê Ltd');
+        $response->assertSee('Báo Cáo Thu Chi');
         $response->assertSee('7.028.106');
     }
 
@@ -44,64 +44,56 @@ class FundManagementTest extends TestCase
         $this->assertEquals($initialBalance + 500000, $fund->fresh()->balance);
     }
 
-    public function test_expense_and_approval_flow()
+    public function test_update_transaction_recalculates_balance()
     {
         $fund = Fund::first();
-        $initialBalance = $fund->balance;
-        $user = User::where('role', 'member')->first();
+        $user = User::first();
 
-        // 1. Submit expense request -> pending
+        // 1. Create a contribution of 1,000,000
         $this->post('/transactions', [
             'user_id' => $user->id,
-            'type' => 'expense',
-            'amount' => 200000,
-            'description' => 'Coffee for team',
+            'type' => 'contribution',
+            'amount' => 1000000,
+            'description' => 'Góp ban đầu',
         ]);
 
-        $tx = Transaction::where('description', 'Coffee for team')->first();
-        $this->assertEquals('pending', $tx->status);
-        $this->assertEquals($initialBalance, $fund->fresh()->balance); // Not deducted yet
+        $tx = Transaction::where('description', 'Góp ban đầu')->first();
+        $balanceAfterAdd = $fund->fresh()->balance;
 
-        // 2. Admin approves expense -> deducted
-        $this->post("/transactions/{$tx->id}/approve");
+        // 2. Edit transaction amount to 1,500,000 (+500k diff)
+        $this->put("/transactions/{$tx->id}", [
+            'user_id' => $user->id,
+            'type' => 'contribution',
+            'amount' => 1500000,
+            'description' => 'Góp sau khi sửa',
+        ]);
 
-        $this->assertEquals('approved', $tx->fresh()->status);
-        $this->assertEquals($initialBalance - 200000, $fund->fresh()->balance);
+        $this->assertEquals('Góp sau khi sửa', $tx->fresh()->description);
+        $this->assertEquals($balanceAfterAdd + 500000, $fund->fresh()->balance);
     }
 
-    public function test_loan_and_repayment_flow()
+    public function test_delete_transaction_reverts_balance()
     {
         $fund = Fund::first();
+        $user = User::first();
+
         $initialBalance = $fund->balance;
-        $user = User::where('name', 'Nguyễn Trung Kiên')->first();
-        $initialDebt = $user->current_debt;
 
-        // 1. Submit loan request -> pending
         $this->post('/transactions', [
             'user_id' => $user->id,
-            'type' => 'loan',
-            'amount' => 500000,
-            'description' => 'Vay tạm nộp tiền nhà',
+            'type' => 'contribution',
+            'amount' => 800000,
+            'description' => 'Góp để xóa',
         ]);
 
-        $tx = Transaction::where('description', 'Vay tạm nộp tiền nhà')->first();
-        $this->post("/transactions/{$tx->id}/approve");
+        $tx = Transaction::where('description', 'Góp để xóa')->first();
+        $this->assertEquals($initialBalance + 800000, $fund->fresh()->balance);
 
-        // Fund decreased by 500k, User debt increased by 500k
-        $this->assertEquals($initialBalance - 500000, $fund->fresh()->balance);
-        $this->assertEquals($initialDebt + 500000, $user->fresh()->current_debt);
+        // Delete transaction
+        $this->delete("/transactions/{$tx->id}");
 
-        // 2. Repayment -> immediate approved
-        $this->post('/transactions', [
-            'user_id' => $user->id,
-            'type' => 'repayment',
-            'amount' => 500000,
-            'description' => 'Trả tiền nhà đã vay',
-        ]);
-
-        // Fund restored, User debt reduced back to initial
+        $this->assertDatabaseMissing('transactions', ['id' => $tx->id]);
         $this->assertEquals($initialBalance, $fund->fresh()->balance);
-        $this->assertEquals($initialDebt, $user->fresh()->current_debt);
     }
 
     public function test_percentage_distribution_calculator()
