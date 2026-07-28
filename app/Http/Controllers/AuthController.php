@@ -18,18 +18,15 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required'],
             'password' => ['required'],
         ]);
 
-        $credentials = [
-            'email' => strtolower(trim($request->email)),
-            'password' => $request->password,
-        ];
-
+        $loginInput = strtolower(trim($request->email));
         $remember = $request->has('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
+        if (Auth::attempt(['email' => $loginInput, 'password' => $request->password], $remember) ||
+            Auth::attempt(['name' => $loginInput, 'password' => $request->password], $remember)) {
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'))->with('success', 'Đăng nhập thành công! Chào mừng ' . Auth::user()->name);
         }

@@ -115,10 +115,10 @@ class FundManagementTest extends TestCase
         $this->assertNotNull($dist);
         $this->assertEquals(10000000, $dist->total_amount);
 
-        // Check payout: Việt has 100% share = 10m
+        // Check payout: Administrator has 100% share = 10m
         $payouts = collect($dist->payout_details);
-        $vietPayout = $payouts->firstWhere('name', 'Nguyễn Hoàng Việt');
+        $adminPayout = $payouts->firstWhere('name', 'Administrator');
 
-        $this->assertEquals(10000000, $vietPayout['amount']);
+        $this->assertEquals(10000000, $adminPayout['amount']);
     }
 }

@@ -20,13 +20,13 @@ class DatabaseSeeder extends Seeder
             'total_profit' => 126160.00,
         ]);
 
-        // 2. Create Single Admin User
+        // 2. Create Single Admin User (admin / 1322)
         $admin = User::create([
-            'name' => 'Nguyễn Hoàng Việt',
-            'email' => 'viet.nh@weamis.com',
-            'password' => Hash::make('password'),
+            'name' => 'Administrator',
+            'email' => 'admin',
+            'password' => Hash::make('1322'),
             'role' => 'admin',
-            'avatar' => 'HV',
+            'avatar' => 'AD',
             'share_percentage' => 100.00,
             'current_debt' => 0.00,
         ]);
@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
         // 3. Create Sample Transactions for Admin
         $now = Carbon::now();
 
-        // 1. Việt góp cns tháng 7 (+900k)
+        // 1. Góp cns tháng 7 (+900k)
         Transaction::create([
             'fund_id' => $fund->id,
             'user_id' => $admin->id,
@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
             'created_at' => $now->copy()->subDays(1),
         ]);
 
-        // 3. Việt góp 10% cns (+700k)
+        // 3. Góp 10% cns (+700k)
         Transaction::create([
             'fund_id' => $fund->id,
             'user_id' => $admin->id,
@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
             'created_at' => $now->copy()->subMonth(),
         ]);
 
-        // 4. Việt trả nợ tiền học (+3m)
+        // 4. Trả nợ tiền học (+3m)
         Transaction::create([
             'fund_id' => $fund->id,
             'user_id' => $admin->id,
@@ -82,7 +82,7 @@ class DatabaseSeeder extends Seeder
             'created_at' => $now->copy()->subMonth()->subMinutes(10),
         ]);
 
-        // 5. Việt vay 3 củ đóng học phí (-3m)
+        // 5. Vay 3 củ đóng học phí (-3m)
         Transaction::create([
             'fund_id' => $fund->id,
             'user_id' => $admin->id,
