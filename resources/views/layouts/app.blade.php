@@ -100,11 +100,6 @@
             </div>
             
             <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-                @isset($fund)
-                    <span class="hidden lg:inline-flex items-center px-3 py-1 bg-emerald-800/60 border border-emerald-500/40 text-emerald-100 text-xs font-bold rounded-full backdrop-blur-sm">
-                        🏢 Quỹ: {{ $fund->name }}
-                    </span>
-                @endisset
 
                 <!-- Dark Mode Toggle -->
                 <button @click="darkMode = !darkMode" class="p-2 sm:p-2.5 rounded-xl bg-emerald-800/60 hover:bg-emerald-800 border border-emerald-500/40 text-xs font-bold text-white flex items-center space-x-1.5 transition">
@@ -119,8 +114,12 @@
                     <div class="relative pl-2 border-l border-emerald-500/40">
                         <!-- Clickable Avatar Tab -->
                         <button @click="userMenuOpen = !userMenuOpen" class="flex items-center space-x-2 sm:space-x-2.5 bg-emerald-800/70 hover:bg-emerald-800 border border-emerald-500/50 px-2.5 sm:px-3 py-1.5 rounded-2xl transition shadow-sm focus:outline-none cursor-pointer">
-                            <div class="w-7 h-7 rounded-full bg-white text-emerald-800 font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
-                                {{ Auth::user()->avatar ?? substr(Auth::user()->name, 0, 2) }}
+                            <div class="w-7 h-7 rounded-full bg-white text-emerald-800 font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden border border-white/20">
+                                @if(Auth::user()->avatar && (\Illuminate\Support\Str::startsWith(Auth::user()->avatar, ['http://', 'https://', '/uploads/'])))
+                                    <img src="{{ Auth::user()->avatar }}" alt="{{ Auth::user()->name }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ Auth::user()->avatar ?? substr(Auth::user()->name, 0, 2) }}
+                                @endif
                             </div>
                             <div class="hidden sm:block text-left">
                                 <p class="text-xs font-extrabold text-white leading-none flex items-center space-x-1">
@@ -342,19 +341,37 @@
                     <button @click="profileModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold cursor-pointer">✕</button>
                 </div>
 
-                <form action="{{ route('profile.update') }}" method="POST" class="space-y-4">
+                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4" x-data="{ avatarPreview: '{{ Auth::user()->avatar }}' }">
                     @csrf
                     
-                    <!-- Avatar Initials Preview & Input -->
+                    <!-- Avatar Preview & Cloud Image Upload -->
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Ảnh Đại Diện / Chữ Viết Tắt</label>
-                        <div class="flex items-center space-x-3">
-                            <div class="w-12 h-12 rounded-2xl bg-slate-900 text-emerald-400 font-extrabold text-sm flex items-center justify-center flex-shrink-0 shadow">
-                                {{ Auth::user()->avatar ?? substr(Auth::user()->name, 0, 2) }}
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Ảnh Đại Diện (Lưu Đám Mây Cloud - Không Tốn Dung Lượng Máy)</label>
+                        <div class="flex items-center space-x-3.5 mb-3">
+                            <div class="w-14 h-14 rounded-2xl bg-slate-900 text-emerald-400 font-extrabold text-base flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden border-2 border-emerald-500/30">
+                                <template x-if="avatarPreview && (avatarPreview.startsWith('http') || avatarPreview.startsWith('/uploads/') || avatarPreview.startsWith('data:image'))">
+                                    <img :src="avatarPreview" class="w-full h-full object-cover">
+                                </template>
+                                <template x-if="!avatarPreview || (!avatarPreview.startsWith('http') && !avatarPreview.startsWith('/uploads/') && !avatarPreview.startsWith('data:image'))">
+                                    <span x-text="avatarPreview || '{{ substr(Auth::user()->name, 0, 2) }}'"></span>
+                                </template>
                             </div>
-                            <input type="text" name="avatar" value="{{ old('avatar', Auth::user()->avatar) }}" placeholder="Ví dụ: HV" maxlength="10" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+                            <div class="flex-1 min-w-0 space-y-2">
+                                <!-- File Upload directly to Cloud -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">☁️ Tải tệp ảnh từ máy (Tự lên Cloud)</label>
+                                    <input type="file" name="avatar_file" accept="image/*" 
+                                           @change="const file = $event.target.files[0]; if(file) { const reader = new FileReader(); reader.onload = (e) => avatarPreview = e.target.result; reader.readAsDataURL(file); }"
+                                           class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 dark:file:bg-emerald-900/50 dark:file:text-emerald-300 cursor-pointer">
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-[10px] text-slate-400 mt-1">Viết tắt tối đa 2-4 ký tự (ví dụ: HV, TS, QĐ...)</p>
+
+                        <!-- Direct Cloud URL or Initials fallback -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">Hoặc dán Link ảnh Cloud / Chữ viết tắt</label>
+                            <input type="text" name="avatar" x-model="avatarPreview" placeholder="https://... hoặc chữ HV" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+                        </div>
                     </div>
 
                     <!-- Full Name -->
@@ -372,7 +389,7 @@
                     <!-- Buttons -->
                     <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                         <button type="button" @click="profileModalOpen = false" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer">Hủy</button>
-                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition cursor-pointer">Lưu Thay Đổi</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition cursor-pointer">☁️ Lưu Thay Đổi Đám Mây</button>
                     </div>
                 </form>
             </div>

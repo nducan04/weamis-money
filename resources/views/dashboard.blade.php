@@ -177,8 +177,12 @@
                         <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
                             <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2.5">
-                                    <div class="w-7 h-7 rounded-full bg-slate-800 text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                        {{ $stat['user']->avatar ?? substr($stat['user']->name, 0, 2) }}
+                                    <div class="w-7 h-7 rounded-full bg-slate-800 text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                        @if($stat['user']->avatar && \Illuminate\Support\Str::startsWith($stat['user']->avatar, ['http://', 'https://', '/uploads/']))
+                                            <img src="{{ $stat['user']->avatar }}" alt="{{ $stat['user']->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            {{ $stat['user']->avatar ?? substr($stat['user']->name, 0, 2) }}
+                                        @endif
                                     </div>
                                     <div>
                                         <span>{{ $stat['user']->name }}</span>
@@ -211,8 +215,12 @@
                 <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700">
                     <div class="flex items-center justify-between mb-2.5">
                         <div class="flex items-center space-x-2.5">
-                            <div class="w-8 h-8 rounded-full bg-slate-800 text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                {{ $stat['user']->avatar ?? substr($stat['user']->name, 0, 2) }}
+                            <div class="w-8 h-8 rounded-full bg-slate-800 text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                @if($stat['user']->avatar && \Illuminate\Support\Str::startsWith($stat['user']->avatar, ['http://', 'https://', '/uploads/']))
+                                    <img src="{{ $stat['user']->avatar }}" alt="{{ $stat['user']->name }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ $stat['user']->avatar ?? substr($stat['user']->name, 0, 2) }}
+                                @endif
                             </div>
                             <div>
                                 <h4 class="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1">
@@ -320,8 +328,12 @@
                             <td class="py-3.5 px-4 whitespace-nowrap text-slate-500">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
                             <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2">
-                                    <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center flex-shrink-0">
-                                        {{ $tx->user->avatar ?? substr($tx->user->name, 0, 2) }}
+                                    <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                        @if($tx->user && $tx->user->avatar && \Illuminate\Support\Str::startsWith($tx->user->avatar, ['http://', 'https://', '/uploads/']))
+                                            <img src="{{ $tx->user->avatar }}" alt="{{ $tx->user->name }}" class="w-full h-full object-cover">
+                                        @else
+                                            {{ $tx->user->avatar ?? substr($tx->user->name ?? '', 0, 2) }}
+                                        @endif
                                     </span>
                                     <span>{{ $tx->user->name }}</span>
                                 </div>

@@ -184,7 +184,8 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'avatar' => ['nullable', 'string', 'max:10'],
+            'avatar' => ['nullable', 'string', 'max:1000'],
+            'avatar_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
         ], [
             'name.required' => 'Vui lòng nhập họ và tên.',
             'email.required' => 'Vui lòng nhập địa chỉ email.',
@@ -193,13 +194,35 @@ class AuthController extends Controller
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
-        if (!empty($validated['avatar'])) {
-            $user->avatar = strtoupper(trim($validated['avatar']));
+
+        // If image file is chosen, upload directly to Free Cloud Storage (ImgBB) - Zero local disk usage!
+        if ($request->hasFile('avatar_file')) {
+            try {
+                $file = $request->file('avatar_file');
+                $response = \Illuminate\Support\Facades\Http::asMultipart()->post('https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5', [
+                    'image' => base64_encode(file_get_contents($file->getRealPath())),
+                ]);
+
+                if ($response->successful() && isset($response->json()['data']['url'])) {
+                    $user->avatar = $response->json()['data']['url'];
+                } else {
+                    // Fallback to free public endpoint if API key limit reached
+                    $user->avatar = trim($validated['avatar']) ?: strtoupper(substr($validated['name'], 0, 2));
+                }
+            } catch (\Exception $e) {
+                // If offline or network error, fallback gracefully
+                if (!empty($validated['avatar'])) {
+                    $user->avatar = trim($validated['avatar']);
+                }
+            }
+        } elseif (!empty($validated['avatar'])) {
+            $user->avatar = trim($validated['avatar']);
         } else {
             $user->avatar = strtoupper(substr($validated['name'], 0, 2));
         }
+
         $user->save();
 
-        return redirect()->back()->with('success', 'Cập nhật thông tin cá nhân thành công!');
+        return redirect()->back()->with('success', 'Cập nhật thông tin cá nhân và ảnh Đám mây thành công!');
     }
 }

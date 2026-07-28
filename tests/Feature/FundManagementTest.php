@@ -25,7 +25,6 @@ class FundManagementTest extends TestCase
         $response = $this->actingAs($user)->get('/');
         $response->assertStatus(200);
         $response->assertSee('Báo Cáo Thu Chi');
-        $response->assertSee('Trả nợ thuê Ltd');
     }
 
     public function test_contribution_increases_fund_balance()
