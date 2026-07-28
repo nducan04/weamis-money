@@ -316,7 +316,7 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                     @forelse($transactions as $tx)
                         <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
-                            <td class="py-3.5 px-4 font-bold text-slate-400">{{ method_exists($transactions, 'firstItem') ? $transactions->firstItem() + $loop->index : $loop->iteration }}</td>
+                            <td class="py-3.5 px-4 font-bold text-slate-400">{{ method_exists($transactions, 'total') ? ($transactions->total() - (($transactions->currentPage() - 1) * $transactions->perPage() + $loop->index)) : $loop->iteration }}</td>
                             <td class="py-3.5 px-4 whitespace-nowrap text-slate-500">{{ $tx->created_at->format('d/m/Y H:i') }}</td>
                             <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2">
