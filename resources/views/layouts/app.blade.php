@@ -113,7 +113,7 @@
                 </button>
 
                 @auth
-                    <!-- User Profile & Logout -->
+                    <!-- User Profile, Change Password & Logout -->
                     <div class="flex items-center space-x-2 pl-2 border-l border-emerald-500/40">
                         <div class="flex items-center space-x-2 bg-emerald-800/60 border border-emerald-500/40 px-2.5 py-1.5 rounded-xl">
                             <div class="w-6.5 h-6.5 rounded-full bg-white text-emerald-800 font-black text-[10px] flex items-center justify-center flex-shrink-0">
@@ -126,6 +126,11 @@
                                 </span>
                             </div>
                         </div>
+
+                        <a href="{{ route('password.change') }}" title="Đổi mật khẩu" class="p-2 bg-emerald-800/60 hover:bg-emerald-800 text-white border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1">
+                            <span>🔑</span>
+                            <span class="hidden md:inline text-xs font-bold">Đổi MK</span>
+                        </a>
 
                         <form action="{{ route('logout') }}" method="POST" class="inline">
                             @csrf

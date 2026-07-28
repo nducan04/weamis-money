@@ -127,4 +127,39 @@ class AuthenticationTest extends TestCase
         
         $this->assertAuthenticatedAs($user);
     }
+
+    public function test_change_password_screen_can_be_rendered(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/change-password');
+
+        $response->assertStatus(200);
+    }
+
+    public function test_authenticated_user_can_change_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => bcrypt('currentpass123'),
+        ]);
+
+        $response = $this->actingAs($user)->post('/change-password', [
+            'current_password' => 'currentpass123',
+            'password' => 'brandnewpass456',
+            'password_confirmation' => 'brandnewpass456',
+        ]);
+
+        $response->assertRedirect('/');
+        $response->assertSessionHas('success');
+
+        // Logout and verify login with new password
+        $this->post('/logout');
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'brandnewpass456',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+    }
 }

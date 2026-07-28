@@ -34,6 +34,9 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');
+    Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.updateCurrent');
+
     Route::get('/', [FundController::class, 'index'])->name('dashboard');
 
     // Transaction CRUD
