@@ -23,12 +23,16 @@ class AuthController extends Controller
         ]);
 
         $loginInput = strtolower(trim($request->email));
-        $remember = $request->has('remember');
 
-        if (Auth::attempt(['email' => $loginInput, 'password' => $request->password], $remember) ||
-            Auth::attempt(['name' => $loginInput, 'password' => $request->password], $remember)) {
+        $user = User::where('email', $loginInput)
+            ->orWhere('name', $loginInput)
+            ->orWhere('email', 'like', $loginInput . '%')
+            ->first();
+
+        if ($user && Hash::check($request->password, $user->password)) {
+            Auth::login($user, $request->has('remember'));
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'))->with('success', 'Đăng nhập thành công! Chào mừng ' . Auth::user()->name);
+            return redirect()->intended(route('dashboard'))->with('success', 'Đăng nhập thành công! Chào mừng ' . $user->name);
         }
 
         return back()->withErrors([

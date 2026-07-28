@@ -23,7 +23,7 @@
             <!-- Email / Username Field -->
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Tài khoản / Email</label>
-                <input type="text" name="email" value="{{ old('email') }}" required autofocus placeholder="admin" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
+                <input type="text" name="email" value="{{ old('email') }}" required autofocus placeholder="admin" autocomplete="off" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
                 @error('email')
                     <p class="text-xs text-rose-500 font-bold mt-1.5 flex items-center space-x-1">
                         <span>⚠️</span>
@@ -35,7 +35,7 @@
             <!-- Password Field -->
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Mật khẩu</label>
-                <input type="password" name="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
+                <input type="password" name="password" required placeholder="••••••••" autocomplete="new-password" class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700/80 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:text-white transition shadow-sm">
                 @error('password')
                     <p class="text-xs text-rose-500 font-bold mt-1.5 flex items-center space-x-1">
                         <span>⚠️</span>
