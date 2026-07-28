@@ -8,8 +8,8 @@
             <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 mx-auto mb-3">
                 💲
             </div>
-            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Đăng Nhập System</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Quản lý Thu Chi & Phân bổ Quỹ Team Weamis</p>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Đăng Nhập</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Quản lý thu chi & Phân bổ quỹ Weamis</p>
         </div>
 
         <!-- Login Form -->
@@ -47,40 +47,24 @@
             </button>
         </form>
 
-        <!-- Quick Login Demo Accounts Banner -->
+        <!-- Quick Login Demo Account Banner -->
         <div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-700/80">
-            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5 text-center">⚡ Đăng Nhập Nhanh (Tài Khoản Mẫu)</p>
-            <div class="grid grid-cols-3 gap-2">
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2.5 text-center">⚡ Đăng Nhập Nhanh (Tài Khoản Admin Mẫu)</p>
+            <div>
                 <!-- Việt Admin -->
                 <form action="{{ route('login') }}" method="POST">
                     @csrf
                     <input type="hidden" name="email" value="viet.nh@weamis.com">
                     <input type="hidden" name="password" value="password">
-                    <button type="submit" class="w-full p-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl text-center transition">
-                        <span class="block font-extrabold text-xs text-amber-700 dark:text-amber-300 truncate">H. Việt</span>
-                        <span class="block text-[9px] font-bold text-amber-600 dark:text-amber-400">Chủ quỹ</span>
-                    </button>
-                </form>
-
-                <!-- Kiên Member -->
-                <form action="{{ route('login') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="email" value="kien.nt@weamis.com">
-                    <input type="hidden" name="password" value="password">
-                    <button type="submit" class="w-full p-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl text-center transition">
-                        <span class="block font-extrabold text-xs text-blue-700 dark:text-blue-300 truncate">T. Kiên</span>
-                        <span class="block text-[9px] font-bold text-blue-600 dark:text-blue-400">Thành viên</span>
-                    </button>
-                </form>
-
-                <!-- Đức Member -->
-                <form action="{{ route('login') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="email" value="duc.nq@weamis.com">
-                    <input type="hidden" name="password" value="password">
-                    <button type="submit" class="w-full p-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 rounded-xl text-center transition">
-                        <span class="block font-extrabold text-xs text-purple-700 dark:text-purple-300 truncate">Q. Đức</span>
-                        <span class="block text-[9px] font-bold text-purple-600 dark:text-purple-400">Thành viên</span>
+                    <button type="submit" class="w-full p-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl flex items-center justify-between transition">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center">HV</span>
+                            <div class="text-left">
+                                <span class="block font-extrabold text-xs text-amber-700 dark:text-amber-300">Nguyễn Hoàng Việt</span>
+                                <span class="block text-[10px] text-slate-500">viet.nh@weamis.com</span>
+                            </div>
+                        </div>
+                        <span class="text-[10px] bg-amber-400 text-slate-950 font-extrabold px-2 py-0.5 rounded">Chủ quỹ (Admin)</span>
                     </button>
                 </form>
             </div>
