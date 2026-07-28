@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');
     Route::post('/change-password', [AuthController::class, 'updatePassword'])->name('password.updateCurrent');
+    Route::post('/profile/update', [AuthController::class, 'updateProfile'])->name('profile.update');
 
     Route::get('/', [FundController::class, 'index'])->name('dashboard');
 

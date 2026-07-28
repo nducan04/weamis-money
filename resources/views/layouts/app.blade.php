@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" x-data="{ darkMode: false }" :class="{ 'dark': darkMode }">
+<html lang="vi" x-data="{ darkMode: false, userMenuOpen: false, profileModalOpen: false }" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -100,9 +100,11 @@
             </div>
             
             <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-                <span class="hidden lg:inline-flex items-center px-3 py-1 bg-emerald-800/60 border border-emerald-500/40 text-emerald-100 text-xs font-bold rounded-full backdrop-blur-sm">
-                    🏢 Quỹ: Trả nợ thuê Ltd
-                </span>
+                @isset($fund)
+                    <span class="hidden lg:inline-flex items-center px-3 py-1 bg-emerald-800/60 border border-emerald-500/40 text-emerald-100 text-xs font-bold rounded-full backdrop-blur-sm">
+                        🏢 Quỹ: {{ $fund->name }}
+                    </span>
+                @endisset
 
                 <!-- Dark Mode Toggle -->
                 <button @click="darkMode = !darkMode" class="p-2 sm:p-2.5 rounded-xl bg-emerald-800/60 hover:bg-emerald-800 border border-emerald-500/40 text-xs font-bold text-white flex items-center space-x-1.5 transition">
@@ -113,31 +115,74 @@
                 </button>
 
                 @auth
-                    <!-- User Profile, Change Password & Logout -->
-                    <div class="flex items-center space-x-2 pl-2 border-l border-emerald-500/40">
-                        <div class="flex items-center space-x-2 bg-emerald-800/60 border border-emerald-500/40 px-2.5 py-1.5 rounded-xl">
-                            <div class="w-6.5 h-6.5 rounded-full bg-white text-emerald-800 font-black text-[10px] flex items-center justify-center flex-shrink-0">
+                    <!-- User Profile Dropdown & Modal -->
+                    <div class="relative pl-2 border-l border-emerald-500/40">
+                        <!-- Clickable Avatar Tab -->
+                        <button @click="userMenuOpen = !userMenuOpen" class="flex items-center space-x-2 sm:space-x-2.5 bg-emerald-800/70 hover:bg-emerald-800 border border-emerald-500/50 px-2.5 sm:px-3 py-1.5 rounded-2xl transition shadow-sm focus:outline-none cursor-pointer">
+                            <div class="w-7 h-7 rounded-full bg-white text-emerald-800 font-black text-xs flex items-center justify-center flex-shrink-0 shadow-sm">
                                 {{ Auth::user()->avatar ?? substr(Auth::user()->name, 0, 2) }}
                             </div>
                             <div class="hidden sm:block text-left">
-                                <p class="text-xs font-extrabold text-white leading-none">{{ Auth::user()->name }}</p>
+                                <p class="text-xs font-extrabold text-white leading-none flex items-center space-x-1">
+                                    <span>{{ Auth::user()->name }}</span>
+                                    <svg class="w-3.5 h-3.5 text-emerald-200 transition-transform duration-200" :class="userMenuOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </p>
                                 <span class="text-[9px] font-bold text-emerald-200">
                                     {{ Auth::user()->role === 'admin' ? 'Chủ quỹ' : 'Thành viên' }}
                                 </span>
                             </div>
+                        </button>
+
+                        <!-- Dropdown Menu Box -->
+                        <div x-show="userMenuOpen" 
+                             @click.away="userMenuOpen = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             x-cloak
+                             class="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 text-slate-800 dark:text-slate-100">
+                            
+                            <!-- Header User Brief -->
+                            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 rounded-t-2xl">
+                                <p class="text-xs font-extrabold text-slate-900 dark:text-white truncate">{{ Auth::user()->name }}</p>
+                                <p class="text-[11px] font-medium text-slate-400 truncate mt-0.5">{{ Auth::user()->email }}</p>
+                                <div class="mt-1.5 flex items-center space-x-2">
+                                    <span class="text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        {{ Auth::user()->role === 'admin' ? 'Chủ quỹ (Admin)' : 'Thành viên' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold text-slate-400">Cổ phần: {{ Auth::user()->share_percentage }}%</span>
+                                </div>
+                            </div>
+
+                            <!-- Menu Action Items -->
+                            <div class="py-1">
+                                <!-- Item 1: Update Profile -->
+                                <button @click="userMenuOpen = false; profileModalOpen = true" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2.5 transition cursor-pointer">
+                                    <span class="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300">👤</span>
+                                    <span>Cập nhật thông tin cá nhân</span>
+                                </button>
+
+                                <!-- Item 2: Change Password -->
+                                <a href="{{ route('password.change') }}" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2.5 transition">
+                                    <span class="p-1 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300">🔑</span>
+                                    <span>Đổi mật khẩu</span>
+                                </a>
+                            </div>
+
+                            <div class="border-t border-slate-100 dark:border-slate-700 pt-1 mt-1">
+                                <!-- Item 3: Logout -->
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center space-x-2.5 transition cursor-pointer">
+                                        <span class="p-1 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300">🚪</span>
+                                        <span>Đăng xuất</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-
-                        <a href="{{ route('password.change') }}" title="Đổi mật khẩu" class="p-2 bg-emerald-800/60 hover:bg-emerald-800 text-white border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1">
-                            <span>🔑</span>
-                            <span class="hidden md:inline text-xs font-bold">Đổi MK</span>
-                        </a>
-
-                        <form action="{{ route('logout') }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" title="Đăng xuất" class="p-2 bg-emerald-800/60 hover:bg-rose-600 text-white border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            </button>
-                        </form>
                     </div>
                 @else
                     <div class="flex items-center space-x-2">
@@ -269,5 +314,69 @@
             </div>
         </div>
     </footer>
+    @auth
+        <!-- Profile Edit Modal -->
+        <div x-show="profileModalOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             x-cloak
+             class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            
+            <div @click.away="profileModalOpen = false" 
+                 class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 relative">
+                
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 font-extrabold text-lg flex items-center justify-center">
+                            👤
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Cập Nhật Thông Tin</h3>
+                            <p class="text-xs text-slate-400">Thay đổi tên, email và chữ đại diện</p>
+                        </div>
+                    </div>
+                    <button @click="profileModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold cursor-pointer">✕</button>
+                </div>
+
+                <form action="{{ route('profile.update') }}" method="POST" class="space-y-4">
+                    @csrf
+                    
+                    <!-- Avatar Initials Preview & Input -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Ảnh Đại Diện / Chữ Viết Tắt</label>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-900 text-emerald-400 font-extrabold text-sm flex items-center justify-center flex-shrink-0 shadow">
+                                {{ Auth::user()->avatar ?? substr(Auth::user()->name, 0, 2) }}
+                            </div>
+                            <input type="text" name="avatar" value="{{ old('avatar', Auth::user()->avatar) }}" placeholder="Ví dụ: HV" maxlength="10" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1">Viết tắt tối đa 2-4 ký tự (ví dụ: HV, TS, QĐ...)</p>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Họ và Tên</label>
+                        <input type="text" name="name" value="{{ old('name', Auth::user()->name) }}" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Địa Chỉ Email</label>
+                        <input type="email" name="email" value="{{ old('email', Auth::user()->email) }}" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <button type="button" @click="profileModalOpen = false" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer">Hủy</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition cursor-pointer">Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endauth
 </body>
 </html>

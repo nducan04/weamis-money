@@ -176,4 +176,30 @@ class AuthController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Đổi mật khẩu thành công!');
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'avatar' => ['nullable', 'string', 'max:10'],
+        ], [
+            'name.required' => 'Vui lòng nhập họ và tên.',
+            'email.required' => 'Vui lòng nhập địa chỉ email.',
+            'email.unique' => 'Địa chỉ email này đã được sử dụng.',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        if (!empty($validated['avatar'])) {
+            $user->avatar = strtoupper(trim($validated['avatar']));
+        } else {
+            $user->avatar = strtoupper(substr($validated['name'], 0, 2));
+        }
+        $user->save();
+
+        return redirect()->back()->with('success', 'Cập nhật thông tin cá nhân thành công!');
+    }
 }
