@@ -99,17 +99,45 @@
             </div>
             
             <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-                <span class="hidden md:inline-flex items-center px-3 py-1 bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold rounded-full">
+                <span class="hidden lg:inline-flex items-center px-3 py-1 bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold rounded-full">
                     🏢 Quỹ: Trả nợ thuê Ltd
                 </span>
 
                 <!-- Dark Mode Toggle -->
-                <button @click="darkMode = !darkMode" class="p-2.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center space-x-1 transition">
+                <button @click="darkMode = !darkMode" class="p-2 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center space-x-1 transition">
                     <span x-show="!darkMode">🌙</span>
                     <span x-show="darkMode">☀️</span>
                     <span class="hidden sm:inline" x-show="!darkMode">Tối</span>
                     <span class="hidden sm:inline" x-show="darkMode">Sáng</span>
                 </button>
+
+                @auth
+                    <!-- User Profile & Logout -->
+                    <div class="flex items-center space-x-2 pl-2 border-l border-slate-800">
+                        <div class="flex items-center space-x-2 bg-slate-800 border border-slate-700/80 px-2.5 py-1 rounded-xl">
+                            <div class="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 font-extrabold text-[10px] flex items-center justify-center flex-shrink-0">
+                                {{ Auth::user()->avatar ?? substr(Auth::user()->name, 0, 2) }}
+                            </div>
+                            <div class="hidden sm:block text-left">
+                                <p class="text-xs font-bold text-white leading-none">{{ Auth::user()->name }}</p>
+                                <span class="text-[9px] font-semibold text-emerald-400">
+                                    {{ Auth::user()->role === 'admin' ? 'Chủ quỹ' : 'Thành viên' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <form action="{{ route('logout') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" title="Đăng xuất" class="p-2 bg-slate-800 hover:bg-rose-600 hover:text-white border border-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <div class="flex items-center space-x-2">
+                        <a href="{{ route('login') }}" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition">Đăng Nhập</a>
+                    </div>
+                @endauth
             </div>
         </div>
     </header>
