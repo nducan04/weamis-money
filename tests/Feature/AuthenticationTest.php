@@ -27,13 +27,13 @@ class AuthenticationTest extends TestCase
     public function test_user_can_login_with_correct_credentials(): void
     {
         $user = User::factory()->create([
-            'email' => 'test@weamis.com',
-            'password' => bcrypt('password123'),
+            'email' => 'admin',
+            'password' => bcrypt('1322'),
         ]);
 
         $response = $this->post('/login', [
-            'email' => 'test@weamis.com',
-            'password' => 'password123',
+            'email' => 'admin',
+            'password' => '1322',
         ]);
 
         $this->assertAuthenticatedAs($user);
@@ -43,12 +43,12 @@ class AuthenticationTest extends TestCase
     public function test_user_cannot_login_with_incorrect_password(): void
     {
         $user = User::factory()->create([
-            'email' => 'test@weamis.com',
-            'password' => bcrypt('password123'),
+            'email' => 'admin',
+            'password' => bcrypt('1322'),
         ]);
 
         $this->post('/login', [
-            'email' => 'test@weamis.com',
+            'email' => 'admin',
             'password' => 'wrong-password',
         ]);
 
@@ -80,5 +80,51 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/login');
+    }
+
+    public function test_forgot_password_screen_can_be_rendered(): void
+    {
+        $response = $this->get('/forgot-password');
+
+        $response->assertStatus(200);
+    }
+
+    public function test_user_can_request_password_reset(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'admin',
+            'email' => 'admin@weamis.com',
+        ]);
+
+        $response = $this->post('/forgot-password', [
+            'account' => 'admin',
+        ]);
+
+        $response->assertRedirect('/reset-password');
+        $this->assertEquals($user->id, session('reset_user_id'));
+    }
+
+    public function test_user_can_reset_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => bcrypt('oldpassword'),
+        ]);
+
+        $response = $this->withSession(['reset_user_id' => $user->id])
+            ->post('/reset-password', [
+                'user_id' => $user->id,
+                'password' => 'newpassword123',
+                'password_confirmation' => 'newpassword123',
+            ]);
+
+        $response->assertRedirect('/login');
+        
+        // Verify new password works
+        $loginResponse = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'newpassword123',
+        ]);
+        
+        $this->assertAuthenticatedAs($user);
     }
 }

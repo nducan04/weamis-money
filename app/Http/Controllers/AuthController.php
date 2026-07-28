@@ -82,15 +82,55 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate([
+            'account' => ['required', 'string'],
+        ], [
+            'account.required' => 'Vui lòng nhập tên tài khoản hoặc email.',
+        ]);
 
-        $user = User::where('email', $request->email)->first();
+        $account = strtolower(trim($request->account));
+
+        $user = User::where('email', $account)->orWhere('name', $account)->first();
 
         if (!$user) {
-            return back()->withErrors(['email' => 'Địa chỉ email này chưa được đăng ký trong hệ thống.']);
+            return back()->withErrors(['account' => 'Tài khoản hoặc email này không tồn tại trong hệ thống.'])->withInput();
         }
 
-        // Demo simulation message for local environment
-        return back()->with('success', 'Link đặt lại mật khẩu đã được gửi đến email của bạn (Trong môi trường demo, bạn có thể đăng nhập bằng tài khoản mẫu hoặc tạo tài khoản mới).');
+        session(['reset_user_id' => $user->id]);
+
+        return redirect()->route('password.reset')->with('info', 'Xác thực tài khoản thành công! Vui lòng nhập mật khẩu mới.');
+    }
+
+    public function showResetPassword()
+    {
+        $userId = session('reset_user_id');
+
+        if (!$userId) {
+            return redirect()->route('password.request')->withErrors(['account' => 'Vui lòng nhập tài khoản cần khôi phục mật khẩu.']);
+        }
+
+        $user = User::findOrFail($userId);
+
+        return view('auth.reset-password', compact('user'));
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'password' => ['required', 'string', 'min:4', 'confirmed'],
+        ], [
+            'password.required' => 'Vui lòng nhập mật khẩu mới.',
+            'password.min' => 'Mật khẩu tối thiểu 4 ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu mới không khớp.',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        session()->forget('reset_user_id');
+
+        return redirect()->route('login')->with('success', 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập bằng mật khẩu mới.');
     }
 }
