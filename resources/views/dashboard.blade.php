@@ -17,6 +17,13 @@
     selectedTx: null,
     distributeAmount: {{ $fund->balance }},
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
+
+    // Báo cáo (Report) State
+    reportFreq: 'monthly', // 'monthly' or 'yearly'
+    reportYear: {{ date('Y') }},
+    reportMonth: {{ date('n') - 1 }}, // 0-indexed (0 = Jan, 6 = Jul)
+    reportCategoryType: 'expense', // 'expense' or 'income'
+
     expenseCategories: [
         { key: 'eat', name: 'Ăn uống', fullName: 'Ăn uống', icon: '/icons/EatAndDrink.svg', color: 'bg-amber-500' },
         { key: 'daily', name: 'Chi tiêu h...', fullName: 'Chi tiêu hàng ngày', icon: '/icons/DailyExpenses.svg', color: 'bg-emerald-500' },
@@ -83,6 +90,113 @@
             this.quickNote = cat.fullName;
         }
     },
+
+    // Báo cáo Report Helper Getters & Methods
+    get reportDateLabel() {
+        if (this.reportFreq === 'monthly') {
+            let m = String(this.reportMonth + 1).padStart(2, '0');
+            let lastDay = new Date(this.reportYear, this.reportMonth + 1, 0).getDate();
+            return `${m}/${this.reportYear} (01/${m} - ${lastDay}/${m})`;
+        } else {
+            return `Năm ${this.reportYear} (01/01 - 31/12)`;
+        }
+    },
+    prevReportPeriod() {
+        if (this.reportFreq === 'monthly') {
+            if (this.reportMonth === 0) {
+                this.reportMonth = 11;
+                this.reportYear--;
+            } else {
+                this.reportMonth--;
+            }
+        } else {
+            this.reportYear--;
+        }
+    },
+    nextReportPeriod() {
+        if (this.reportFreq === 'monthly') {
+            if (this.reportMonth === 11) {
+                this.reportMonth = 0;
+                this.reportYear++;
+            } else {
+                this.reportMonth++;
+            }
+        } else {
+            this.reportYear++;
+        }
+    },
+    get reportTransactions() {
+        return this.rawTransactions.filter(tx => {
+            if (tx.status !== 'approved') return false;
+            if (!tx.created_at) return false;
+            let d = new Date(tx.created_at);
+            if (d.getFullYear() !== this.reportYear) return false;
+            if (this.reportFreq === 'monthly' && d.getMonth() !== this.reportMonth) return false;
+            return true;
+        });
+    },
+    get periodExpenseTotal() {
+        return this.reportTransactions
+            .filter(tx => tx.type === 'expense' || tx.type === 'loan')
+            .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+    },
+    get periodIncomeTotal() {
+        return this.reportTransactions
+            .filter(tx => tx.type === 'contribution' || tx.type === 'repayment')
+            .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+    },
+    get periodNetTotal() {
+        return this.periodIncomeTotal - this.periodExpenseTotal;
+    },
+    get reportCategoryBreakdown() {
+        let cats = this.reportCategoryType === 'expense' ? this.expenseCategories : this.incomeCategories;
+        let total = this.reportCategoryType === 'expense' ? this.periodExpenseTotal : this.periodIncomeTotal;
+        
+        let results = cats.map(cat => {
+            let catTotal = 0;
+            if (this.reportCategoryType === 'expense') {
+                catTotal = this.reportTransactions
+                    .filter(tx => (tx.type === 'expense' || tx.type === 'loan') && (
+                        (tx.description && tx.description.toLowerCase().includes(cat.fullName.toLowerCase())) ||
+                        (tx.description && cat.name !== 'Chỉnh sửa' && tx.description.toLowerCase().includes(cat.name.toLowerCase()))
+                    ))
+                    .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+            } else {
+                catTotal = this.reportTransactions
+                    .filter(tx => (tx.type === 'contribution' || tx.type === 'repayment') && (
+                        (tx.description && tx.description.toLowerCase().includes(cat.fullName.toLowerCase())) ||
+                        (tx.description && cat.name !== 'Chỉnh sửa' && tx.description.toLowerCase().includes(cat.name.toLowerCase()))
+                    ))
+                    .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+            }
+            return {
+                ...cat,
+                amount: catTotal,
+                percentage: total > 0 ? (catTotal / total) * 100 : 0
+            };
+        }).filter(item => item.amount > 0);
+
+        let matchedSum = results.reduce((sum, item) => sum + item.amount, 0);
+        if (total > matchedSum) {
+            let remainder = total - matchedSum;
+            let otherCat = cats.find(c => c.key === 'other') || cats[cats.length - 1];
+            let existingOther = results.find(r => r.key === otherCat.key);
+            if (existingOther) {
+                existingOther.amount += remainder;
+                existingOther.percentage = (existingOther.amount / total) * 100;
+            } else {
+                results.push({
+                    ...otherCat,
+                    name: otherCat.name || 'Thu chi khác',
+                    amount: remainder,
+                    percentage: (remainder / total) * 100
+                });
+            }
+        }
+
+        return results.sort((a, b) => b.amount - a.amount);
+    },
+
     get calculatedPayouts() {
         let amount = parseFloat(this.distributeAmount) || 0;
         return [
@@ -97,7 +211,7 @@ class="pb-20 lg:pb-6">
     <!-- Mobile View Switcher Tabs (hidden on desktop) -->
     <div class="lg:hidden flex items-center space-x-1 p-1 bg-slate-200 dark:bg-slate-700/60 rounded-2xl mb-4">
         <button @click="mobileTab = 'entry'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'entry' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">✏️ Nhập vào</button>
-        <button @click="mobileTab = 'stats'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'stats' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">📊 Thống kê</button>
+        <button @click="mobileTab = 'stats'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'stats' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">📊 Báo cáo</button>
         <a href="{{ route('history') }}" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-center text-slate-500 dark:text-slate-400">📜 Lịch sử ➔</a>
     </div>
 
@@ -111,7 +225,6 @@ class="pb-20 lg:pb-6">
                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
                     <div class="flex items-center space-x-2">
                         <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Sổ thu chi</h2>
-                        <div class="w-5 h-5 bg-slate-500" style="-webkit-mask: url('/icons/Edit.svg') center/contain no-repeat; mask: url('/icons/Edit.svg') center/contain no-repeat;"></div>
                     </div>
                     <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-2.5 py-1 rounded-full">Quỹ: {{ number_format($fund->balance, 0, ',', '.') }}đ</span>
                 </div>
@@ -216,9 +329,8 @@ class="pb-20 lg:pb-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                        Sổ thu chi & Báo cáo
+                        Báo cáo & Tổng quan
                     </h2>
-                    <p class="text-xs text-slate-400 font-medium">Theo dõi tổng dư nợ và chi tiêu nhóm minh bạch</p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button @click="showDistributionModal = true" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
@@ -277,178 +389,199 @@ class="pb-20 lg:pb-6">
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5"
-                 :class="mobileTab === 'stats' || mobileTab === 'all' ? 'grid' : 'hidden lg:grid'"
+            <!-- KHỐI BÁO CÁO CHI TIẾT (REPORT CARD: Hàng tháng / Hàng năm & Biểu đồ Indicator) -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md space-y-5"
+                 :class="mobileTab === 'stats' || mobileTab === 'all' ? 'block' : 'hidden lg:block'"
                  x-data="{
-                isDark: document.documentElement.classList.contains('dark'),
-                donutChart: null,
-                barChart: null,
-                updateTheme() {
-                    this.isDark = document.documentElement.classList.contains('dark');
-                    const textColor = this.isDark ? '#94a3b8' : '#64748b';
-                    const valueColor = this.isDark ? '#f8fafc' : '#0f172a';
-                    const foreColor = this.isDark ? '#f1f5f9' : '#1e293b';
-                    const bgColor = this.isDark ? '#1e293b' : '#ffffff';
-                    const gridColor = this.isDark ? '#334155' : '#e2e8f0';
+                reportChart: null,
+                updateReportChart() {
+                    let breakdown = this.reportCategoryBreakdown;
+                    let labels = breakdown.map(item => item.name);
+                    let series = breakdown.map(item => item.amount);
+                    let colors = breakdown.map(item => {
+                        let cMap = {
+                            'bg-amber-500': '#f59e0b',
+                            'bg-emerald-500': '#10b981',
+                            'bg-blue-500': '#3b82f6',
+                            'bg-pink-500': '#ec4899',
+                            'bg-purple-500': '#a855f7',
+                            'bg-teal-500': '#14b8a6',
+                            'bg-indigo-500': '#6366f1',
+                            'bg-yellow-500': '#eab308',
+                            'bg-orange-500': '#f97316',
+                            'bg-cyan-500': '#06b6d4',
+                            'bg-rose-500': '#f43f5e',
+                            'bg-slate-400': '#94a3b8'
+                        };
+                        return cMap[item.color] || '#3b82f6';
+                    });
 
-                    if (this.donutChart) {
-                        this.donutChart.updateOptions({
-                            chart: { foreColor: foreColor },
-                            stroke: { colors: [bgColor] },
-                            legend: { labels: { colors: foreColor } },
-                            tooltip: { theme: this.isDark ? 'dark' : 'light' },
+                    if (series.length === 0) {
+                        labels = ['Chưa có dữ liệu'];
+                        series = [1];
+                        colors = ['#cbd5e1'];
+                    }
+
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const foreColor = isDark ? '#f1f5f9' : '#1e293b';
+
+                    if (this.reportChart) {
+                        this.reportChart.updateOptions({
+                            series: series,
+                            labels: labels,
+                            colors: colors,
+                            chart: { foreColor: foreColor }
+                        });
+                    } else {
+                        this.reportChart = new ApexCharts(this.$refs.reportDonutChart, {
+                            chart: { type: 'donut', height: 260, background: 'transparent', fontFamily: 'Plus Jakarta Sans, sans-serif', foreColor: foreColor },
+                            series: series,
+                            labels: labels,
+                            colors: colors,
+                            stroke: { width: 2 },
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function (val, opts) {
+                                    return opts.w.globals.labels[opts.seriesIndex] + '\n' + val.toFixed(1) + '%';
+                                },
+                                style: { fontSize: '10px', fontWeight: 700, colors: ['#ffffff'] },
+                                dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.5 }
+                            },
+                            legend: { position: 'bottom', fontSize: '11px', fontWeight: 600, labels: { colors: foreColor } },
+                            tooltip: {
+                                y: { formatter: (val) => new Intl.NumberFormat('vi-VN').format(val) + 'đ' },
+                                theme: isDark ? 'dark' : 'light'
+                            },
                             plotOptions: {
                                 pie: {
                                     donut: {
+                                        size: '65%',
                                         labels: {
-                                            name: { color: textColor },
-                                            value: { color: valueColor },
-                                            total: { color: textColor }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-
-                    if (this.barChart) {
-                        this.barChart.updateOptions({
-                            chart: { foreColor: foreColor },
-                            xaxis: { labels: { style: { colors: foreColor } } },
-                            yaxis: { labels: { style: { colors: foreColor } } },
-                            grid: { borderColor: gridColor },
-                            tooltip: { theme: this.isDark ? 'dark' : 'light' }
-                        });
-                    }
-                },
-                initCharts() {
-                    this.isDark = document.documentElement.classList.contains('dark');
-                    const textColor = this.isDark ? '#94a3b8' : '#64748b';
-                    const valueColor = this.isDark ? '#f8fafc' : '#0f172a';
-                    const foreColor = this.isDark ? '#f1f5f9' : '#1e293b';
-                    const bgColor = this.isDark ? '#1e293b' : '#ffffff';
-                    const gridColor = this.isDark ? '#334155' : '#e2e8f0';
-
-                    // 1. Donut Chart: Thu / Chi / Vay
-                    this.donutChart = new ApexCharts(this.$refs.donutChart, {
-                        chart: { type: 'donut', height: 280, background: 'transparent', fontFamily: 'Plus Jakarta Sans, sans-serif', foreColor: foreColor },
-                        series: [{{ $totalIncome }}, {{ $totalExpense }}, {{ $totalLoans }}],
-                        labels: ['Tổng Thu (Góp + Trả nợ)', 'Tổng Chi', 'Đang Cho Vay'],
-                        colors: ['#10b981', '#f43f5e', '#f59e0b'],
-                        stroke: { width: 3, colors: [bgColor] },
-                        dataLabels: {
-                            enabled: true,
-                            style: { fontSize: '11px', fontWeight: 700, colors: ['#ffffff'] },
-                            dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.5 }
-                        },
-                        legend: {
-                            position: 'bottom',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            labels: { colors: foreColor },
-                            markers: { width: 10, height: 10, radius: 3 }
-                        },
-                        tooltip: {
-                            y: { formatter: (val) => new Intl.NumberFormat('vi-VN').format(val) + 'đ' },
-                            theme: this.isDark ? 'dark' : 'light'
-                        },
-                        plotOptions: {
-                            pie: {
-                                donut: {
-                                    size: '62%',
-                                    labels: {
-                                        show: true,
-                                        name: { fontSize: '12px', fontWeight: 700, color: textColor },
-                                        value: { fontSize: '18px', fontWeight: 800, color: valueColor, formatter: (val) => new Intl.NumberFormat('vi-VN').format(val) + 'đ' },
-                                        total: {
                                             show: true,
-                                            showAlways: true,
-                                            label: 'Số Dư Quỹ',
-                                            fontSize: '11px',
-                                            fontWeight: 600,
-                                            color: textColor,
-                                            formatter: () => new Intl.NumberFormat('vi-VN').format({{ $fund->balance }}) + 'đ'
+                                            total: {
+                                                show: true,
+                                                showAlways: true,
+                                                label: 'Tổng',
+                                                fontSize: '11px',
+                                                formatter: () => new Intl.NumberFormat('vi-VN').format(this.reportCategoryType === 'expense' ? this.periodExpenseTotal : this.periodIncomeTotal) + 'đ'
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                    });
-                    this.donutChart.render();
-
-                    // 2. Bar Chart: Member Shares
-                    const memberNames = [@foreach($members as $m)'{{ $m->name }}',@endforeach];
-                    const memberShares = [@foreach($members as $m){{ $m->share_percentage }},@endforeach];
-
-                    this.barChart = new ApexCharts(this.$refs.barChart, {
-                        chart: { type: 'bar', height: 280, background: 'transparent', fontFamily: 'Plus Jakarta Sans, sans-serif', toolbar: { show: false }, foreColor: foreColor },
-                        series: [{ name: 'Cổ phần (%)', data: memberShares }],
-                        xaxis: {
-                            categories: memberNames,
-                            labels: {
-                                style: { fontSize: '11px', fontWeight: 600, colors: foreColor },
-                                formatter: (val) => val + '%'
-                            }
-                        },
-                        yaxis: {
-                            labels: {
-                                style: { fontSize: '11px', fontWeight: 700, colors: foreColor }
-                            },
-                            max: Math.max(...memberShares) + 5
-                        },
-                        plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
-                        colors: ['#6366f1', '#8b5cf6', '#a78bfa', '#c084fc', '#e879f9', '#f472b6', '#fb7185', '#f87171'],
-                        dataLabels: {
-                            enabled: true,
-                            formatter: (val) => val + '%',
-                            style: { fontSize: '11px', fontWeight: 700, colors: ['#ffffff'] },
-                            dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.5 }
-                        },
-                        legend: { show: false },
-                        grid: { borderColor: gridColor, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-                        tooltip: {
-                            y: { formatter: (val) => val + '% cổ phần' },
-                            theme: this.isDark ? 'dark' : 'light'
-                        }
-                    });
-                    this.barChart.render();
-
-                    // Auto-update charts when theme toggles
-                    const observer = new MutationObserver(() => {
-                        this.updateTheme();
-                    });
-                    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+                        });
+                        this.reportChart.render();
+                    }
                 }
              }"
-                 x-init="$nextTick(() => initCharts())"
+                 x-init="$nextTick(() => updateReportChart()); $watch('reportFreq', () => updateReportChart()); $watch('reportMonth', () => updateReportChart()); $watch('reportYear', () => updateReportChart()); $watch('reportCategoryType', () => updateReportChart());"
             >
-                <!-- Donut Chart Card -->
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-                    <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                        <div class="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
-                        </div>
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Tỷ Lệ Dòng Tiền</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">Thu / Chi / Cho Vay</p>
-                        </div>
+                <!-- 1. Header & Frequency Tabs (Hàng tháng vs Hàng năm) -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                    <div>
+                        <h3 class="font-black text-slate-900 dark:text-white text-base sm:text-lg">Báo Cáo Thu Chi</h3>
+                        <p class="text-xs text-slate-400 font-medium">Thống kê theo chu kỳ và danh mục</p>
                     </div>
-                    <div x-ref="donutChart"></div>
+
+                    <!-- Frequency Tabs: Hàng tháng vs Hàng năm -->
+                    <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl self-start sm:self-auto">
+                        <button type="button" @click="reportFreq = 'monthly'" 
+                                class="px-4 py-1.5 rounded-xl font-extrabold text-xs transition-all duration-150 cursor-pointer"
+                                :class="reportFreq === 'monthly' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
+                            Hàng tháng
+                        </button>
+                        <button type="button" @click="reportFreq = 'yearly'" 
+                                class="px-4 py-1.5 rounded-xl font-extrabold text-xs transition-all duration-150 cursor-pointer"
+                                :class="reportFreq === 'yearly' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
+                            Hàng năm
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Bar Chart Card -->
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-                    <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                        <div class="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        </div>
+                <!-- 2. Date Range Navigator (< 07/2026 (01/07 - 31/07) >) -->
+                <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 border border-slate-200/80 dark:border-slate-600/60 rounded-2xl px-3 py-2">
+                    <button type="button" @click="prevReportPeriod()" class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white" x-text="reportDateLabel"></span>
+                    <button type="button" @click="nextReportPeriod()" class="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+
+                <!-- 3. Net Financial Summary Card (Chi tiêu | Thu nhập | Thu chi) -->
+                <div class="bg-slate-900 dark:bg-slate-900/90 text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-800">
+                    <div class="grid grid-cols-2 gap-4 pb-3 border-b border-slate-800 text-center">
                         <div>
-                            <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Cổ Phần Thành Viên</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">Tỷ lệ % góp vốn của từng thành viên</p>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Chi tiêu</p>
+                            <p class="text-base sm:text-lg font-black text-rose-400 mt-1" x-text="'-' + new Intl.NumberFormat('vi-VN').format(periodExpenseTotal) + 'đ'"></p>
+                        </div>
+                        <div class="border-l border-slate-800">
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Thu nhập</p>
+                            <p class="text-base sm:text-lg font-black text-emerald-400 mt-1" x-text="'+' + new Intl.NumberFormat('vi-VN').format(periodIncomeTotal) + 'đ'"></p>
                         </div>
                     </div>
-                    <div x-ref="barChart"></div>
+                    <div class="pt-3 text-center">
+                        <span class="text-xs font-bold text-slate-400">Thu chi: </span>
+                        <span class="text-base sm:text-xl font-black ml-1" 
+                              :class="periodNetTotal >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+                              x-text="(periodNetTotal >= 0 ? '+' : '') + new Intl.NumberFormat('vi-VN').format(periodNetTotal) + 'đ'"></span>
+                    </div>
+                </div>
+
+                <!-- 4. Report Mode Tabs (Chi tiêu vs Thu nhập) -->
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl">
+                    <button type="button" @click="reportCategoryType = 'expense'" 
+                            class="py-2 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
+                            :class="reportCategoryType === 'expense' ? 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm border-b-2 border-rose-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
+                        Chi tiêu
+                    </button>
+                    <button type="button" @click="reportCategoryType = 'income'" 
+                            class="py-2 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
+                            :class="reportCategoryType === 'income' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
+                        Thu nhập
+                    </button>
+                </div>
+
+                <!-- 5. Chart & Dynamic Callout Line Indicator -->
+                <div class="relative py-2">
+                    <div x-ref="reportDonutChart" class="min-h-[260px]"></div>
+
+                    <!-- Indicator Line Callout (1 đường gạch ra % + tên danh mục như ảnh mẫu) -->
+                    <template x-if="reportCategoryBreakdown.length > 0">
+                        <div class="mt-2 text-center flex flex-col items-center justify-center">
+                            <div class="w-0.5 h-4 bg-orange-500"></div>
+                            <div class="h-0.5 w-16 bg-orange-500"></div>
+                            <div class="bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/30 px-3 py-1 rounded-xl text-xs font-black mt-1">
+                                <span x-text="reportCategoryBreakdown[0].percentage.toFixed(1) + '%'"></span>
+                                <span class="ml-1" x-text="reportCategoryBreakdown[0].name"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- 6. Detailed Category Breakdown List (Matching Screenshot!) -->
+                <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <template x-for="item in reportCategoryBreakdown" :key="item.key">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-700/40 rounded-2xl border border-slate-200/60 dark:border-slate-600/60 flex items-center justify-between hover:shadow-sm transition">
+                            <div class="flex items-center space-x-3 min-w-0">
+                                <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                                     :class="item.color"
+                                     :style="`-webkit-mask: url('${item.icon}') center/contain no-repeat; mask: url('${item.icon}') center/contain no-repeat;`">
+                                </div>
+                                <span class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate" x-text="item.name"></span>
+                            </div>
+
+                            <div class="flex items-center space-x-3 flex-shrink-0">
+                                <span class="font-black text-xs sm:text-sm text-slate-900 dark:text-white" x-text="new Intl.NumberFormat('vi-VN').format(item.amount) + 'đ'"></span>
+                                <span class="text-[11px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-600 px-2 py-0.5 rounded-full" x-text="item.percentage.toFixed(1) + '%'"></span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="reportCategoryBreakdown.length === 0">
+                        <p class="text-center py-6 text-xs font-semibold text-slate-400">Không có dữ liệu thu chi trong khoảng thời gian này.</p>
+                    </template>
                 </div>
             </div>
 
@@ -700,7 +833,7 @@ class="pb-20 lg:pb-6">
 
             <button @click="mobileTab = 'stats'" class="flex flex-col items-center justify-center py-1 rounded-xl transition cursor-pointer" :class="mobileTab === 'stats' ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-400 hover:text-slate-600'">
                 <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
-                <span class="text-[10px]">Thống kê</span>
+                <span class="text-[10px]">Báo cáo</span>
             </button>
 
             <a href="{{ route('history') }}" class="flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-emerald-600 transition cursor-pointer">
