@@ -13,6 +13,9 @@
     filterSearch: '',
     filterMemberId: '',
     filterType: '',
+    filterDateFrom: '',
+    filterDateTo: '',
+    sortOrder: 'desc',
     currentPage: 1,
     perPage: 10,
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
@@ -20,12 +23,29 @@
         let search = this.filterSearch.toLowerCase().trim();
         let memberId = this.filterMemberId;
         let type = this.filterType;
+        let dateFrom = this.filterDateFrom;
+        let dateTo = this.filterDateTo;
 
-        return this.rawTransactions.filter(tx => {
+        let filtered = this.rawTransactions.filter(tx => {
             let matchSearch = !search || (tx.description && tx.description.toLowerCase().includes(search));
             let matchMember = !memberId || tx.user_id == memberId;
             let matchType = !type || tx.type == type;
-            return matchSearch && matchMember && matchType;
+
+            let txDate = tx.created_at ? tx.created_at.substring(0, 10) : '';
+            let matchFrom = !dateFrom || (txDate && txDate >= dateFrom);
+            let matchTo = !dateTo || (txDate && txDate <= dateTo);
+
+            return matchSearch && matchMember && matchType && matchFrom && matchTo;
+        });
+
+        let order = this.sortOrder;
+        return filtered.sort((a, b) => {
+            let dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            let dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            if (dateA === dateB) {
+                return order === 'desc' ? b.id - a.id : a.id - b.id;
+            }
+            return order === 'desc' ? dateB - dateA : dateA - dateB;
         });
     },
     get totalPages() {
@@ -57,6 +77,9 @@
         this.filterSearch = '';
         this.filterMemberId = '';
         this.filterType = '';
+        this.filterDateFrom = '';
+        this.filterDateTo = '';
+        this.sortOrder = 'desc';
         this.currentPage = 1;
     },
     get calculatedPayouts() {
@@ -68,7 +91,7 @@
         ];
     }
 }"
-x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', () => currentPage = 1); $watch('filterType', () => currentPage = 1)">
+x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', () => currentPage = 1); $watch('filterType', () => currentPage = 1); $watch('filterDateFrom', () => currentPage = 1); $watch('filterDateTo', () => currentPage = 1); $watch('sortOrder', () => currentPage = 1)">
 
     <!-- Page Header & Action Bar -->
     <div class="flex flex-col gap-3 mb-6">
@@ -503,7 +526,7 @@ x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', 
                         <h3 class="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg">Lịch Sử Giao Dịch</h3>
                         <p class="text-[10px] text-slate-400 font-medium">
                             <span x-text="filteredTransactions.length"></span> giao dịch
-                            <template x-if="filterSearch || filterMemberId || filterType">
+                            <template x-if="filterSearch || filterMemberId || filterType || filterDateFrom || filterDateTo || sortOrder !== 'desc'">
                                 <span class="text-indigo-500 font-bold"> (đang lọc)</span>
                             </template>
                         </p>
@@ -519,7 +542,7 @@ x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', 
 
             <!-- Reactive Filter Bar: Zero Reload, Instant Filter -->
             <div class="gap-2 grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap md:items-center" :class="showFilters ? 'grid' : 'hidden md:flex'">
-                <input type="text" x-model="filterSearch" placeholder="🔍 Tìm kiếm nội dung..." class="w-full md:w-64 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+                <input type="text" x-model="filterSearch" placeholder="🔍 Tìm kiếm nội dung..." class="w-full md:w-52 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
                 
                 <select x-model="filterMemberId" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả thành viên</option>
@@ -537,7 +560,21 @@ x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', 
                     <option value="distribution">Chia tiền %</option>
                 </select>
 
-                <template x-if="filterSearch || filterMemberId || filterType">
+                <!-- Lọc Theo Ngày Tháng Năm -->
+                <div class="flex items-center space-x-1.5 w-full sm:w-auto bg-slate-50 dark:bg-slate-700/50 p-1 rounded-xl border border-slate-200 dark:border-slate-600">
+                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 pl-1.5">📅</span>
+                    <input type="date" x-model="filterDateFrom" title="Từ ngày" class="px-2 py-1 rounded-lg border-0 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+                    <span class="text-slate-400 text-xs font-bold">➔</span>
+                    <input type="date" x-model="filterDateTo" title="Đến ngày" class="px-2 py-1 rounded-lg border-0 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+                </div>
+
+                <!-- Sắp Xếp Ngày Giao Dịch -->
+                <select x-model="sortOrder" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+                    <option value="desc">⬇️ Mới nhất ➔ Cũ nhất</option>
+                    <option value="asc">⬆️ Cũ nhất ➔ Mới nhất</option>
+                </select>
+
+                <template x-if="filterSearch || filterMemberId || filterType || filterDateFrom || filterDateTo || sortOrder !== 'desc'">
                     <button @click="resetFilters()" class="px-3 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center space-x-1 cursor-pointer">
                         <span>✕ Xóa lọc</span>
                     </button>
@@ -563,7 +600,7 @@ x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', 
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                     <template x-for="(tx, index) in paginatedTransactions" :key="tx.id">
                         <tr class="hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-colors duration-150">
-                            <td class="py-3.5 px-4 font-bold text-slate-400" x-text="filteredTransactions.length - ((currentPage - 1) * perPage + index)"></td>
+                            <td class="py-3.5 px-4 font-bold text-slate-400" x-text="sortOrder === 'asc' ? ((currentPage - 1) * perPage + index + 1) : (filteredTransactions.length - ((currentPage - 1) * perPage + index))"></td>
                             <td class="py-3.5 px-4 whitespace-nowrap text-slate-500" x-text="tx.created_at_formatted"></td>
                             <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2">
