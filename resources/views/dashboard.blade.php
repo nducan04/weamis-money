@@ -26,20 +26,38 @@
     currentPage: 1,
     perPage: 10,
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
-    categories: [
-        { key: 'eat', name: 'Ăn uống', fullName: 'Ăn uống', icon: '/icons/EatAndDrink.svg' },
-        { key: 'daily', name: 'Chi tiêu h...', fullName: 'Chi tiêu hàng ngày', icon: '/icons/DailyExpenses.svg' },
-        { key: 'clothes', name: 'Quần áo', fullName: 'Quần áo', icon: '/icons/Clothes.svg' },
-        { key: 'cosmetics', name: 'Mỹ phẩm', fullName: 'Mỹ phẩm', icon: '/icons/Cosmetics.svg' },
-        { key: 'exchange', name: 'Phí giao l...', fullName: 'Phí giao lưu', icon: '/icons/Exchange.svg' },
-        { key: 'medical', name: 'Y tế', fullName: 'Y tế', icon: '/icons/Medical.svg' },
-        { key: 'education', name: 'Giáo dục', fullName: 'Giáo dục', icon: '/icons/Education.svg' },
-        { key: 'electric', name: 'Tiền điện', fullName: 'Tiền điện', icon: '/icons/Electric.svg' },
-        { key: 'transport', name: 'Đi lại', fullName: 'Đi lại', icon: '/icons/Transport.svg' },
-        { key: 'contact', name: 'Phí liên lạc', fullName: 'Phí liên lạc', icon: '/icons/Contact.svg' },
-        { key: 'house', name: 'Tiền nhà', fullName: 'Tiền nhà', icon: '/icons/HouseRent.svg' },
-        { key: 'other', name: 'Chỉnh sửa', fullName: '', icon: null }
+    expenseCategories: [
+        { key: 'eat', name: 'Ăn uống', fullName: 'Ăn uống', icon: '/icons/EatAndDrink.svg', color: 'bg-amber-500' },
+        { key: 'daily', name: 'Chi tiêu h...', fullName: 'Chi tiêu hàng ngày', icon: '/icons/DailyExpenses.svg', color: 'bg-emerald-500' },
+        { key: 'clothes', name: 'Quần áo', fullName: 'Quần áo', icon: '/icons/Clothes.svg', color: 'bg-blue-500' },
+        { key: 'cosmetics', name: 'Mỹ phẩm', fullName: 'Mỹ phẩm', icon: '/icons/Cosmetics.svg', color: 'bg-pink-500' },
+        { key: 'exchange', name: 'Phí giao l...', fullName: 'Phí giao lưu', icon: '/icons/Exchange.svg', color: 'bg-purple-500' },
+        { key: 'medical', name: 'Y tế', fullName: 'Y tế', icon: '/icons/Medical.svg', color: 'bg-teal-500' },
+        { key: 'education', name: 'Giáo dục', fullName: 'Giáo dục', icon: '/icons/Education.svg', color: 'bg-indigo-500' },
+        { key: 'electric', name: 'Tiền điện', fullName: 'Tiền điện', icon: '/icons/Electric.svg', color: 'bg-yellow-500' },
+        { key: 'transport', name: 'Đi lại', fullName: 'Đi lại', icon: '/icons/Transport.svg', color: 'bg-orange-500' },
+        { key: 'contact', name: 'Phí liên lạc', fullName: 'Phí liên lạc', icon: '/icons/Contact.svg', color: 'bg-cyan-500' },
+        { key: 'house', name: 'Tiền nhà', fullName: 'Tiền nhà', icon: '/icons/HouseRent.svg', color: 'bg-rose-500' },
+        { key: 'other', name: 'Chỉnh sửa', fullName: '', icon: '/icons/Edit.svg', color: 'bg-slate-400' }
     ],
+    incomeCategories: [
+        { key: 'salary', name: 'Tiền lương', fullName: 'Tiền lương', icon: '/icons/Salary.svg', color: 'bg-emerald-500' },
+        { key: 'bonus', name: 'Tiền thưởng', fullName: 'Tiền thưởng', icon: '/icons/Bonus.svg', color: 'bg-amber-500' },
+        { key: 'invest', name: 'Đầu tư', fullName: 'Lợi nhuận đầu tư', icon: '/icons/Invest.svg', color: 'bg-blue-500' },
+        { key: 'other_income', name: 'Thu khác', fullName: 'Góp quỹ / Thu khác', icon: '/icons/Exchange.svg', color: 'bg-purple-500' },
+        { key: 'other', name: 'Chỉnh sửa', fullName: '', icon: '/icons/Edit.svg', color: 'bg-slate-400' }
+    ],
+    get activeCategories() {
+        return this.quickType === 'expense' ? this.expenseCategories : this.incomeCategories;
+    },
+    switchQuickType(type) {
+        this.quickType = type;
+        if (type === 'expense') {
+            this.selectCategory(this.expenseCategories[0]);
+        } else {
+            this.selectCategory(this.incomeCategories[0]);
+        }
+    },
     get formattedQuickDate() {
         let parts = this.quickDate.split('-');
         if (parts.length !== 3) return this.quickDate;
@@ -166,19 +184,19 @@ class="pb-20 lg:pb-6">
                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
                     <div class="flex items-center space-x-2">
                         <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Sổ thu chi</h2>
-                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <div class="w-5 h-5 bg-slate-500" style="-webkit-mask: url('/icons/Edit.svg') center/contain no-repeat; mask: url('/icons/Edit.svg') center/contain no-repeat;"></div>
                     </div>
                     <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-2.5 py-1 rounded-full">Quỹ: {{ number_format($fund->balance, 0, ',', '.') }}đ</span>
                 </div>
 
                 <!-- Type Tabs: Chi tiêu vs Thu nhập -->
                 <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl mb-4">
-                    <button type="button" @click="quickType = 'expense'" 
+                    <button type="button" @click="switchQuickType('expense')" 
                             class="py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
                             :class="quickType === 'expense' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border-b-2 border-slate-900 dark:border-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
                         Chi tiêu
                     </button>
-                    <button type="button" @click="quickType = 'contribution'" 
+                    <button type="button" @click="switchQuickType('contribution')" 
                             class="py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
                             :class="quickType !== 'expense' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border-b-2 border-slate-900 dark:border-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
                         Thu nhập
@@ -238,18 +256,16 @@ class="pb-20 lg:pb-6">
                     <div class="pt-2">
                         <p class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">Danh mục</p>
                         
-                        <!-- Category Grid (3 cols) -->
+                        <!-- Category Grid -->
                         <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            <template x-for="cat in categories" :key="cat.key">
+                            <template x-for="cat in activeCategories" :key="cat.key">
                                 <button type="button" @click="selectCategory(cat)"
-                                        class="flex flex-col items-center justify-center p-2 rounded-2xl border transition-all duration-150 cursor-pointer min-h-[70px]"
+                                        class="flex flex-col items-center justify-center p-2 rounded-2xl border transition-all duration-150 cursor-pointer min-h-[72px]"
                                         :class="selectedCategory === cat.key ? 'border-2 border-emerald-500 dark:border-emerald-400 bg-emerald-500/10 shadow-sm scale-95' : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 hover:border-slate-300 dark:hover:border-slate-600'">
-                                    <template x-if="cat.icon">
-                                        <img :src="cat.icon" :alt="cat.name" class="w-6 h-6 mb-1 filter dark:invert">
-                                    </template>
-                                    <template x-if="!cat.icon">
-                                        <svg class="w-6 h-6 mb-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    </template>
+                                    <div class="w-6 h-6 mb-1.5 rounded-md transition-colors"
+                                         :class="cat.color"
+                                         :style="`-webkit-mask: url('${cat.icon}') center/contain no-repeat; mask: url('${cat.icon}') center/contain no-repeat;`">
+                                    </div>
                                     <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate w-full text-center" x-text="cat.name"></span>
                                 </button>
                             </template>
@@ -959,7 +975,7 @@ class="pb-20 lg:pb-6">
     <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 shadow-2xl safe-bottom px-2 py-1.5">
         <div class="grid grid-cols-5 gap-1 text-center">
             <button @click="mobileTab = 'entry'" class="flex flex-col items-center justify-center py-1 rounded-xl transition cursor-pointer" :class="mobileTab === 'entry' ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-400 hover:text-slate-600'">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Edit.svg') center/contain no-repeat; mask: url('/icons/Edit.svg') center/contain no-repeat;"></div>
                 <span class="text-[10px]">Nhập vào</span>
             </button>
 
