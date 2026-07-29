@@ -10,6 +10,32 @@ use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
+    public function history(Request $request)
+    {
+        $members = User::orderBy('id')->get();
+        $fund = Fund::firstOrCreate(
+            ['id' => 1],
+            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7028106.00, 'total_profit' => 126160.00]
+        );
+
+        $allTransactions = Transaction::with(['user', 'approver'])->latest()->get()->map(function($tx) {
+            return [
+                'id' => $tx->id,
+                'user_id' => $tx->user_id,
+                'user_name' => $tx->user ? $tx->user->name : 'N/A',
+                'user_avatar' => $tx->user ? $tx->user->avatar : null,
+                'type' => $tx->type,
+                'amount' => (float)$tx->amount,
+                'description' => $tx->description,
+                'status' => $tx->status,
+                'created_at' => $tx->created_at ? $tx->created_at->format('Y-m-d\TH:i') : '',
+                'created_at_formatted' => $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : '',
+            ];
+        });
+
+        return view('history', compact('members', 'fund', 'allTransactions'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

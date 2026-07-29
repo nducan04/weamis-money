@@ -100,7 +100,7 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
     <!-- Top Navigation Header (Vibrant Emerald Brand Navbar) -->
     <header class="bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-700 text-white sticky top-0 z-30 shadow-md border-b border-emerald-800/50 safe-top transition-colors">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between">
-            <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div class="flex items-center space-x-4 sm:space-x-6 min-w-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white text-emerald-700 font-black text-base sm:text-xl flex items-center justify-center shadow-md flex-shrink-0">
                         💲
@@ -110,6 +110,18 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                         <p class="text-[10px] sm:text-xs text-emerald-100 font-semibold hidden xs:block">Quản lý thu chi & Quỹ team</p>
                     </div>
                 </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden sm:flex items-center space-x-1 pl-4 border-l border-emerald-400/40">
+                    <a href="{{ route('dashboard') }}" 
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('dashboard') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
+                        <span>📊 Dashboard</span>
+                    </a>
+                    <a href="{{ route('history') }}" 
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
+                        <span>📜 Lịch Sử Giao Dịch</span>
+                    </a>
+                </nav>
             </div>
             
             <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">

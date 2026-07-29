@@ -26,6 +26,13 @@ class FundManagementTest extends TestCase
         $response->assertSee('Sổ thu chi');
     }
 
+    public function test_history_page_renders_successfully()
+    {
+        $response = $this->get('/history');
+        $response->assertStatus(200);
+        $response->assertSee('Lịch Sử Giao Dịch');
+    }
+
     public function test_contribution_increases_fund_balance()
     {
         $fund = Fund::first();

@@ -13,6 +13,7 @@ use App\Http\Controllers\MemberController;
 */
 
 Route::get('/', [FundController::class, 'index'])->name('dashboard');
+Route::get('/history', [TransactionController::class, 'history'])->name('history');
 
 // Transaction CRUD
 Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
