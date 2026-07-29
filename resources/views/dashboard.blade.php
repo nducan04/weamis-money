@@ -97,7 +97,7 @@ x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', 
     <div class="flex flex-col gap-3 mb-6">
         <div>
             <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Báo Cáo Thu Chi & Quản Lý Quỹ
+                Sổ thu chi
             </h2>
         </div>
 

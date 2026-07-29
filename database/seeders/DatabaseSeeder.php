@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\Fund;
 use App\Models\Transaction;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
@@ -20,13 +19,10 @@ class DatabaseSeeder extends Seeder
             'total_profit' => 126160.00,
         ]);
 
-        $defaultPassword = Hash::make('1322');
-
         // 2. Create All 8 Team Members from DuLieuDaCo
         $admin = User::create([
             'name' => 'Nguyễn Hoàng Việt',
             'email' => 'admin@weamis.com',
-            'password' => $defaultPassword,
             'role' => 'admin',
             'avatar' => 'HV',
             'share_percentage' => 25.00,
@@ -38,7 +34,6 @@ class DatabaseSeeder extends Seeder
         $son = User::create([
             'name' => 'Hồ Trung Sơn',
             'email' => 'son.ht@weamis.com',
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => 'TS',
             'share_percentage' => 20.00,
@@ -48,7 +43,6 @@ class DatabaseSeeder extends Seeder
         $duc = User::create([
             'name' => 'Nguyễn Quý Đức',
             'email' => 'duc.nq@weamis.com',
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => 'QĐ',
             'share_percentage' => 15.00,
@@ -58,7 +52,6 @@ class DatabaseSeeder extends Seeder
         $hung = User::create([
             'name' => 'Nguyễn Đăng Phúc Hưng',
             'email' => 'hung.ndp@weamis.com',
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => 'PH',
             'share_percentage' => 15.00,
@@ -68,7 +61,6 @@ class DatabaseSeeder extends Seeder
         $kien = User::create([
             'name' => 'Nguyễn Trung Kiên',
             'email' => 'kien.nt@weamis.com',
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => 'TK',
             'share_percentage' => 10.00,
@@ -78,7 +70,6 @@ class DatabaseSeeder extends Seeder
         $hoanganh = User::create([
             'name' => 'Vũ Đức Hoàng Anh',
             'email' => 'anh.vdh@weamis.com',
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => 'HA',
             'share_percentage' => 5.00,
@@ -88,7 +79,6 @@ class DatabaseSeeder extends Seeder
         $thanhan = User::create([
             'name' => 'Lê Văn Thành An',
             'email' => 'an.lvt@weamis.com',
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => 'TA',
             'share_percentage' => 5.00,
@@ -98,7 +88,6 @@ class DatabaseSeeder extends Seeder
         $minh = User::create([
             'name' => 'Trịnh Quang Minh',
             'email' => 'minh.tq@weamis.com',
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => 'QM',
             'share_percentage' => 5.00,

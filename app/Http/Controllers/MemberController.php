@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class MemberController extends Controller
 {
@@ -27,7 +26,7 @@ class MemberController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'share_percentage' => 'required|numeric|min:0|max:100',
-            'avatar' => 'nullable|string|max:4',
+            'avatar' => 'nullable|string|max:255',
         ]);
 
         $initials = $validated['avatar'] ?? strtoupper(substr($validated['name'], 0, 2));
@@ -35,7 +34,6 @@ class MemberController extends Controller
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => Hash::make('password'),
             'role' => 'member',
             'avatar' => $initials,
             'share_percentage' => $validated['share_percentage'],

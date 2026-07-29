@@ -21,10 +21,9 @@ class FundManagementTest extends TestCase
 
     public function test_dashboard_renders_successfully()
     {
-        $user = User::first();
-        $response = $this->actingAs($user)->get('/');
+        $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('Báo Cáo Thu Chi');
+        $response->assertSee('Sổ thu chi');
     }
 
     public function test_contribution_increases_fund_balance()
@@ -33,7 +32,7 @@ class FundManagementTest extends TestCase
         $initialBalance = $fund->balance;
         $user = User::first();
 
-        $response = $this->actingAs($user)->post('/transactions', [
+        $response = $this->post('/transactions', [
             'user_id' => $user->id,
             'type' => 'contribution',
             'amount' => 500000,
@@ -50,7 +49,7 @@ class FundManagementTest extends TestCase
         $user = User::first();
 
         // 1. Create a contribution of 1,000,000
-        $this->actingAs($user)->post('/transactions', [
+        $this->post('/transactions', [
             'user_id' => $user->id,
             'type' => 'contribution',
             'amount' => 1000000,
@@ -61,7 +60,7 @@ class FundManagementTest extends TestCase
         $balanceAfterAdd = $fund->fresh()->balance;
 
         // 2. Edit transaction amount to 1,500,000 (+500k diff)
-        $this->actingAs($user)->put("/transactions/{$tx->id}", [
+        $this->put("/transactions/{$tx->id}", [
             'user_id' => $user->id,
             'type' => 'contribution',
             'amount' => 1500000,
@@ -79,7 +78,7 @@ class FundManagementTest extends TestCase
 
         $initialBalance = $fund->balance;
 
-        $this->actingAs($user)->post('/transactions', [
+        $this->post('/transactions', [
             'user_id' => $user->id,
             'type' => 'contribution',
             'amount' => 800000,
@@ -90,7 +89,7 @@ class FundManagementTest extends TestCase
         $this->assertEquals($initialBalance + 800000, $fund->fresh()->balance);
 
         // Delete transaction
-        $this->actingAs($user)->delete("/transactions/{$tx->id}");
+        $this->delete("/transactions/{$tx->id}");
 
         $this->assertDatabaseMissing('transactions', ['id' => $tx->id]);
         $this->assertEquals($initialBalance, $fund->fresh()->balance);
@@ -103,7 +102,7 @@ class FundManagementTest extends TestCase
         $user->update(['share_percentage' => 100]);
         $fund->update(['balance' => 10000000]); // 10m
 
-        $response = $this->actingAs($user)->post('/distributions', [
+        $response = $this->post('/distributions', [
             'total_amount' => 10000000,
             'note' => 'Chia lợi nhuận dự án',
         ]);
