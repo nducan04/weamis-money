@@ -33,6 +33,13 @@ class FundManagementTest extends TestCase
         $response->assertSee('Lịch Sử Giao Dịch');
     }
 
+    public function test_report_page_renders_successfully()
+    {
+        $response = $this->get('/report');
+        $response->assertStatus(200);
+        $response->assertSee('Báo Cáo Thu Chi');
+    }
+
     public function test_contribution_increases_fund_balance()
     {
         $fund = Fund::first();

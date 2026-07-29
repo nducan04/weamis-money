@@ -14,6 +14,7 @@ use App\Http\Controllers\MemberController;
 
 Route::get('/', [FundController::class, 'index'])->name('dashboard');
 Route::get('/history', [TransactionController::class, 'history'])->name('history');
+Route::get('/report', [TransactionController::class, 'report'])->name('report');
 
 // Transaction CRUD
 Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
