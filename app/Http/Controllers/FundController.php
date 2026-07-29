@@ -35,6 +35,11 @@ class FundController extends Controller
 
             return [
                 'user' => $m,
+                'id' => $m->id,
+                'name' => $m->name,
+                'avatar' => $m->avatar,
+                'share_percentage' => $m->share_percentage,
+                'contributions' => $contributed,
                 'contributed' => $contributed,
                 'loans' => $loans,
                 'repaid' => $repaid,
@@ -42,6 +47,7 @@ class FundController extends Controller
                 'debt' => $m->current_debt,
                 'share' => $m->share_percentage,
                 'estimated_payout' => $estimatedPayout,
+                'estimated_share_amount' => $estimatedPayout,
             ];
         });
 
