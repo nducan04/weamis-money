@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Fund;
 use App\Models\User;
+use App\Models\Project;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,7 @@ class FundController extends Controller
         );
 
         $members = User::orderBy('id')->get();
+        $projects = Project::all();
 
         // 1. Stat Totals
         $approvedTxs = Transaction::where('status', 'approved')->get();
@@ -77,6 +79,7 @@ class FundController extends Controller
         return view('dashboard', compact(
             'fund',
             'members',
+            'projects',
             'memberStats',
             'allTransactions',
             'pendingTransactions',

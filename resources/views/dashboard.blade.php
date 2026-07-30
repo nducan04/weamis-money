@@ -131,7 +131,7 @@ class="pb-20 lg:pb-6">
                 </div>
 
                 <!-- Form Submit -->
-                <form action="{{ route('transactions.store') }}" method="POST" class="space-y-3.5">
+                <form action="{{ route('transactions.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3.5" x-data="{ evidenceMode: 'none' }">
                     @csrf
                     <input type="hidden" name="type" :value="quickType">
 
@@ -141,6 +141,17 @@ class="pb-20 lg:pb-6">
                         <select name="user_id" x-model="quickUserId" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             @foreach($members as $m)
                                 <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->share_percentage }}%)</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Project Selector -->
+                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
+                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Dự án</span>
+                        <select name="project_id" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="">-- Không gắn dự án (Quỹ chung) --</option>
+                            @foreach($projects as $p)
+                                <option value="{{ $p->id }}">📁 {{ $p->name }} ({{ $p->code }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -159,6 +170,51 @@ class="pb-20 lg:pb-6">
                             <button type="button" @click="nextQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Responsible & Claimant User Selectors -->
+                    <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+                        <div>
+                            <span class="text-slate-500 dark:text-slate-400 block mb-1">Người trách nhiệm</span>
+                            <select name="responsible_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs font-medium text-slate-900 dark:text-white outline-none">
+                                <option value="">-- Trách nhiệm --</option>
+                                @foreach($members as $m)
+                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 dark:text-slate-400 block mb-1">Người đòi/nhận tiền</span>
+                            <select name="claimant_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs font-medium text-slate-900 dark:text-white outline-none">
+                                <option value="">-- Đòi tiền --</option>
+                                @foreach($members as $m)
+                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Evidence Attachment Row -->
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-slate-500 dark:text-slate-400">Bằng chứng (Evidence)</span>
+                            <div class="flex space-x-1">
+                                <button type="button" @click="evidenceMode = 'none'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'none' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'">Tắt</button>
+                                <button type="button" @click="evidenceMode = 'file'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'file' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'">🖼️ Ảnh bill</button>
+                                <button type="button" @click="evidenceMode = 'link'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'link' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'">🔗 Link</button>
+                                <button type="button" @click="evidenceMode = 'text'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'text' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-500'">📝 Momo</button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="evidence_type" :value="evidenceMode">
+                        <div x-show="evidenceMode === 'file'" x-cloak>
+                            <input type="file" name="evidence_file" accept="image/*,.pdf" class="w-full text-xs text-slate-500 border border-slate-200 dark:border-slate-600 rounded-xl p-1.5 bg-slate-50 dark:bg-slate-700/60">
+                        </div>
+                        <div x-show="evidenceMode === 'link'" x-cloak>
+                            <input type="url" name="evidence_link" placeholder="https://momo.vn/transaction/..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white">
+                        </div>
+                        <div x-show="evidenceMode === 'text'" x-cloak>
+                            <textarea name="evidence_text" rows="2" placeholder="Dán thông tin sao kê trích xuất từ Momo..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white"></textarea>
                         </div>
                     </div>
 

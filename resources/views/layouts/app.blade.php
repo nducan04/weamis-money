@@ -117,13 +117,21 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('dashboard') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
                         <span>📊 Dashboard</span>
                     </a>
+                    <a href="{{ route('projects.index') }}" 
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('projects.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
+                        <span>📂 Dự Án</span>
+                    </a>
+                    <a href="{{ route('analytics.networth') }}" 
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('analytics.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
+                        <span>🕸️ Net Worth & Graph</span>
+                    </a>
                     <a href="{{ route('report') }}" 
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('report') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
                         <span>📈 Báo Cáo</span>
                     </a>
                     <a href="{{ route('history') }}" 
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>📜 Lịch Sử Giao Dịch</span>
+                        <span>📜 Lịch Sử</span>
                     </a>
                 </nav>
             </div>
