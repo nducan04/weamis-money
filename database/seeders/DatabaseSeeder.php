@@ -19,17 +19,28 @@ class DatabaseSeeder extends Seeder
             'total_profit' => 126160.00,
         ]);
 
-        // 2. Create All 8 Team Members from DuLieuDaCo
+        // 2. Create Admin Account and All 8 Team Members
         $admin = User::create([
-            'name' => 'Nguyễn Hoàng Việt',
+            'name' => 'Quản Trị Viên (Admin)',
+            'username' => 'admin',
             'email' => 'admin@weamis.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('1322'),
             'role' => 'admin',
+            'avatar' => 'AD',
+            'share_percentage' => 0.00,
+            'current_debt' => 0.00,
+        ]);
+
+        $viet = User::create([
+            'name' => 'Nguyễn Hoàng Việt',
+            'username' => 'nhv',
+            'email' => 'viet.nh@weamis.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('1234'),
+            'role' => 'member',
             'avatar' => 'HV',
             'share_percentage' => 25.00,
             'current_debt' => 0.00,
         ]);
-
-        $viet = $admin; // Nguyễn Hoàng Việt
 
         $son = User::create([
             'name' => 'Hồ Trung Sơn',
@@ -198,5 +209,8 @@ class DatabaseSeeder extends Seeder
         // Set exact real MoMo balance on Fund
         $fund->balance = 7028106.00;
         $fund->save();
+
+        // Run UserPasswordSeeder to assign usernames and Bcrypt hashed passwords
+        $this->call(UserPasswordSeeder::class);
     }
 }

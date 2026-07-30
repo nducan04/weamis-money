@@ -11,11 +11,10 @@ class UserPasswordSeeder extends Seeder
 {
     public function run(): void
     {
-        // Get initial passwords from environment configuration
         $adminPassword = env('ADMIN_INITIAL_PASSWORD', '1322');
         $defaultMemberPassword = env('DEFAULT_MEMBER_PASSWORD', '1234');
 
-        // 1. Create or update the SOLE Admin account: admin / 1322
+        // 1. Super Admin Account: admin / 1322
         $admin = User::where('username', 'admin')->orWhere('email', 'admin@weamis.com')->first();
         if (!$admin) {
             $admin = User::create([
@@ -37,14 +36,33 @@ class UserPasswordSeeder extends Seeder
             ]);
         }
 
-        // 2. All other team members are assigned role 'member' and short initial usernames & password '1234'
-        $users = User::where('id', '!=', $admin->id)->get();
-        $usedUsernames = ['admin'];
+        // 2. Ensure Nguyễn Hoàng Việt is a distinct member account: nhv / 1234
+        $viet = User::where('name', 'Nguyễn Hoàng Việt')->first();
+        if (!$viet) {
+            User::create([
+                'name' => 'Nguyễn Hoàng Việt',
+                'username' => 'nhv',
+                'email' => 'viet.nh@weamis.com',
+                'password' => Hash::make($defaultMemberPassword),
+                'role' => 'member',
+                'share_percentage' => 25.00,
+                'current_debt' => 0.00,
+                'avatar' => 'HV',
+            ]);
+        } else {
+            $viet->update([
+                'username' => 'nhv',
+                'password' => Hash::make($defaultMemberPassword),
+                'role' => 'member',
+            ]);
+        }
+
+        // 3. Map all other team members to short initial usernames & Bcrypt hashed passwords
+        $users = User::whereNotIn('id', [$admin->id, $viet->id])->get();
+        $usedUsernames = ['admin', 'nhv'];
 
         foreach ($users as $u) {
-            if ($u->name === 'Nguyễn Hoàng Việt') {
-                $username = 'nhv';
-            } elseif ($u->name === 'Hồ Trung Sơn') {
+            if ($u->name === 'Hồ Trung Sơn') {
                 $username = 'hts';
             } else {
                 // Generate initials from name: e.g. "Trần Văn Nam" => "tvn"
@@ -68,7 +86,6 @@ class UserPasswordSeeder extends Seeder
 
             $usedUsernames[] = $username;
 
-            // Enforce role = 'member' for all non-admin users
             $u->update([
                 'username' => $username,
                 'password' => Hash::make($defaultMemberPassword),
