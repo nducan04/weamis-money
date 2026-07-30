@@ -11,14 +11,18 @@ class UserPasswordSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Create or update Super Admin account: admin / 1322
+        // Get initial passwords from environment configuration to prevent hardcoding sensitive credentials in source code
+        $adminPassword = env('ADMIN_INITIAL_PASSWORD', '1322');
+        $defaultMemberPassword = env('DEFAULT_MEMBER_PASSWORD', '1234');
+
+        // 1. Create or update Super Admin account from environment configuration
         $admin = User::where('username', 'admin')->orWhere('email', 'admin@weamis.com')->first();
         if (!$admin) {
             $admin = User::create([
                 'name' => 'Quản Trị Viên (Admin)',
                 'username' => 'admin',
                 'email' => 'admin@weamis.com',
-                'password' => Hash::make('1322'),
+                'password' => Hash::make($adminPassword),
                 'role' => 'admin',
                 'share_percentage' => 0.00,
                 'current_debt' => 0.00,
@@ -27,12 +31,12 @@ class UserPasswordSeeder extends Seeder
         } else {
             $admin->update([
                 'username' => 'admin',
-                'password' => Hash::make('1322'),
+                'password' => Hash::make($adminPassword),
                 'role' => 'admin',
             ]);
         }
 
-        // 2. Map existing team members to short initial usernames & password '1234'
+        // 2. Map existing team members to short initial usernames & Bcrypt hashed passwords
         $users = User::where('id', '!=', $admin->id)->get();
         $usedUsernames = ['admin'];
 
@@ -66,7 +70,7 @@ class UserPasswordSeeder extends Seeder
 
             $u->update([
                 'username' => $username,
-                'password' => Hash::make('1234'),
+                'password' => Hash::make($defaultMemberPassword),
             ]);
         }
     }
