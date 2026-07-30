@@ -25,8 +25,10 @@ COPY . .
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions & ensure storage directories exist
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy Nginx & Supervisor config
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
