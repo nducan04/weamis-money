@@ -2,23 +2,8 @@
 
 @section('content')
 <div class="space-y-6">
-
-    <!-- Header Section -->
-    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
-                <span>📊</span>
-                <span>Thống Kê Tài Sản Ròng & Mạng Lưới Hợp Tác</span>
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">Phân tích giá trị tích lũy tài chính và mối quan hệ hợp tác làm chung dự án của các thành viên.</p>
-        </div>
-    </div>
-
     <!-- 1. Explanation & Formula Banner -->
     <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-xl border border-indigo-900/50 space-y-3">
-        <div class="flex items-center space-x-2 text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
-            <span>💡 Giải Thích Công Thức Tính Tài Sản Ròng (Net Worth)</span>
-        </div>
         <div class="text-sm font-semibold text-slate-200 leading-relaxed space-y-1.5">
             <p class="text-base font-extrabold text-white">
                 Tài Sản Ròng = <span class="text-emerald-400">(Thu Nhập Từ Dự Án + Đã Đóng Góp Quỹ)</span> - <span class="text-rose-400">Khoản Đang Vay</span>
