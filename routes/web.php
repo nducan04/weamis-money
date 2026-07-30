@@ -18,9 +18,6 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 
-    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
-
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
 });
@@ -61,7 +58,11 @@ Route::middleware('auth')->group(function () {
     // Distributions & Profit Sharing
     Route::post('/distributions', [DistributionController::class, 'store'])->name('distributions.store');
 
-    // Members Management
+    // Admin Member Management
+    Route::get('/members', [MemberController::class, 'index'])->name('members.index');
     Route::post('/members', [MemberController::class, 'store'])->name('members.store');
+    Route::put('/members/{user}', [MemberController::class, 'update'])->name('members.update');
+    Route::post('/members/{user}/reset-password', [MemberController::class, 'resetPassword'])->name('members.resetPassword');
+    Route::delete('/members/{user}', [MemberController::class, 'destroy'])->name('members.destroy');
     Route::put('/members/{user}/share', [MemberController::class, 'updateShare'])->name('members.updateShare');
 });

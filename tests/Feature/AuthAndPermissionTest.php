@@ -38,7 +38,7 @@ class AuthAndPermissionTest extends TestCase
             'username' => 'nhv',
             'email' => 'viet@weamis.com',
             'password' => Hash::make('1234'),
-            'role' => 'admin',
+            'role' => 'member',
         ]);
 
         $response = $this->post('/login', [
@@ -50,41 +50,71 @@ class AuthAndPermissionTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_user_can_register_new_account()
+    public function test_admin_can_access_member_management_and_create_member()
     {
-        $response = $this->post('/register', [
+        $admin = User::create([
+            'name' => 'Quản Trị Viên',
+            'username' => 'admin',
+            'email' => 'admin@weamis.com',
+            'password' => Hash::make('1322'),
+            'role' => 'admin',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/members');
+        $response->assertStatus(200);
+        $response->assertSee('Quản Lý Tài Khoản Thành Viên');
+
+        $responseCreate = $this->actingAs($admin)->post('/members', [
             'name' => 'Trần Văn Nam',
             'username' => 'tvn',
             'email' => 'nam@weamis.com',
-            'password' => 'secret123',
-            'password_confirmation' => 'secret123',
+            'password' => '1234',
+            'role' => 'member',
+            'share_percentage' => 10,
         ]);
 
-        $response->assertRedirect('/');
+        $responseCreate->assertSessionHas('success');
         $this->assertDatabaseHas('users', ['username' => 'tvn', 'name' => 'Trần Văn Nam']);
-        $this->assertAuthenticated();
+    }
+
+    public function test_non_admin_cannot_access_member_management()
+    {
+        $member = User::create([
+            'name' => 'Ordinary Member',
+            'username' => 'nhv',
+            'email' => 'member@weamis.com',
+            'password' => Hash::make('1234'),
+            'role' => 'member',
+        ]);
+
+        $response = $this->actingAs($member)->get('/members');
+        $response->assertRedirect('/');
+        $response->assertSessionHas('error');
     }
 
     public function test_non_lead_cannot_delete_or_update_project()
     {
         $admin = User::create([
             'name' => 'Admin User',
+            'username' => 'admin_test',
             'email' => 'admin@weamis.com',
-            'password' => Hash::make('weamis123'),
+            'password' => Hash::make('1322'),
             'role' => 'admin',
         ]);
 
         $lead = User::create([
             'name' => 'Project Lead',
+            'username' => 'lead_test',
             'email' => 'lead@weamis.com',
-            'password' => Hash::make('weamis123'),
-            'role' => 'lead',
+            'password' => Hash::make('1234'),
+            'role' => 'member',
         ]);
 
         $member = User::create([
             'name' => 'Ordinary Member',
+            'username' => 'member_test',
             'email' => 'member@weamis.com',
-            'password' => Hash::make('weamis123'),
+            'password' => Hash::make('1234'),
             'role' => 'member',
         ]);
 
