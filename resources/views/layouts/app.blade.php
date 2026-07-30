@@ -123,7 +123,7 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                     </a>
                     <a href="{{ route('analytics.networth') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('analytics.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>🕸️ Net Worth & Graph</span>
+                        <span>💎 Tài Sản & Mạng Lưới</span>
                     </a>
                     <a href="{{ route('report') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('report') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
