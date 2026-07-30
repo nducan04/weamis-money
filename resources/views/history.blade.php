@@ -78,6 +78,69 @@
         this.filterDateTo = '';
         this.sortOrder = 'desc';
         this.currentPage = 1;
+    },
+    calMonthYear: new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'),
+    showCalModal: false,
+    selectedCalDay: null,
+    get calendarDays() {
+        if (!this.calMonthYear) return [];
+        let parts = this.calMonthYear.split('-');
+        let year = parseInt(parts[0]);
+        let month = parseInt(parts[1]) - 1;
+
+        let daysInMonth = new Date(year, month + 1, 0).getDate();
+        let firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
+        firstDay = firstDay === 0 ? 6 : firstDay - 1; // convert to 0=Mon, 6=Sun
+
+        let days = [];
+        // Previous month days
+        let prevMonthDays = new Date(year, month, 0).getDate();
+        for(let i = firstDay - 1; i >= 0; i--) {
+            days.push({ day: prevMonthDays - i, isCurrentMonth: false });
+        }
+        
+        for(let i = 1; i <= daysInMonth; i++) {
+            let dStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(i).padStart(2, '0');
+            // Filter approved transactions for this day
+            let dailyTxs = this.rawTransactions.filter(tx => tx.created_at && tx.created_at.startsWith(dStr) && tx.status === 'approved');
+            
+            let income = 0;
+            let expense = 0;
+            let users = {};
+            
+            dailyTxs.forEach(tx => {
+                if(tx.type === 'contribution' || tx.type === 'repayment') {
+                    income += tx.amount;
+                } else {
+                    expense += tx.amount;
+                }
+                
+                if(!users[tx.user_name]) { users[tx.user_name] = { income: 0, expense: 0, avatar: tx.user_avatar }; }
+                if(tx.type === 'contribution' || tx.type === 'repayment') {
+                    users[tx.user_name].income += tx.amount;
+                } else {
+                    users[tx.user_name].expense += tx.amount;
+                }
+            });
+            
+            days.push({
+                day: i,
+                dateStr: dStr,
+                income: income,
+                expense: expense,
+                users: users,
+                txCount: dailyTxs.length,
+                isCurrentMonth: true
+            });
+        }
+
+        // Next month days to complete grid
+        let nextMonthDay = 1;
+        while(days.length % 7 !== 0) {
+            days.push({ day: nextMonthDay++, isCurrentMonth: false });
+        }
+
+        return days;
     }
 }"
 x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', () => currentPage = 1); $watch('filterType', () => currentPage = 1); $watch('filterDateFrom', () => currentPage = 1); $watch('filterDateTo', () => currentPage = 1); $watch('sortOrder', () => currentPage = 1)"
@@ -96,6 +159,54 @@ class="pb-20 lg:pb-6">
             <button @click="showAddModal = true" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer active:scale-95">
                 <span>➕ Thêm Giao Dịch Mới</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Calendar Section -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <span>🗓️ Lịch Thu Chi Nhóm</span>
+            </h3>
+            <div class="flex items-center gap-2">
+                <input type="month" x-model="calMonthYear" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-bold text-slate-800 dark:text-slate-300 mb-3 uppercase tracking-wider">
+            <div>H</div>
+            <div>B</div>
+            <div>T</div>
+            <div>N</div>
+            <div>S</div>
+            <div>B</div>
+            <div>C</div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 sm:gap-2">
+            <template x-for="(dayObj, i) in calendarDays" :key="i">
+                <div class="min-h-[70px] sm:min-h-[90px] border border-slate-100 dark:border-slate-700 rounded-xl p-1 sm:p-2 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col justify-between transition"
+                    :class="{ 'opacity-60 grayscale': !dayObj.isCurrentMonth, 'hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 cursor-pointer bg-white dark:bg-slate-700': dayObj.isCurrentMonth, 'ring-2 ring-emerald-500 shadow-md': dayObj.isCurrentMonth && new Date().toISOString().startsWith(dayObj.dateStr) }"
+                    @click="if(dayObj.isCurrentMonth && dayObj.txCount > 0) { selectedCalDay = dayObj; showCalModal = true; }">
+                    
+                    <div>
+                        <p class="text-right font-black text-sm" 
+                           :class="{ 'text-emerald-600': dayObj.isCurrentMonth && new Date().toISOString().startsWith(dayObj.dateStr), 'text-slate-700 dark:text-slate-200': dayObj.isCurrentMonth && !new Date().toISOString().startsWith(dayObj.dateStr), 'text-slate-400 dark:text-slate-500': !dayObj.isCurrentMonth }"
+                           x-text="dayObj.day"></p>
+                    </div>
+
+                    <div x-show="dayObj.isCurrentMonth && dayObj.txCount > 0" class="flex flex-col gap-0.5 mt-1 text-right">
+                        <!-- Thu nhập màu xanh -->
+                        <template x-if="dayObj.income > 0">
+                            <span class="text-[9px] sm:text-[10px] font-black text-emerald-600 dark:text-emerald-400 truncate" x-text="'+' + (dayObj.income >= 1000000 ? (dayObj.income/1000000).toFixed(1) + 'tr' : (dayObj.income/1000).toFixed(0) + 'k')"></span>
+                        </template>
+                        <!-- Chi tiêu màu đỏ -->
+                        <template x-if="dayObj.expense > 0">
+                            <span class="text-[9px] sm:text-[10px] font-black text-rose-600 dark:text-rose-400 truncate" x-text="'-' + (dayObj.expense >= 1000000 ? (dayObj.expense/1000000).toFixed(1) + 'tr' : (dayObj.expense/1000).toFixed(0) + 'k')"></span>
+                        </template>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -178,7 +289,7 @@ class="pb-20 lg:pb-6">
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                     <template x-for="(tx, index) in paginatedTransactions" :key="tx.id">
                         <tr class="hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-colors duration-150">
-                            <td class="py-4 px-4 font-bold text-slate-400" x-text="sortOrder === 'asc' ? ((currentPage - 1) * perPage + index + 1) : (filteredTransactions.length - ((currentPage - 1) * perPage + index))"></td>
+                            <td class="py-4 px-4 font-bold text-slate-400" x-text="(currentPage - 1) * perPage + index + 1"></td>
                             <td class="py-4 px-4 whitespace-nowrap text-slate-500 font-semibold" x-text="tx.created_at_formatted"></td>
                             <td class="py-4 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2.5">
@@ -475,5 +586,70 @@ class="pb-20 lg:pb-6">
         </div>
     </div>
 
+    <!-- MODAL: CHI TIẾT NGÀY TRÊN LỊCH -->
+    <div x-show="showCalModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
+        <div @click.away="showCalModal = false" class="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4 flex-shrink-0">
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+                    Chi tiết ngày <span class="text-emerald-600" x-text="selectedCalDay ? (selectedCalDay.day + '/' + (calMonthYear ? calMonthYear.split('-')[1] : '') + '/' + (calMonthYear ? calMonthYear.split('-')[0] : '')) : ''"></span>
+                </h3>
+                <button @click="showCalModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto pr-1 flex-1 space-y-4">
+                <template x-if="selectedCalDay">
+                    <div>
+                        <!-- Summary -->
+                        <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-2xl mb-4 border border-slate-100 dark:border-slate-700">
+                            <div class="text-center w-1/2 border-r border-slate-200 dark:border-slate-600">
+                                <p class="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Tổng Thu</p>
+                                <p class="text-sm font-black text-emerald-600 dark:text-emerald-400" x-text="'+' + new Intl.NumberFormat('vi-VN').format(selectedCalDay.income)"></p>
+                            </div>
+                            <div class="text-center w-1/2">
+                                <p class="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Tổng Chi</p>
+                                <p class="text-sm font-black text-rose-600 dark:text-rose-400" x-text="'-' + new Intl.NumberFormat('vi-VN').format(selectedCalDay.expense)"></p>
+                            </div>
+                        </div>
+
+                        <!-- Per User Breakdown -->
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Chi tiết từng tài khoản</h4>
+                            <template x-for="(userData, userName) in selectedCalDay.users" :key="userName">
+                                <div class="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800">
+                                    <div class="flex items-center space-x-2.5">
+                                        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                            <template x-if="userData.avatar && (userData.avatar.startsWith('http') || userData.avatar.startsWith('/uploads/'))">
+                                                <img :src="userData.avatar" :alt="userName" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!userData.avatar || (!userData.avatar.startsWith('http') && !userData.avatar.startsWith('/uploads/'))">
+                                                <span x-text="userData.avatar || (userName ? userName.substr(0, 2) : 'HV')"></span>
+                                            </template>
+                                        </div>
+                                        <p class="text-sm font-bold text-slate-800 dark:text-white" x-text="userName"></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <template x-if="userData.income > 0">
+                                            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400" x-text="'+' + new Intl.NumberFormat('vi-VN').format(userData.income)"></p>
+                                        </template>
+                                        <template x-if="userData.expense > 0">
+                                            <p class="text-xs font-black text-rose-600 dark:text-rose-400" x-text="'-' + new Intl.NumberFormat('vi-VN').format(userData.expense)"></p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            
+            <div class="pt-4 mt-2 border-t border-slate-100 dark:border-slate-700 flex-shrink-0 text-center">
+                <button @click="showCalModal = false" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl text-xs font-bold transition w-full">Đóng</button>
+            </div>
+        </div>
+    </div>
+
 </div>
+
 @endsection
