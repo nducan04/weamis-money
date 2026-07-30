@@ -11,11 +11,11 @@ class UserPasswordSeeder extends Seeder
 {
     public function run(): void
     {
-        // Get initial passwords from environment configuration to prevent hardcoding sensitive credentials in source code
+        // Get initial passwords from environment configuration
         $adminPassword = env('ADMIN_INITIAL_PASSWORD', '1322');
         $defaultMemberPassword = env('DEFAULT_MEMBER_PASSWORD', '1234');
 
-        // 1. Create or update Super Admin account from environment configuration
+        // 1. Create or update the SOLE Admin account: admin / 1322
         $admin = User::where('username', 'admin')->orWhere('email', 'admin@weamis.com')->first();
         if (!$admin) {
             $admin = User::create([
@@ -30,20 +30,20 @@ class UserPasswordSeeder extends Seeder
             ]);
         } else {
             $admin->update([
+                'name' => 'Quản Trị Viên (Admin)',
                 'username' => 'admin',
                 'password' => Hash::make($adminPassword),
                 'role' => 'admin',
             ]);
         }
 
-        // 2. Map existing team members to short initial usernames & Bcrypt hashed passwords
+        // 2. All other team members are assigned role 'member' and short initial usernames & password '1234'
         $users = User::where('id', '!=', $admin->id)->get();
         $usedUsernames = ['admin'];
 
         foreach ($users as $u) {
             if ($u->name === 'Nguyễn Hoàng Việt') {
                 $username = 'nhv';
-                $u->role = 'admin'; // Nguyễn Hoàng Việt is also admin
             } elseif ($u->name === 'Hồ Trung Sơn') {
                 $username = 'hts';
             } else {
@@ -68,9 +68,11 @@ class UserPasswordSeeder extends Seeder
 
             $usedUsernames[] = $username;
 
+            // Enforce role = 'member' for all non-admin users
             $u->update([
                 'username' => $username,
                 'password' => Hash::make($defaultMemberPassword),
+                'role' => 'member',
             ]);
         }
     }
