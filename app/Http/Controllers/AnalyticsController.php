@@ -13,18 +13,16 @@ class AnalyticsController extends Controller
 {
     public function networth()
     {
-        $members = User::all();
+        $members = User::where('role', '!=', 'admin')->get();
         $projects = Project::with('members')->get();
 
         // 1. Net Worth calculation per member
         $netWorthData = [];
         foreach ($members as $m) {
-            $contributions = Transaction::where('user_id', $m->id)->where('status', 'approved')->where('type', 'contribution')->sum('amount');
-            $repayments = Transaction::where('user_id', $m->id)->where('status', 'approved')->where('type', 'repayment')->sum('amount');
-            $loans = Transaction::where('user_id', $m->id)->where('status', 'approved')->where('type', 'loan')->sum('amount');
-            $expenses = Transaction::where('user_id', $m->id)->where('status', 'approved')->where('type', 'expense')->sum('amount');
+            $contributions = Transaction::where('user_id', $m->id)->where('status', 'approved')->where('type', 'contribution')->whereNull('project_id')->sum('amount');
+            $loans = (float) $m->current_debt;
 
-            // Estimated payouts from projects
+            // Estimated payouts from active & completed projects
             $projectEarnings = 0;
             foreach ($projects as $p) {
                 $pIncome = $p->transactions()->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
@@ -36,11 +34,12 @@ class AnalyticsController extends Controller
                 }
             }
 
-            $netWorth = ($contributions + $repayments + $projectEarnings) - ($loans + $expenses);
+            $netWorth = ($contributions + $projectEarnings) - $loans;
 
             $netWorthData[] = [
                 'id' => $m->id,
                 'name' => $m->name,
+                'username' => $m->username,
                 'avatar' => $m->avatar,
                 'contributions' => $contributions,
                 'project_earnings' => $projectEarnings,
@@ -49,11 +48,16 @@ class AnalyticsController extends Controller
             ];
         }
 
+        // Sort descending by Net Worth
+        usort($netWorthData, function ($a, $b) {
+            return $b['net_worth'] <=> $a['net_worth'];
+        });
+
         // 2. Collaboration Network Graph data (Nodes and Edges)
         $nodes = [];
         $edges = [];
 
-        // Member nodes
+        // Member nodes (Exclude Admin)
         foreach ($members as $m) {
             $avatarUrl = ($m->avatar && (str_starts_with($m->avatar, 'http://') || str_starts_with($m->avatar, 'https://') || str_starts_with($m->avatar, '/uploads/')))
                 ? $m->avatar
@@ -92,12 +96,14 @@ class AnalyticsController extends Controller
                 'font' => ['color' => '#0f172a', 'face' => 'Plus Jakarta Sans', 'size' => 12, 'vadjust' => 0]
             ];
 
-            $pMemberIds = $p->members->pluck('id')->toArray();
+            $pMembers = $p->members->where('role', '!=', 'admin');
+            $pMemberIds = $pMembers->pluck('id')->toArray();
             foreach ($pMemberIds as $uid) {
+                $pm = $pMembers->where('id', $uid)->first();
                 $edges[] = [
                     'from' => 'u_' . $uid,
                     'to' => 'p_' . $p->id,
-                    'label' => $p->members->where('id', $uid)->first()->pivot->share_percentage . '%',
+                    'label' => $pm->pivot->share_percentage . '%',
                     'color' => ['color' => '#10b981', 'highlight' => '#34d399'],
                     'width' => 2,
                     'font' => ['color' => '#10b981', 'size' => 11, 'face' => 'Plus Jakarta Sans', 'strokeWidth' => 3, 'strokeColor' => '#0f172a']
