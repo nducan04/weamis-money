@@ -18,6 +18,39 @@ class AuthController extends Controller
         return view('auth.login', compact('users'));
     }
 
+    public function showRegister()
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $initials = strtoupper(substr(trim($validated['name']), 0, 2));
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'member',
+            'avatar' => $initials,
+            'share_percentage' => 0.00,
+            'current_debt' => 0.00,
+        ]);
+
+        Auth::login($user);
+
+        return redirect()->route('dashboard')->with('success', 'Đăng ký tài khoản thành công! Chào mừng ' . $user->name . ' đến với Weamis Money.');
+    }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([

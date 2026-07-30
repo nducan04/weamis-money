@@ -49,6 +49,20 @@ class AuthAndPermissionTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_user_can_register_new_account()
+    {
+        $response = $this->post('/register', [
+            'name' => 'Trần Văn Nam',
+            'email' => 'nam@weamis.com',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('users', ['email' => 'nam@weamis.com', 'name' => 'Trần Văn Nam']);
+        $this->assertAuthenticated();
+    }
+
     public function test_non_lead_cannot_delete_or_update_project()
     {
         $admin = User::create([
