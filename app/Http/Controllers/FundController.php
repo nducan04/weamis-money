@@ -17,7 +17,7 @@ class FundController extends Controller
             ['name' => 'Trả nợ thuê Ltd', 'balance' => 7028106.00, 'total_profit' => 126160.00]
         );
 
-        $members = User::orderBy('id')->get();
+        $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
         $projects = Project::all();
 
         // 1. Stat Totals

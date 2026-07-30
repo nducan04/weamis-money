@@ -13,7 +13,7 @@ class TransactionController extends Controller
 {
     public function history(Request $request)
     {
-        $members = User::orderBy('id')->get();
+        $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
         $projects = Project::all();
         $fund = Fund::firstOrCreate(
             ['id' => 1],
@@ -46,7 +46,7 @@ class TransactionController extends Controller
 
     public function report(Request $request)
     {
-        $members = User::orderBy('id')->get();
+        $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
         $projects = Project::all();
         $fund = Fund::firstOrCreate(
             ['id' => 1],

@@ -2,7 +2,7 @@
 
 @section('content')
 <div x-data="{ 
-    showAddModal: false,
+    showCalendar: false,
     showEditModal: false,
     showDeleteModal: false,
     showFilters: false,
@@ -153,28 +153,29 @@ class="pb-20 lg:pb-6">
             <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center space-x-2">
                 <span>📜 Lịch Sử Giao Dịch</span>
             </h2>
-            <p class="text-xs text-slate-400 font-medium">Toàn bộ lịch sử thu, chi, vay và trả nợ nhóm</p>
+            <p class="text-xs text-slate-400 font-medium">Toàn bộ nhật ký thu, chi, vay và trả nợ nhóm</p>
         </div>
 
         <div class="flex items-center space-x-2">
-            <button @click="showAddModal = true" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer active:scale-95">
-                <span>➕ Thêm Giao Dịch Mới</span>
+            <button @click="showCalendar = !showCalendar" class="px-3.5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-2 cursor-pointer">
+                <span>📅 Lịch Thu Chi Nhật Ký</span>
+                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-black" x-text="showCalendar ? '▲ Thu gọn' : '▼ Mở rộng'"></span>
             </button>
         </div>
     </div>
 
-    <!-- Calendar Section -->
-    <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md mb-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <span>🗓️ Lịch Thu Chi Nhóm</span>
+    <!-- Collapsible Calendar Section -->
+    <div x-show="showCalendar" x-cloak x-transition class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-md mb-6">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                <span>🗓️ Lịch Thu Chi Nhóm Thống Kê Theo Ngày</span>
             </h3>
             <div class="flex items-center gap-2">
-                <input type="month" x-model="calMonthYear" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+                <input type="month" x-model="calMonthYear" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
             </div>
         </div>
 
-        <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-bold text-slate-800 dark:text-slate-300 mb-3 uppercase tracking-wider">
+        <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
             <div>H</div>
             <div>B</div>
             <div>T</div>
@@ -186,24 +187,24 @@ class="pb-20 lg:pb-6">
 
         <div class="grid grid-cols-7 gap-1 sm:gap-2">
             <template x-for="(dayObj, i) in calendarDays" :key="i">
-                <div class="min-h-[70px] sm:min-h-[90px] border border-slate-100 dark:border-slate-700 rounded-xl p-1 sm:p-2 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col justify-between transition"
-                    :class="{ 'opacity-60 grayscale': !dayObj.isCurrentMonth, 'hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-700 cursor-pointer bg-white dark:bg-slate-700': dayObj.isCurrentMonth, 'ring-2 ring-emerald-500 shadow-md': dayObj.isCurrentMonth && new Date().toISOString().startsWith(dayObj.dateStr) }"
+                <div class="min-h-[55px] sm:min-h-[65px] border border-slate-100 dark:border-slate-700 rounded-xl p-1 sm:p-1.5 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col justify-between transition"
+                    :class="{ 'opacity-50 grayscale': !dayObj.isCurrentMonth, 'hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 cursor-pointer bg-white dark:bg-slate-700': dayObj.isCurrentMonth, 'ring-2 ring-emerald-500 shadow-md': dayObj.isCurrentMonth && new Date().toISOString().startsWith(dayObj.dateStr) }"
                     @click="if(dayObj.isCurrentMonth && dayObj.txCount > 0) { selectedCalDay = dayObj; showCalModal = true; }">
                     
                     <div>
-                        <p class="text-right font-black text-sm" 
+                        <p class="text-right font-black text-xs" 
                            :class="{ 'text-emerald-600': dayObj.isCurrentMonth && new Date().toISOString().startsWith(dayObj.dateStr), 'text-slate-700 dark:text-slate-200': dayObj.isCurrentMonth && !new Date().toISOString().startsWith(dayObj.dateStr), 'text-slate-400 dark:text-slate-500': !dayObj.isCurrentMonth }"
                            x-text="dayObj.day"></p>
                     </div>
 
-                    <div x-show="dayObj.isCurrentMonth && dayObj.txCount > 0" class="flex flex-col gap-0.5 mt-1 text-right">
+                    <div x-show="dayObj.isCurrentMonth && dayObj.txCount > 0" class="flex flex-col gap-0.5 mt-0.5 text-right">
                         <!-- Thu nhập màu xanh -->
                         <template x-if="dayObj.income > 0">
-                            <span class="text-[9px] sm:text-[10px] font-black text-emerald-600 dark:text-emerald-400 truncate" x-text="'+' + (dayObj.income >= 1000000 ? (dayObj.income/1000000).toFixed(1) + 'tr' : (dayObj.income/1000).toFixed(0) + 'k')"></span>
+                            <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 truncate" x-text="'+' + (dayObj.income >= 1000000 ? (dayObj.income/1000000).toFixed(1) + 'tr' : (dayObj.income/1000).toFixed(0) + 'k')"></span>
                         </template>
                         <!-- Chi tiêu màu đỏ -->
                         <template x-if="dayObj.expense > 0">
-                            <span class="text-[9px] sm:text-[10px] font-black text-rose-600 dark:text-rose-400 truncate" x-text="'-' + (dayObj.expense >= 1000000 ? (dayObj.expense/1000000).toFixed(1) + 'tr' : (dayObj.expense/1000).toFixed(0) + 'k')"></span>
+                            <span class="text-[9px] font-black text-rose-600 dark:text-rose-400 truncate" x-text="'-' + (dayObj.expense >= 1000000 ? (dayObj.expense/1000000).toFixed(1) + 'tr' : (dayObj.expense/1000).toFixed(0) + 'k')"></span>
                         </template>
                     </div>
                 </div>
@@ -488,50 +489,6 @@ class="pb-20 lg:pb-6">
                 </div>
             </div>
         </template>
-    </div>
-
-    <!-- MODAL: THÊM GIAO DỊCH MỚI -->
-    <div x-show="showAddModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
-        <div @click.away="showAddModal = false" class="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-4">➕ Thêm Giao Dịch Thu Chi</h3>
-
-            <form action="{{ route('transactions.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thành viên</label>
-                    <select name="user_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-emerald-500">
-                        @foreach($members->where('role', '!=', 'admin') as $m)
-                            <option value="{{ $m->id }}">{{ $m->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Phân loại</label>
-                    <select name="type" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-emerald-500">
-                        <option value="contribution">🟢 Góp Quỹ (Thu vào)</option>
-                        <option value="expense">🔴 Chi Tiêu Nhóm (Chi ra)</option>
-                        <option value="loan">🟣 Vay Cá Nhân</option>
-                        <option value="repayment">🔵 Trả Nợ Vay</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền (VNĐ)</label>
-                    <input type="number" name="amount" required step="1000" min="1000" placeholder="VD: 500000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nội dung / Lí do</label>
-                    <input type="text" name="description" required placeholder="VD: Tiền mua nước uống họp team..." class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <div class="flex items-center justify-end space-x-3 pt-2">
-                    <button type="button" @click="showAddModal = false" class="px-4 py-2.5 text-xs font-bold text-slate-500">Hủy</button>
-                    <button type="submit" class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition">Lưu Giao Dịch</button>
-                </div>
-            </form>
-        </div>
     </div>
 
     <!-- MODAL: CHỈNH SỬA GIAO DỊCH -->

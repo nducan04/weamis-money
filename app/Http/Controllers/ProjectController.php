@@ -13,7 +13,7 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::with(['lead', 'members', 'transactions'])->latest()->get();
-        $members = User::all();
+        $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
         return view('projects.index', compact('projects', 'members'));
     }
@@ -77,7 +77,7 @@ class ProjectController extends Controller
             ];
         }
 
-        $allMembers = User::all();
+        $allMembers = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
         return view('projects.show', compact('project', 'totalIncome', 'totalExpense', 'fundCut', 'distributable', 'memberPayouts', 'allMembers'));
     }
