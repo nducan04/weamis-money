@@ -236,7 +236,7 @@ class="pb-20 lg:pb-6">
                 
                 <select x-model="filterMemberId" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả thành viên</option>
-                    @foreach($members as $m)
+                    @foreach($members->where('role', '!=', 'admin') as $m)
                         <option value="{{ $m->id }}">{{ $m->name }}</option>
                     @endforeach
                 </select>
@@ -500,7 +500,7 @@ class="pb-20 lg:pb-6">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thành viên</label>
                     <select name="user_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium focus:ring-2 focus:ring-emerald-500">
-                        @foreach($members as $m)
+                        @foreach($members->where('role', '!=', 'admin') as $m)
                             <option value="{{ $m->id }}">{{ $m->name }}</option>
                         @endforeach
                     </select>
@@ -546,7 +546,7 @@ class="pb-20 lg:pb-6">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thành viên</label>
                         <select name="user_id" x-model="selectedTx.user_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
-                            @foreach($members as $m)
+                            @foreach($members->where('role', '!=', 'admin') as $m)
                                 <option value="{{ $m->id }}">{{ $m->name }}</option>
                             @endforeach
                         </select>
@@ -676,7 +676,7 @@ class="pb-20 lg:pb-6">
     <div x-show="activeEvidence" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4" x-cloak x-transition>
         <div @click.away="activeEvidence = null" class="bg-white dark:bg-slate-800 rounded-3xl p-5 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700">
             <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
-                <h4 class="font-bold text-sm text-slate-900 dark:text-white">📌 Bằng chứng (Evidence)</h4>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">📌 Bằng chứng</h4>
                 <button @click="activeEvidence = null" class="text-slate-400 font-bold">✕</button>
             </div>
             <template x-if="activeEvidence && activeEvidence.type === 'image'">

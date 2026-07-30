@@ -170,7 +170,7 @@
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Quản lý dự án</label>
                         <select name="lead_user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             <option value="">-- Chọn --</option>
-                            @foreach($members as $m)
+                            @foreach($members->where('role', '!=', 'admin') as $m)
                                 <option value="{{ $m->id }}">{{ $m->name }}</option>
                             @endforeach
                         </select>
@@ -181,7 +181,7 @@
                 <div class="pt-2">
                     <label class="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-2">Tỷ lệ % Cổ Phần Thành Viên Trong Dự Án</label>
                     <div class="space-y-2 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-700">
-                        @foreach($members as $index => $m)
+                        @foreach($members->where('role', '!=', 'admin') as $index => $m)
                             <div class="flex items-center justify-between text-xs">
                                 <span class="font-bold text-slate-800 dark:text-slate-200 w-1/2">{{ $m->name }}</span>
                                 <input type="hidden" name="members[{{ $index }}][user_id]" value="{{ $m->id }}">

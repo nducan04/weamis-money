@@ -206,7 +206,7 @@ class="pb-20 lg:pb-6">
                             <span class="text-slate-500 dark:text-slate-400 block mb-1">Người trách nhiệm</span>
                             <select name="responsible_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs font-medium text-slate-900 dark:text-white outline-none">
                                 <option value="">-- Trách nhiệm --</option>
-                                @foreach($members as $m)
+                                @foreach($members->where('role', '!=', 'admin') as $m)
                                     <option value="{{ $m->id }}">{{ $m->name }}</option>
                                 @endforeach
                             </select>
@@ -215,7 +215,7 @@ class="pb-20 lg:pb-6">
                             <span class="text-slate-500 dark:text-slate-400 block mb-1">Người đòi/nhận tiền</span>
                             <select name="claimant_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs font-medium text-slate-900 dark:text-white outline-none">
                                 <option value="">-- Đòi tiền --</option>
-                                @foreach($members as $m)
+                                @foreach($members->where('role', '!=', 'admin') as $m)
                                     <option value="{{ $m->id }}">{{ $m->name }}</option>
                                 @endforeach
                             </select>
@@ -225,7 +225,7 @@ class="pb-20 lg:pb-6">
                     <!-- Evidence Attachment Row -->
                     <div class="space-y-1.5">
                         <div class="flex items-center justify-between text-xs font-semibold">
-                            <span class="text-slate-500 dark:text-slate-400">Bằng chứng (Evidence)</span>
+                            <span class="text-slate-500 dark:text-slate-400">Bằng chứng</span>
                             <div class="flex space-x-1">
                                 <button type="button" @click="triggerFilePick()" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" :class="evidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100'">
                                     <span>🖼️ Ảnh bill</span>

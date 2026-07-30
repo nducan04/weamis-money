@@ -101,7 +101,7 @@
                         <th class="py-3 px-3">Người nhập</th>
                         <th class="py-3 px-3">Nội dung</th>
                         <th class="py-3 px-3">Người trách nhiệm / Đòi tiền</th>
-                        <th class="py-3 px-3">Bằng chứng (Evidence)</th>
+                        <th class="py-3 px-3">Bằng chứng</th>
                         <th class="py-3 px-3 text-right rounded-r-xl">Số tiền</th>
                     </tr>
                 </thead>
@@ -148,7 +148,7 @@
     <div x-show="activeEvidence" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4" x-cloak x-transition>
         <div @click.away="activeEvidence = null" class="bg-white dark:bg-slate-800 rounded-3xl p-5 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700">
             <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
-                <h4 class="font-bold text-sm text-slate-900 dark:text-white">📌 Bằng chứng (Evidence)</h4>
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">📌 Bằng chứng</h4>
                 <button @click="activeEvidence = null" class="text-slate-400 font-bold">✕</button>
             </div>
             <template x-if="activeEvidence && activeEvidence.type === 'image'">
@@ -204,7 +204,7 @@
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Project Lead</label>
                         <select name="lead_user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             <option value="">-- Chọn Lead --</option>
-                            @foreach($allMembers as $m)
+                            @foreach($allMembers->where('role', '!=', 'admin') as $m)
                                 <option value="{{ $m->id }}" {{ $project->lead_user_id == $m->id ? 'selected' : '' }}>{{ $m->name }}</option>
                             @endforeach
                         </select>
@@ -215,7 +215,7 @@
                 <div class="pt-2">
                     <label class="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-2">Tỷ lệ % Cổ Phần Thành Viên</label>
                     <div class="space-y-2 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-700">
-                        @foreach($allMembers as $index => $m)
+                        @foreach($allMembers->where('role', '!=', 'admin') as $index => $m)
                             @php
                                 $pm = $project->projectMembers->where('user_id', $m->id)->first();
                                 $share = $pm ? $pm->share_percentage : 0;
