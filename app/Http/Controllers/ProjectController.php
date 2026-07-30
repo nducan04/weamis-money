@@ -37,6 +37,7 @@ class ProjectController extends Controller
             'description' => $validated['description'] ?? null,
             'weamis_fund_percentage' => $validated['weamis_fund_percentage'],
             'lead_user_id' => $validated['lead_user_id'] ?? null,
+            'created_by_user_id' => auth()->id(),
             'status' => 'active',
         ]);
 
@@ -57,7 +58,7 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['lead', 'members', 'projectMembers.user', 'transactions.user', 'transactions.responsibleUser', 'transactions.claimantUser']);
+        $project->load(['lead', 'creator', 'members', 'projectMembers.user', 'transactions.user', 'transactions.responsibleUser', 'transactions.claimantUser']);
 
         $totalIncome = $project->transactions()->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
         $totalExpense = $project->transactions()->where('status', 'approved')->where('type', 'expense')->sum('amount');
@@ -83,6 +84,10 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        if (!$project->canManage(auth()->user())) {
+            return redirect()->back()->with('error', 'Bạn không có quyền chỉnh sửa cấu hình dự án này. Chỉ Admin, Người tạo hoặc Lead của dự án mới có quyền.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -121,6 +126,10 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
+        if (!$project->canManage(auth()->user())) {
+            return redirect()->back()->with('error', 'Bạn không có quyền xóa dự án này. Chỉ Admin, Người tạo hoặc Lead của dự án mới có quyền xóa.');
+        }
+
         $name = $project->name;
         $project->delete();
 

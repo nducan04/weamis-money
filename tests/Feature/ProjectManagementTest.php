@@ -25,7 +25,7 @@ class ProjectManagementTest extends TestCase
             'total_profit' => 500000.00,
         ]);
 
-        User::create([
+        $admin = User::create([
             'id' => 1,
             'name' => 'Nguyễn Hoàng Việt',
             'email' => 'viet@weamis.com',
@@ -51,6 +51,8 @@ class ProjectManagementTest extends TestCase
             'share_percentage' => 10.0,
             'current_debt' => 0.0,
         ]);
+
+        $this->actingAs($admin);
     }
 
     public function test_projects_page_renders_successfully()

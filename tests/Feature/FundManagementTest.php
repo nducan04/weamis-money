@@ -17,6 +17,11 @@ class FundManagementTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+
+        $user = User::first();
+        if ($user) {
+            $this->actingAs($user);
+        }
     }
 
     public function test_dashboard_renders_successfully()

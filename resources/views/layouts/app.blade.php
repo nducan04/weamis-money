@@ -141,9 +141,52 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                 <button @click="darkMode = !darkMode" class="p-2 sm:p-2.5 rounded-xl bg-emerald-800/60 hover:bg-emerald-800 border border-emerald-500/40 text-xs font-bold text-white flex items-center space-x-1.5 transition cursor-pointer">
                     <span x-show="!darkMode">🌙</span>
                     <span x-show="darkMode">☀️</span>
-                    <span class="hidden sm:inline" x-show="!darkMode">Chế độ Tối</span>
-                    <span class="hidden sm:inline" x-show="darkMode">Chế độ Sáng</span>
+                    <span class="hidden md:inline" x-show="!darkMode">Tối</span>
+                    <span class="hidden md:inline" x-show="darkMode">Sáng</span>
                 </button>
+
+                <!-- User Profile & Dropdown -->
+                @auth
+                <div class="relative" x-data="{ openProfile: false }">
+                    <button @click="openProfile = !openProfile" class="flex items-center space-x-2 p-1.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 text-white transition cursor-pointer">
+                        <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-900 text-white font-black text-xs flex items-center justify-center overflow-hidden border border-white/40">
+                            @if(auth()->user()->avatar && \Illuminate\Support\Str::startsWith(auth()->user()->avatar, ['http://', 'https://', '/uploads/']))
+                                <img src="{{ auth()->user()->avatar }}" alt="{{ auth()->user()->name }}" class="w-full h-full object-cover">
+                            @else
+                                {{ auth()->user()->avatar ?? substr(auth()->user()->name, 0, 2) }}
+                            @endif
+                        </div>
+                        <div class="text-left hidden sm:block">
+                            <p class="text-xs font-black leading-none flex items-center space-x-1">
+                                <span>{{ auth()->user()->name }}</span>
+                                @if(auth()->user()->isAdmin())
+                                    <span class="px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] uppercase">Admin</span>
+                                @elseif(auth()->user()->isLead())
+                                    <span class="px-1.5 py-0.5 bg-indigo-400 text-white rounded font-black text-[9px] uppercase">Lead</span>
+                                @endif
+                            </p>
+                        </div>
+                        <svg class="w-3.5 h-3.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div x-show="openProfile" @click.away="openProfile = false" x-cloak class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl py-2 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 z-50 text-xs font-bold">
+                        <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-700 sm:hidden">
+                            <p class="font-extrabold text-sm text-slate-900 dark:text-white">{{ auth()->user()->name }}</p>
+                            <p class="text-[10px] text-slate-400 font-semibold">{{ auth()->user()->email }}</p>
+                        </div>
+                        <a href="{{ route('password.change') }}" class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 transition">
+                            <span>🔐 Đổi mật khẩu</span>
+                        </a>
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full text-left px-4 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 flex items-center space-x-2 transition cursor-pointer">
+                                <span>🚪 Đăng xuất</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @endauth
             </div>
         </div>
     </header>

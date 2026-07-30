@@ -20,6 +20,7 @@
             </p>
         </div>
 
+        @if($project->canManage(auth()->user()))
         <div class="flex items-center space-x-2">
             <button @click="showEditModal = true" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
                 <span>⚙️ Cấu Hình Dự Án</span>
@@ -32,6 +33,11 @@
                 </button>
             </form>
         </div>
+        @else
+        <div class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-semibold rounded-xl">
+            🔒 Chỉ Lead/Admin mới có quyền sửa/xóa
+        </div>
+        @endif
     </div>
 
     <!-- Financial Cards -->
