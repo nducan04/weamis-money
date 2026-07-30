@@ -1,14 +1,25 @@
 stages:
   - deploy
 
-deploy_job:
+deploy_production:
   stage: deploy
-  only:
-    - main
-  tags:
-    - docker
+  image: alpine:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  before_script:
+    - 'which ssh-agent || ( apk update && apk add --no-cache openssh-client bash )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts || true
+    - chmod 644 ~/.ssh/known_hosts || true
   script:
-    - echo "Deploying WEAMIS Money to money.vietnh.io.vn..."
-    - docker-compose up -d --build
-    - docker exec weamis-money-app php artisan migrate --force
-    - echo "Deployment completed successfully!"
+    - |
+      ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+        cd $PROJECT_PATH && \
+        git fetch --all && \
+        git checkout main && \
+        git pull origin main && \
+        docker compose up -d --build
+      "
