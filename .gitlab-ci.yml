@@ -1,3 +1,8 @@
+variables:
+  AUTO_DEVOPS_EXPLICITLY_DISABLED: "1"
+
+include: []
+
 stages:
   - deploy
 
