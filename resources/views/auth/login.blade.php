@@ -69,9 +69,8 @@
             </button>
         </form>
 
-        <div class="text-center pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
-            <span class="text-slate-400 font-medium">Chưa có tài khoản?</span>
-            <a href="{{ route('register') }}" class="font-extrabold text-emerald-400 hover:underline">📝 Đăng ký tài khoản mới</a>
+        <div class="text-center pt-2 border-t border-slate-700/60">
+            <p class="text-[11px] text-slate-400 font-medium">© {{ date('Y') }} Team Weamis. Hệ thống quản lý tài chính nội bộ.</p>
         </div>
 
     </div>
