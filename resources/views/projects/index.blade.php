@@ -19,6 +19,60 @@
         </button>
     </div>
 
+    <!-- Summary Metrics Header -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        @php
+            $totalProjectsCount = $projects->count();
+            $activeProjectsCount = $projects->where('status', 'active')->count();
+            $totalProjectsIncome = $projects->sum(function($p) {
+                return $p->transactions->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
+            });
+            $totalFundCutAll = $projects->sum(function($p) {
+                $inc = $p->transactions->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
+                return ($inc * $p->weamis_fund_percentage) / 100;
+            });
+        @endphp
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-lg flex items-center justify-center flex-shrink-0">
+                📁
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Số Dự Án</p>
+                <p class="text-lg font-black text-slate-900 dark:text-white">{{ $totalProjectsCount }} <span class="text-xs font-semibold text-slate-400">({{ $activeProjectsCount }} đang chạy)</span></p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-lg flex items-center justify-center flex-shrink-0">
+                💰
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Doanh Thu Dự Án</p>
+                <p class="text-lg font-black text-indigo-600 dark:text-indigo-400">+{{ number_format($totalProjectsIncome, 0, ',', '.') }}đ</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-black text-lg flex items-center justify-center flex-shrink-0">
+                🏛️
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trích Quỹ Weamis</p>
+                <p class="text-lg font-black text-amber-600 dark:text-amber-400">{{ number_format($totalFundCutAll, 0, ',', '.') }}đ</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 font-black text-lg flex items-center justify-center flex-shrink-0">
+                👥
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đội Ngũ Phụ Trách</p>
+                <p class="text-lg font-black text-teal-600 dark:text-teal-400">{{ $members->count() }} Thành viên</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Projects Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @forelse($projects as $p)
@@ -41,7 +95,7 @@
                     </div>
 
                     <h3 class="font-black text-lg text-slate-900 dark:text-white mb-1.5">{{ $p->name }}</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 font-medium">{{ $p->description ?: 'Không có mô tả' }}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 font-medium">{{ $p->description ?: 'Không có mô tả dự án' }}</p>
 
                     <!-- Financial Summary -->
                     <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-700/40 p-3 rounded-2xl mb-4 border border-slate-100 dark:border-slate-700/60 text-xs">
@@ -72,7 +126,7 @@
                 <!-- Footer Action Link -->
                 <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <span class="text-xs text-slate-400 font-medium">Lead: <strong class="text-slate-700 dark:text-slate-200">{{ $p->lead ? $p->lead->name : 'N/A' }}</strong></span>
-                    <a href="{{ route('projects.show', $p) }}" class="px-3.5 py-1.5 bg-slate-900 dark:bg-slate-700 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl transition flex items-center space-x-1 cursor-pointer">
+                    <a href="{{ route('projects.show', $p) }}" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition flex items-center space-x-1 cursor-pointer">
                         <span>Chi tiết Audit ➔</span>
                     </a>
                 </div>

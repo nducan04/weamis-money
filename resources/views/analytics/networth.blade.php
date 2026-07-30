@@ -46,18 +46,29 @@
 
     <!-- 2. Vis.js Collaboration Network Graph -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md">
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <h3 class="font-black text-slate-900 dark:text-white text-base sm:text-lg flex items-center space-x-2">
                     <span>🕸️</span>
                     <span>Đồ Thị Mạng Lưới Tương Quan Hợp Tác (Collaboration Graph)</span>
                 </h3>
-                <p class="text-xs text-slate-400 font-medium">Trực quan hóa mối quan hệ hợp tác làm chung dự án giữa các thành viên team.</p>
+                <p class="text-xs text-slate-400 font-medium">Trực quan hóa mối quan hệ hợp tác làm chung dự án & % phân chia giữa các thành viên.</p>
             </div>
-            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs rounded-xl">Interactive Graph</span>
+            
+            <!-- Graph Legend & Controls -->
+            <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700/60 px-3 py-1.5 rounded-xl text-xs font-bold">
+                    <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> <span class="text-slate-700 dark:text-slate-300">Thành viên</span></span>
+                    <span class="text-slate-300 dark:text-slate-600">|</span>
+                    <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-md bg-amber-500 inline-block"></span> <span class="text-slate-700 dark:text-slate-300">Dự án</span></span>
+                </div>
+                <button id="btn-reset-view" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition cursor-pointer flex items-center space-x-1">
+                    <span>🔍 Zoom Chuẩn</span>
+                </button>
+            </div>
         </div>
 
-        <div id="network-graph" class="w-full h-[450px] bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/80 dark:border-slate-700"></div>
+        <div id="network-graph" class="w-full h-[520px] bg-slate-900 rounded-2xl border border-slate-700/60 shadow-inner relative overflow-hidden"></div>
     </div>
 
 </div>
@@ -77,22 +88,59 @@
         const data = { nodes: nodes, edges: edges };
         const options = {
             nodes: {
-                borderWidth: 2,
-                size: 24,
-                font: { size: 12, color: '#64748b', face: 'Plus Jakarta Sans' }
+                borderWidth: 3,
+                size: 32,
+                font: { 
+                    size: 13, 
+                    color: '#ffffff', 
+                    face: 'Plus Jakarta Sans',
+                    strokeWidth: 4,
+                    strokeColor: '#0f172a'
+                },
+                shadow: {
+                    enabled: true,
+                    color: 'rgba(0,0,0,0.5)',
+                    size: 10,
+                    x: 3,
+                    y: 3
+                }
             },
             edges: {
-                width: 2,
-                font: { size: 10, align: 'middle' },
-                smooth: { type: 'continuous' }
+                width: 2.5,
+                smooth: { type: 'cubicBezier', forceDirection: 'none', roundness: 0.4 },
+                shadow: { enabled: true, color: 'rgba(0,0,0,0.3)', size: 5, x: 2, y: 2 }
             },
             physics: {
                 solver: 'forceAtlas2Based',
-                forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 100 }
+                forceAtlas2Based: {
+                    gravitationalConstant: -220,
+                    centralGravity: 0.015,
+                    springLength: 180,
+                    springConstant: 0.05,
+                    damping: 0.4
+                },
+                maxVelocity: 50,
+                minVelocity: 0.1,
+                stabilization: { iterations: 150 }
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 100,
+                zoomView: true,
+                dragView: true
             }
         };
 
-        new vis.Network(container, data, options);
+        const network = new vis.Network(container, data, options);
+
+        document.getElementById('btn-reset-view').addEventListener('click', function() {
+            network.fit({
+                animation: {
+                    duration: 600,
+                    easingFunction: 'easeInOutQuad'
+                }
+            });
+        });
     });
 </script>
 @endsection

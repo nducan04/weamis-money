@@ -56,19 +56,25 @@
 
     <!-- Member Payouts Table -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-        <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center space-x-2">
+        <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center space-x-2">
             <span>💎 Phân Bổ Tiền Dự Án Cho Thành Viên</span>
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             @foreach($memberPayouts as $payout)
-                <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-bold text-slate-900 dark:text-white">{{ $payout['user']->name }}</p>
-                        <p class="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold">Tỷ lệ cổ phần: {{ number_format($payout['share_percentage'], 1) }}%</p>
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-extrabold text-slate-900 dark:text-white">{{ $payout['user']->name }}</p>
+                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold">Cổ phần: {{ number_format($payout['share_percentage'], 1) }}%</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Số tiền nhận</p>
+                            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($payout['estimated_payout'], 0, ',', '.') }}đ</p>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase">Số tiền nhận</p>
-                        <p class="text-xs font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($payout['estimated_payout'], 0, ',', '.') }}đ</p>
+                    <!-- Share progress bar -->
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 to-indigo-600 h-full rounded-full" style="width: {{ min(100, max(5, $payout['share_percentage'])) }}%"></div>
                     </div>
                 </div>
             @endforeach

@@ -55,12 +55,22 @@ class AnalyticsController extends Controller
 
         // Member nodes
         foreach ($members as $m) {
+            $avatarUrl = ($m->avatar && (str_starts_with($m->avatar, 'http://') || str_starts_with($m->avatar, 'https://') || str_starts_with($m->avatar, '/uploads/')))
+                ? $m->avatar
+                : 'https://ui-avatars.com/api/?name=' . urlencode($m->name) . '&background=10b981&color=ffffff&size=128&font-size=0.45&bold=true';
+
             $nodes[] = [
                 'id' => 'u_' . $m->id,
                 'label' => $m->name,
                 'group' => 'member',
                 'shape' => 'circularImage',
-                'image' => $m->avatar && str_starts_with($m->avatar, 'http') ? $m->avatar : 'https://ui-avatars.com/api/?name=' . urlencode($m->name),
+                'image' => $avatarUrl,
+                'borderWidth' => 3,
+                'color' => [
+                    'border' => '#10b981',
+                    'background' => '#0f172a',
+                    'highlight' => ['border' => '#34d399', 'background' => '#1e293b']
+                ]
             ];
         }
 
@@ -69,10 +79,17 @@ class AnalyticsController extends Controller
         foreach ($projects as $p) {
             $nodes[] = [
                 'id' => 'p_' . $p->id,
-                'label' => $p->name . ' (' . $p->code . ')',
+                'label' => '📁 ' . $p->name . ' (' . $p->code . ')',
                 'group' => 'project',
                 'shape' => 'box',
-                'color' => '#10b981',
+                'borderRadius' => 8,
+                'margin' => 10,
+                'color' => [
+                    'background' => '#f59e0b',
+                    'border' => '#d97706',
+                    'highlight' => ['background' => '#fbbf24', 'border' => '#b45309']
+                ],
+                'font' => ['color' => '#0f172a', 'face' => 'Plus Jakarta Sans', 'size' => 12, 'vadjust' => 0]
             ];
 
             $pMemberIds = $p->members->pluck('id')->toArray();
@@ -81,7 +98,9 @@ class AnalyticsController extends Controller
                     'from' => 'u_' . $uid,
                     'to' => 'p_' . $p->id,
                     'label' => $p->members->where('id', $uid)->first()->pivot->share_percentage . '%',
-                    'color' => ['color' => '#6366f1'],
+                    'color' => ['color' => '#10b981', 'highlight' => '#34d399'],
+                    'width' => 2,
+                    'font' => ['color' => '#10b981', 'size' => 11, 'face' => 'Plus Jakarta Sans', 'strokeWidth' => 3, 'strokeColor' => '#0f172a']
                 ];
             }
 
