@@ -328,12 +328,14 @@ class="pb-20 lg:pb-6">
                     <a href="{{ route('report') }}" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
                         <span>📈 Xem Báo Cáo</span>
                     </a>
-                    <button @click="showDistributionModal = true" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
-                        <span>📊 Chia % Quỹ</span>
-                    </button>
-                    <button @click="showMemberModal = true" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
-                        <span>👥 Thành Viên</span>
-                    </button>
+                    @if(auth()->user()?->isAdmin())
+                        <button @click="showDistributionModal = true" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+                            <span>📊 Chia % Quỹ</span>
+                        </button>
+                        <a href="{{ route('members.index') }}" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
+                            <span>👥 Quản Lý Người Dùng</span>
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -563,8 +565,8 @@ class="pb-20 lg:pb-6">
                 </div>
             </div>
 
-            <!-- Admin Pending Requests Alert Bar -->
-            @if($pendingTransactions->count() > 0)
+            <!-- Admin Pending Requests Alert Bar (Admin Only) -->
+            @if(auth()->user()?->isAdmin() && $pendingTransactions->count() > 0)
                 <div class="bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-3 sm:p-4">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-2">

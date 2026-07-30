@@ -211,6 +211,10 @@ class TransactionController extends Controller
 
     public function destroy(Transaction $transaction)
     {
+        if (!auth()->user()?->isAdmin() && $transaction->user_id !== auth()->id()) {
+            return redirect()->back()->with('error', 'Bạn không có quyền xóa giao dịch của thành viên khác. Chỉ Admin hoặc người tạo mới có quyền.');
+        }
+
         $fund = Fund::firstOrFail();
         $user = User::findOrFail($transaction->user_id);
 
@@ -227,6 +231,10 @@ class TransactionController extends Controller
 
     public function approve(Transaction $transaction)
     {
+        if (!auth()->user()?->isAdmin()) {
+            return redirect()->back()->with('error', 'Chỉ Admin mới có quyền phê duyệt giao dịch.');
+        }
+
         if ($transaction->status !== 'pending') {
             return redirect()->back()->with('error', 'Giao dịch này đã được xử lý.');
         }
@@ -234,7 +242,7 @@ class TransactionController extends Controller
         DB::transaction(function () use ($transaction) {
             $fund = $transaction->fund;
             $user = $transaction->user;
-            $adminUser = User::where('role', 'admin')->first() ?? $user;
+            $adminUser = auth()->user();
 
             $this->applyTransactionImpact($fund, $user, $transaction->type, $transaction->amount);
 
@@ -249,6 +257,10 @@ class TransactionController extends Controller
 
     public function reject(Transaction $transaction)
     {
+        if (!auth()->user()?->isAdmin()) {
+            return redirect()->back()->with('error', 'Chỉ Admin mới có quyền từ chối giao dịch.');
+        }
+
         if ($transaction->status !== 'pending') {
             return redirect()->back()->with('error', 'Giao dịch này đã được xử lý.');
         }

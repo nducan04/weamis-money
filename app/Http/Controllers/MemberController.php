@@ -104,4 +104,21 @@ class MemberController extends Controller
 
         return redirect()->back()->with('success', 'Đã xóa tài khoản ' . $name);
     }
+
+    public function updateShare(Request $request, User $user)
+    {
+        if (!auth()->user()?->isAdmin()) {
+            return redirect()->back()->with('error', 'Chỉ Admin mới có quyền chỉnh sửa % cổ phần của từng thành viên.');
+        }
+
+        $validated = $request->validate([
+            'share_percentage' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $user->update([
+            'share_percentage' => $validated['share_percentage'],
+        ]);
+
+        return redirect()->back()->with('success', 'Đã cập nhật tỷ lệ % cổ phần cho ' . $user->name);
+    }
 }

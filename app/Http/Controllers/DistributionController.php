@@ -13,6 +13,10 @@ class DistributionController extends Controller
 {
     public function store(Request $request)
     {
+        if (!auth()->user()?->isAdmin()) {
+            return redirect()->back()->with('error', 'Chỉ Admin mới có quyền kích hoạt chia tiền lợi nhuận Quỹ.');
+        }
+
         $validated = $request->validate([
             'total_amount' => 'required|numeric|min:1000',
             'note' => 'nullable|string|max:255',

@@ -133,12 +133,6 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
                         <span>📜 Lịch Sử</span>
                     </a>
-                    @if(auth()->user()?->isAdmin())
-                        <a href="{{ route('members.index') }}" 
-                           class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('members.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                            <span>👥 Thành Viên</span>
-                        </a>
-                    @endif
                 </nav>
             </div>
             
@@ -181,6 +175,11 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                             <p class="font-extrabold text-sm text-slate-900 dark:text-white">{{ auth()->user()->name }}</p>
                             <p class="text-[10px] text-slate-400 font-semibold">{{ auth()->user()->email }}</p>
                         </div>
+                        @if(auth()->user()?->isAdmin())
+                            <a href="{{ route('members.index') }}" class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 transition text-emerald-600 dark:text-emerald-400 font-bold">
+                                <span>👥 Quản lý người dùng</span>
+                            </a>
+                        @endif
                         <a href="{{ route('password.change') }}" class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center space-x-2 transition">
                             <span>🔐 Đổi mật khẩu</span>
                         </a>
