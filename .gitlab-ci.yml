@@ -1,0 +1,14 @@
+stages:
+  - deploy
+
+deploy_job:
+  stage: deploy
+  only:
+    - main
+  tags:
+    - docker
+  script:
+    - echo "Deploying WEAMIS Money to money.vietnh.io.vn..."
+    - docker-compose up -d --build
+    - docker exec weamis-money-app php artisan migrate --force
+    - echo "Deployment completed successfully!"
