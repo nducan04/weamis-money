@@ -131,7 +131,34 @@ class="pb-20 lg:pb-6">
                 </div>
 
                 <!-- Form Submit -->
-                <form action="{{ route('transactions.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3.5" x-data="{ evidenceMode: 'none' }">
+                <form action="{{ route('transactions.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3.5" x-data="{ 
+                    evidenceMode: 'none', 
+                    selectedFileName: '', 
+                    selectedFilePreview: '',
+                    triggerFilePick() {
+                        this.evidenceMode = 'file';
+                        this.$refs.evidenceFileInput.click();
+                    },
+                    onFileSelected(e) {
+                        let file = e.target.files[0];
+                        if (file) {
+                            this.selectedFileName = file.name;
+                            if (file.type.startsWith('image/')) {
+                                let reader = new FileReader();
+                                reader.onload = (evt) => { this.selectedFilePreview = evt.target.result; };
+                                reader.readAsDataURL(file);
+                            } else {
+                                this.selectedFilePreview = '';
+                            }
+                        }
+                    },
+                    clearFile() {
+                        this.$refs.evidenceFileInput.value = '';
+                        this.selectedFileName = '';
+                        this.selectedFilePreview = '';
+                        this.evidenceMode = 'none';
+                    }
+                }">
                     @csrf
                     <input type="hidden" name="type" :value="quickType">
 
@@ -200,16 +227,38 @@ class="pb-20 lg:pb-6">
                         <div class="flex items-center justify-between text-xs font-semibold">
                             <span class="text-slate-500 dark:text-slate-400">Bằng chứng (Evidence)</span>
                             <div class="flex space-x-1">
-                                <button type="button" @click="evidenceMode = 'none'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'none' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'">Tắt</button>
-                                <button type="button" @click="evidenceMode = 'file'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'file' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'">🖼️ Ảnh bill</button>
-                                <button type="button" @click="evidenceMode = 'link'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'link' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'">🔗 Link</button>
-                                <button type="button" @click="evidenceMode = 'text'" class="px-2 py-0.5 rounded-md text-[10px] font-bold" :class="evidenceMode === 'text' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-500'">📝 Momo</button>
+                                <button type="button" @click="triggerFilePick()" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" :class="evidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100'">
+                                    <span>🖼️ Ảnh bill</span>
+                                </button>
+                                <button type="button" @click="evidenceMode = 'link'" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" :class="evidenceMode === 'link' ? 'bg-blue-600 text-white shadow-sm' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-100'">
+                                    <span>🔗 Link</span>
+                                </button>
+                                <button type="button" @click="evidenceMode = 'text'" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" :class="evidenceMode === 'text' ? 'bg-amber-600 text-white shadow-sm' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 hover:bg-amber-100'">
+                                    <span>📝 Momo</span>
+                                </button>
                             </div>
                         </div>
+
+                        <!-- Hidden File Input triggered directly by 'Ảnh bill' button -->
+                        <input type="file" x-ref="evidenceFileInput" name="evidence_file" accept="image/*,.pdf" class="hidden" @change="onFileSelected($event)">
                         <input type="hidden" name="evidence_type" :value="evidenceMode">
-                        <div x-show="evidenceMode === 'file'" x-cloak>
-                            <input type="file" name="evidence_file" accept="image/*,.pdf" class="w-full text-xs text-slate-500 border border-slate-200 dark:border-slate-600 rounded-xl p-1.5 bg-slate-50 dark:bg-slate-700/60">
+
+                        <!-- Selected File Preview Container with ✕ Delete Button -->
+                        <div x-show="evidenceMode === 'file' && selectedFileName" class="p-2.5 bg-emerald-50/60 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200/80 dark:border-emerald-700/50 flex items-center justify-between transition" x-cloak>
+                            <div class="flex items-center space-x-2.5 min-w-0">
+                                <template x-if="selectedFilePreview">
+                                    <img :src="selectedFilePreview" class="w-9 h-9 object-cover rounded-lg border border-emerald-300 dark:border-emerald-600 shadow-sm flex-shrink-0">
+                                </template>
+                                <template x-if="!selectedFilePreview">
+                                    <span class="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-200 font-bold text-xs flex items-center justify-center flex-shrink-0">📄</span>
+                                </template>
+                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate" x-text="selectedFileName"></span>
+                            </div>
+                            <button type="button" @click="clearFile()" title="Xóa ảnh đã chọn" class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition font-black text-sm cursor-pointer ml-2 flex-shrink-0">
+                                ✕
+                            </button>
                         </div>
+
                         <div x-show="evidenceMode === 'link'" x-cloak>
                             <input type="url" name="evidence_link" placeholder="https://momo.vn/transaction/..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white">
                         </div>
