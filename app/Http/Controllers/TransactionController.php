@@ -138,7 +138,7 @@ class TransactionController extends Controller
             Transaction::create($txData);
 
             if ($status === 'approved') {
-                $this->applyTransactionImpact($fund, $user, $validated['type'], $validated['amount']);
+                $this->applyTransactionImpact($fund, $user, $validated['type'], $validated['amount'], $validated['project_id'] ?? null);
             }
         });
 
@@ -184,9 +184,9 @@ class TransactionController extends Controller
             $newUser = User::findOrFail($validated['user_id']);
 
             if ($transaction->status === 'approved') {
-                $this->revertTransactionImpact($fund, $oldUser, $transaction->type, $transaction->amount);
+                $this->revertTransactionImpact($fund, $oldUser, $transaction->type, $transaction->amount, $transaction->project_id);
+                $this->applyTransactionImpact($fund, $newUser, $validated['type'], $validated['amount'], $validated['project_id'] ?? null);
             }
-
             $transaction->user_id = $newUser->id;
             $transaction->project_id = $validated['project_id'] ?? null;
             $transaction->responsible_user_id = $validated['responsible_user_id'] ?? null;
@@ -200,10 +200,6 @@ class TransactionController extends Controller
                 $transaction->created_at = $validated['created_at'];
             }
             $transaction->save();
-
-            if ($transaction->status === 'approved') {
-                $this->applyTransactionImpact($fund, $newUser, $validated['type'], $validated['amount']);
-            }
         });
 
         return redirect()->back()->with('success', 'Đã cập nhật giao dịch thành công!');
@@ -220,7 +216,7 @@ class TransactionController extends Controller
 
         DB::transaction(function () use ($transaction, $fund, $user) {
             if ($transaction->status === 'approved') {
-                $this->revertTransactionImpact($fund, $user, $transaction->type, $transaction->amount);
+                $this->revertTransactionImpact($fund, $user, $transaction->type, $transaction->amount, $transaction->project_id);
             }
 
             $transaction->delete();
@@ -244,7 +240,7 @@ class TransactionController extends Controller
             $user = $transaction->user;
             $adminUser = auth()->user();
 
-            $this->applyTransactionImpact($fund, $user, $transaction->type, $transaction->amount);
+            $this->applyTransactionImpact($fund, $user, $transaction->type, $transaction->amount, $transaction->project_id);
 
             $transaction->update([
                 'status' => 'approved',
@@ -270,33 +266,37 @@ class TransactionController extends Controller
         return redirect()->back()->with('success', 'Đã từ chối giao dịch.');
     }
 
-    private function applyTransactionImpact(Fund $fund, User $user, string $type, float $amount): void
+    private function applyTransactionImpact(Fund $fund, User $user, string $type, float $amount, ?int $projectId = null): void
     {
-        if ($type === 'contribution' || $type === 'repayment') {
-            $fund->increment('balance', $amount);
-            if ($type === 'repayment') {
-                $user->decrement('current_debt', min($amount, $user->current_debt));
+        if (!$projectId) {
+            if ($type === 'contribution' || $type === 'repayment') {
+                $fund->increment('balance', $amount);
+            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution') {
+                $fund->decrement('balance', $amount);
             }
-        } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution') {
-            $fund->decrement('balance', $amount);
-            if ($type === 'loan') {
-                $user->increment('current_debt', $amount);
-            }
+        }
+
+        if ($type === 'repayment') {
+            $user->decrement('current_debt', min($amount, $user->current_debt));
+        } elseif ($type === 'loan') {
+            $user->increment('current_debt', $amount);
         }
     }
 
-    private function revertTransactionImpact(Fund $fund, User $user, string $type, float $amount): void
+    private function revertTransactionImpact(Fund $fund, User $user, string $type, float $amount, ?int $projectId = null): void
     {
-        if ($type === 'contribution' || $type === 'repayment') {
-            $fund->decrement('balance', $amount);
-            if ($type === 'repayment') {
-                $user->increment('current_debt', $amount);
+        if (!$projectId) {
+            if ($type === 'contribution' || $type === 'repayment') {
+                $fund->decrement('balance', $amount);
+            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution') {
+                $fund->increment('balance', $amount);
             }
-        } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution') {
-            $fund->increment('balance', $amount);
-            if ($type === 'loan') {
-                $user->decrement('current_debt', min($amount, $user->current_debt));
-            }
+        }
+
+        if ($type === 'repayment') {
+            $user->increment('current_debt', $amount);
+        } elseif ($type === 'loan') {
+            $user->decrement('current_debt', min($amount, $user->current_debt));
         }
     }
 

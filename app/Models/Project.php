@@ -15,6 +15,7 @@ class Project extends Model
         'description',
         'status',
         'weamis_fund_percentage',
+        'fund_credited_amount',
         'lead_user_id',
         'created_by_user_id',
     ];
