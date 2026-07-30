@@ -149,13 +149,6 @@ class="pb-20 lg:pb-6">
 
     <!-- Page Header & Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-            <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center space-x-2">
-                <span>📜 Lịch Sử Giao Dịch</span>
-            </h2>
-            <p class="text-xs text-slate-400 font-medium">Toàn bộ lịch sử thu, chi, vay và trả nợ nhóm</p>
-        </div>
-
         <div class="flex items-center space-x-2">
             <button @click="showAddModal = true" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer active:scale-95">
                 <span>➕ Thêm Giao Dịch Mới</span>

@@ -7,12 +7,8 @@
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
             <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
-                <span>📂</span>
-                <span>Quản Lý Dự Án (Projects)</span>
+                <span>Quản Lý Dự Án</span>
             </h2>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-                Phân chia % cổ phần thu nhập theo từng dự án & theo dõi audit thu chi minh bạch.
-            </p>
         </div>
         <button @click="showCreateModal = true" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all duration-200 flex items-center space-x-2 cursor-pointer">
             <span>➕ Tạo Dự Án Mới</span>
@@ -155,7 +151,7 @@
                         <input type="text" name="name" placeholder="VD: Everbloom" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Mã Code</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tên viết tắt</label>
                         <input type="text" name="code" placeholder="EVB" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-black text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                 </div>
@@ -171,9 +167,9 @@
                         <input type="number" name="weamis_fund_percentage" value="10" min="0" max="100" step="0.5" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-extrabold text-amber-600 focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Project Lead</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Quản lý dự án</label>
                         <select name="lead_user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="">-- Chọn Lead --</option>
+                            <option value="">-- Chọn --</option>
                             @foreach($members as $m)
                                 <option value="{{ $m->id }}">{{ $m->name }}</option>
                             @endforeach

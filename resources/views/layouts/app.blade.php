@@ -131,7 +131,7 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                     </a>
                     <a href="{{ route('history') }}" 
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>📜 Lịch Sử</span>
+                        <span>📜 Lịch Sử GD</span>
                     </a>
                 </nav>
             </div>

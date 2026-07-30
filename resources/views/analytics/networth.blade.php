@@ -9,9 +9,6 @@
             <span>📈</span>
             <span>Tài Sản Ròng (Net Worth) & Đồ Thị Mạng Lưới Tương Quan</span>
         </h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-            Theo dõi tích lũy tài sản ròng cá nhân và mạng lưới quan hệ hợp tác dự án giữa các thành viên.
-        </p>
     </div>
 
     <!-- 1. Net Worth Cards -->
