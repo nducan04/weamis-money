@@ -30,14 +30,16 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'required|string|max:50|unique:users,username|alpha_dash',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:4|confirmed',
         ]);
 
         $initials = strtoupper(substr(trim($validated['name']), 0, 2));
 
         $user = User::create([
             'name' => $validated['name'],
+            'username' => strtolower($validated['username']),
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'member',
@@ -53,21 +55,24 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
+        $request->validate([
+            'login' => 'required|string',
             'password' => 'required|string',
         ]);
 
+        $loginInput = trim($request->input('login'));
+        $field = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
         $remember = $request->boolean('remember', true);
 
-        if (Auth::attempt($credentials, $remember)) {
+        if (Auth::attempt([$field => $loginInput, 'password' => $request->password], $remember)) {
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'))->with('success', 'Đăng nhập thành công! Chào mừng ' . Auth::user()->name);
         }
 
         return redirect()->back()->withErrors([
-            'email' => 'Email hoặc mật khẩu không chính xác.',
-        ])->withInput($request->only('email'));
+            'login' => 'Tên đăng nhập hoặc mật khẩu không chính xác.',
+        ])->withInput($request->only('login'));
     }
 
     public function logout(Request $request)

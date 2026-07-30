@@ -18,7 +18,7 @@
     <div class="absolute -top-40 -left-40 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-teal-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div class="w-full max-w-md bg-slate-800/90 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl backdrop-blur-xl relative z-10 space-y-6" x-data="{ selectedEmail: '{{ $users->first()?->email }}' }">
+    <div class="w-full max-w-md bg-slate-800/90 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl backdrop-blur-xl relative z-10 space-y-6">
 
         <!-- Logo & Header -->
         <div class="text-center space-y-2">
@@ -42,36 +42,19 @@
             </div>
         @endif
 
-        <!-- Quick Select Member Chips -->
-        <div>
-            <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Chọn nhanh tài khoản thành viên:</label>
-            <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-                @foreach($users as $u)
-                    <button type="button" @click="selectedEmail = '{{ $u->email }}'" class="px-2.5 py-1 rounded-xl text-xs font-extrabold transition flex items-center space-x-1 border" :class="selectedEmail === '{{ $u->email }}' ? 'bg-emerald-600 text-white border-emerald-400 shadow-md' : 'bg-slate-700/60 text-slate-300 border-slate-600 hover:bg-slate-700'">
-                        <span>{{ $u->name }}</span>
-                        @if($u->isAdmin())
-                            <span class="text-[10px]">👑</span>
-                        @endif
-                    </button>
-                @endforeach
-            </div>
-        </div>
-
-        <!-- Login Form -->
+        <!-- Minimal Clean Login Form -->
         <form action="{{ route('login') }}" method="POST" class="space-y-4">
             @csrf
             <div>
-                <label class="block text-xs font-bold text-slate-300 mb-1.5">Email tài khoản</label>
-                <input type="email" name="email" x-model="selectedEmail" required placeholder="name@weamis.com" class="w-full px-4 py-3 rounded-2xl bg-slate-700/70 border border-slate-600 text-sm font-bold text-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                <label class="block text-xs font-bold text-slate-300 mb-1.5">Tên đăng nhập</label>
+                <input type="text" name="login" value="{{ old('login') }}" required placeholder="VD: nhv, hts hoặc admin" class="w-full px-4 py-3 rounded-2xl bg-slate-700/70 border border-slate-600 text-sm font-bold text-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
             </div>
 
             <div>
                 <div class="flex items-center justify-between mb-1.5">
                     <label class="text-xs font-bold text-slate-300">Mật khẩu</label>
-                    <a href="{{ route('password.request') }}" class="text-[11px] font-bold text-emerald-400 hover:underline">Quên mật khẩu?</a>
                 </div>
-                <input type="password" name="password" value="weamis123" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl bg-slate-700/70 border border-slate-600 text-sm font-bold text-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
-                <p class="text-[10px] text-slate-400 font-medium mt-1">Mật khẩu mặc định khởi tạo: <code class="text-emerald-400 font-bold">weamis123</code></p>
+                <input type="password" name="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl bg-slate-700/70 border border-slate-600 text-sm font-bold text-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
             </div>
 
             <div class="flex items-center justify-between pt-1">

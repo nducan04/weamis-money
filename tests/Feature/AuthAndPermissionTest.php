@@ -31,35 +31,37 @@ class AuthAndPermissionTest extends TestCase
         $response->assertRedirect('/login');
     }
 
-    public function test_user_can_login_with_default_password()
+    public function test_user_can_login_with_username_and_password()
     {
         $user = User::create([
             'name' => 'Nguyễn Hoàng Việt',
+            'username' => 'nhv',
             'email' => 'viet@weamis.com',
-            'password' => Hash::make('weamis123'),
+            'password' => Hash::make('1234'),
             'role' => 'admin',
         ]);
 
         $response = $this->post('/login', [
-            'email' => 'viet@weamis.com',
-            'password' => 'weamis123',
+            'login' => 'nhv',
+            'password' => '1234',
         ]);
 
         $response->assertRedirect('/');
-        $this->assertAuthenticated();
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_user_can_register_new_account()
     {
         $response = $this->post('/register', [
             'name' => 'Trần Văn Nam',
+            'username' => 'tvn',
             'email' => 'nam@weamis.com',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ]);
 
         $response->assertRedirect('/');
-        $this->assertDatabaseHas('users', ['email' => 'nam@weamis.com', 'name' => 'Trần Văn Nam']);
+        $this->assertDatabaseHas('users', ['username' => 'tvn', 'name' => 'Trần Văn Nam']);
         $this->assertAuthenticated();
     }
 

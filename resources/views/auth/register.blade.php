@@ -38,9 +38,15 @@
         <!-- Registration Form -->
         <form action="{{ route('register') }}" method="POST" class="space-y-4">
             @csrf
-            <div>
-                <label class="block text-xs font-bold text-slate-300 mb-1.5">Họ và Tên</label>
-                <input type="text" name="name" value="{{ old('name') }}" required placeholder="VD: Nguyễn Văn A" class="w-full px-4 py-3 rounded-2xl bg-slate-700/70 border border-slate-600 text-sm font-bold text-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Họ và Tên</label>
+                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="VD: Nguyễn Văn A" class="w-full px-4 py-3 rounded-2xl bg-slate-700/70 border border-slate-600 text-sm font-bold text-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">Tên đăng nhập (Username)</label>
+                    <input type="text" name="username" value="{{ old('username') }}" required placeholder="nva" class="w-full px-4 py-3 rounded-2xl bg-slate-700/70 border border-slate-600 text-sm font-bold text-white focus:ring-2 focus:ring-emerald-500 outline-none transition lowercase">
+                </div>
             </div>
 
             <div>
