@@ -108,4 +108,43 @@ class ProjectManagementTest extends TestCase
         $response->assertSee('Tài Sản Ròng');
         $response->assertSee('Collaboration Graph');
     }
+
+    public function test_project_completion_credits_weamis_fund()
+    {
+        $project = Project::create([
+            'name' => 'Everbloom Sales',
+            'code' => 'EBS',
+            'weamis_fund_percentage' => 10.0,
+            'status' => 'active',
+            'lead_user_id' => 2,
+        ]);
+
+        Transaction::create([
+            'fund_id' => 1,
+            'project_id' => $project->id,
+            'user_id' => 2,
+            'type' => 'contribution',
+            'amount' => 5000000.00,
+            'description' => 'Doanh thu Everbloom',
+            'status' => 'approved',
+        ]);
+
+        $response = $this->put('/projects/' . $project->id, [
+            'name' => 'Everbloom Sales',
+            'description' => 'Hoàn thành',
+            'weamis_fund_percentage' => 10.0,
+            'lead_user_id' => 2,
+            'status' => 'completed',
+        ]);
+
+        $response->assertRedirect('/projects/' . $project->id);
+
+        $fund = Fund::find(1);
+        $this->assertEquals(10500000.00, $fund->balance);
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'status' => 'completed',
+            'fund_credited_amount' => 500000.00,
+        ]);
+    }
 }

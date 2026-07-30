@@ -31,6 +31,18 @@ class ProjectController extends Controller
             'members.*.share_percentage' => 'required|numeric|min:0|max:100',
         ]);
 
+        $sumShares = 0;
+        if (!empty($validated['members'])) {
+            foreach ($validated['members'] as $m) {
+                $sumShares += (float)($m['share_percentage'] ?? 0);
+            }
+        }
+        $totalPct = (float)$validated['weamis_fund_percentage'] + $sumShares;
+
+        if (round($totalPct, 2) > 100.00) {
+            return redirect()->back()->withInput()->with('error', 'Lỗi: Tổng % Trích Về Quỹ (' . $validated['weamis_fund_percentage'] . '%) và cổ phần các thành viên (' . $sumShares . '%) vượt quá 100% (Tổng hiện tại: ' . $totalPct . '%). Vui lòng kiểm tra lại!');
+        }
+
         $project = Project::create([
             'name' => $validated['name'],
             'code' => strtoupper($validated['code']),
@@ -99,13 +111,64 @@ class ProjectController extends Controller
             'members.*.share_percentage' => 'required|numeric|min:0|max:100',
         ]);
 
+        $sumShares = 0;
+        if (!empty($validated['members'])) {
+            foreach ($validated['members'] as $m) {
+                $sumShares += (float)($m['share_percentage'] ?? 0);
+            }
+        }
+        $totalPct = (float)$validated['weamis_fund_percentage'] + $sumShares;
+
+        if (round($totalPct, 2) > 100.00) {
+            return redirect()->back()->withInput()->with('error', 'Lỗi: Tổng % Trích Về Quỹ (' . $validated['weamis_fund_percentage'] . '%) và cổ phần các thành viên (' . $sumShares . '%) vượt quá 100% (Tổng hiện tại: ' . $totalPct . '%). Vui lòng kiểm tra lại!');
+        }
+
+        $oldStatus = $project->status;
+        $newStatus = $validated['status'];
+
         $project->update([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'status' => $validated['status'],
+            'status' => $newStatus,
             'weamis_fund_percentage' => $validated['weamis_fund_percentage'],
             'lead_user_id' => $validated['lead_user_id'] ?? null,
         ]);
+
+        // Handle Fund Crediting on Project Completion
+        if ($newStatus === 'completed' && $oldStatus !== 'completed') {
+            $totalIncome = $project->transactions()->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
+            $fundCut = ($totalIncome * $project->weamis_fund_percentage) / 100;
+
+            if ($fundCut > 0) {
+                $fund = \App\Models\Fund::firstOrCreate(
+                    ['id' => 1],
+                    ['name' => 'Trả nợ thuê Ltd', 'balance' => 7028106.00, 'total_profit' => 126160.00]
+                );
+                $fund->increment('balance', $fundCut);
+                $fund->increment('total_profit', $fundCut);
+
+                Transaction::create([
+                    'fund_id' => 1,
+                    'user_id' => auth()->id() ?? $project->lead_user_id ?? 1,
+                    'project_id' => $project->id,
+                    'type' => 'contribution',
+                    'amount' => $fundCut,
+                    'description' => 'Trích Về Quỹ Chung (' . number_format($project->weamis_fund_percentage, 0) . '%) khi Hoàn Thành Dự Án: ' . $project->name,
+                    'status' => 'approved',
+                    'approved_by_user_id' => auth()->id(),
+                ]);
+
+                $project->update(['fund_credited_amount' => $fundCut]);
+            }
+        } elseif ($newStatus !== 'completed' && $oldStatus === 'completed' && $project->fund_credited_amount > 0) {
+            // Revert fund credit if status changed back to active/cancelled
+            $fund = \App\Models\Fund::first();
+            if ($fund) {
+                $fund->decrement('balance', $project->fund_credited_amount);
+                $fund->decrement('total_profit', $project->fund_credited_amount);
+            }
+            $project->update(['fund_credited_amount' => 0]);
+        }
 
         // Sync Project Members
         ProjectMember::where('project_id', $project->id)->delete();
@@ -121,7 +184,11 @@ class ProjectController extends Controller
             }
         }
 
-        return redirect()->route('projects.show', $project)->with('success', 'Đã cập nhật dự án thành công!');
+        $msg = $newStatus === 'completed' && $oldStatus !== 'completed'
+            ? 'Chúc mừng! Dự án đã hoàn thành và số tiền Trích Về Quỹ Chung đã được cộng dồn vào Quỹ!'
+            : 'Đã cập nhật dự án thành công!';
+
+        return redirect()->route('projects.show', $project)->with('success', $msg);
     }
 
     public function destroy(Project $project)

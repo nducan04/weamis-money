@@ -20,10 +20,10 @@
 
     expenseCategories: [
         { key: 'eat', name: 'Ăn uống', fullName: 'Ăn uống', icon: '/icons/EatAndDrink.svg', color: 'bg-amber-500' },
-        { key: 'daily', name: 'Chi tiêu h...', fullName: 'Chi tiêu hàng ngày', icon: '/icons/DailyExpenses.svg', color: 'bg-emerald-500' },
+        { key: 'daily', name: 'Chi hàng ngày', fullName: 'Chi tiêu hàng ngày', icon: '/icons/DailyExpenses.svg', color: 'bg-emerald-500' },
         { key: 'clothes', name: 'Quần áo', fullName: 'Quần áo', icon: '/icons/Clothes.svg', color: 'bg-blue-500' },
         { key: 'cosmetics', name: 'Mỹ phẩm', fullName: 'Mỹ phẩm', icon: '/icons/Cosmetics.svg', color: 'bg-pink-500' },
-        { key: 'exchange', name: 'Phí giao l...', fullName: 'Phí giao lưu', icon: '/icons/Exchange.svg', color: 'bg-purple-500' },
+        { key: 'exchange', name: 'Phí giao lưu', fullName: 'Phí giao lưu', icon: '/icons/Exchange.svg', color: 'bg-purple-500' },
         { key: 'medical', name: 'Y tế', fullName: 'Y tế', icon: '/icons/Medical.svg', color: 'bg-teal-500' },
         { key: 'education', name: 'Giáo dục', fullName: 'Giáo dục', icon: '/icons/Education.svg', color: 'bg-indigo-500' },
         { key: 'electric', name: 'Tiền điện', fullName: 'Tiền điện', icon: '/icons/Electric.svg', color: 'bg-yellow-500' },
@@ -167,21 +167,12 @@ class="pb-20 lg:pb-6">
                         <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Thành viên</span>
                         <select name="user_id" x-model="quickUserId" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             @foreach($members->where('role', '!=', 'admin') as $m)
-                                <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->share_percentage }}%)</option>
+                                <option value="{{ $m->id }}">{{ $m->name }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <!-- Project Selector -->
-                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Dự án</span>
-                        <select name="project_id" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400 focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="">-- Không gắn dự án (Quỹ chung) --</option>
-                            @foreach($projects as $p)
-                                <option value="{{ $p->id }}">📁 {{ $p->name }} ({{ $p->code }})</option>
-                            @endforeach
-                        </select>
-                    </div>
+
 
                     <!-- Date Picker Row with < and > controls -->
                     <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
@@ -200,44 +191,23 @@ class="pb-20 lg:pb-6">
                         </div>
                     </div>
 
-                    <!-- Responsible & Claimant User Selectors -->
-                    <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
-                        <div>
-                            <span class="text-slate-500 dark:text-slate-400 block mb-1">Người trách nhiệm</span>
-                            <select name="responsible_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs font-medium text-slate-900 dark:text-white outline-none">
-                                <option value="">-- Trách nhiệm --</option>
-                                @foreach($members->where('role', '!=', 'admin') as $m)
-                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <span class="text-slate-500 dark:text-slate-400 block mb-1">Người đòi/nhận tiền</span>
-                            <select name="claimant_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5 text-xs font-medium text-slate-900 dark:text-white outline-none">
-                                <option value="">-- Đòi tiền --</option>
-                                @foreach($members->where('role', '!=', 'admin') as $m)
-                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+
 
                     <!-- Evidence Attachment Row -->
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between text-xs font-semibold">
-                            <span class="text-slate-500 dark:text-slate-400">Bằng chứng</span>
-                            <div class="flex space-x-1">
-                                <button type="button" @click="triggerFilePick()" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" :class="evidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-100'">
-                                    <span>🖼️ Ảnh bill</span>
-                                </button>
-                                <button type="button" @click="evidenceMode = 'link'" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" :class="evidenceMode === 'link' ? 'bg-blue-600 text-white shadow-sm' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-100'">
-                                    <span>🔗 Link</span>
-                                </button>
-                                <button type="button" @click="evidenceMode = 'text'" class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" :class="evidenceMode === 'text' ? 'bg-amber-600 text-white shadow-sm' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 hover:bg-amber-100'">
-                                    <span>📝 Momo</span>
-                                </button>
-                            </div>
+                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
+                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Bằng chứng</span>
+                        <div class="flex-1 grid grid-cols-3 gap-1.5">
+                            <button type="button" @click="triggerFilePick()" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'">
+                                <span>🖼️ Bill</span>
+                            </button>
+                            <button type="button" @click="evidenceMode = evidenceMode === 'link' ? 'none' : 'link'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'link' ? 'bg-blue-600 text-white ring-2 ring-blue-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-blue-900/30'">
+                                <span>🔗 Link</span>
+                            </button>
+                            <button type="button" @click="evidenceMode = evidenceMode === 'text' ? 'none' : 'text'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'text' ? 'bg-amber-600 text-white ring-2 ring-amber-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'">
+                                <span>📝 Momo</span>
+                            </button>
                         </div>
+                    </div>
 
                         <!-- Hidden File Input triggered directly by 'Ảnh bill' button -->
                         <input type="file" x-ref="evidenceFileInput" name="evidence_file" accept="image/*,.pdf" class="hidden" @change="onFileSelected($event)">
@@ -259,13 +229,12 @@ class="pb-20 lg:pb-6">
                             </button>
                         </div>
 
-                        <div x-show="evidenceMode === 'link'" x-cloak>
+                        <div x-show="evidenceMode === 'link'" x-cloak class="mt-1.5">
                             <input type="url" name="evidence_link" placeholder="https://momo.vn/transaction/..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white">
                         </div>
-                        <div x-show="evidenceMode === 'text'" x-cloak>
+                        <div x-show="evidenceMode === 'text'" x-cloak class="mt-1.5">
                             <textarea name="evidence_text" rows="2" placeholder="Dán thông tin sao kê trích xuất từ Momo..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white"></textarea>
                         </div>
-                    </div>
 
                     <!-- Note Input Row -->
                     <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
@@ -325,9 +294,6 @@ class="pb-20 lg:pb-6">
                     </h2>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <a href="{{ route('report') }}" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
-                        <span>📈 Xem Báo Cáo</span>
-                    </a>
                     @if(auth()->user()?->isAdmin())
                         <button @click="showDistributionModal = true" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
                             <span>📊 Chia % Quỹ</span>
