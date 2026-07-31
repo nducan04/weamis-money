@@ -306,6 +306,53 @@ class TransactionController extends Controller
         return redirect()->back()->with('success', 'Đã từ chối giao dịch.');
     }
 
+    public function linkToProject(Request $request)
+    {
+        $validated = $request->validate([
+            'transaction_id' => 'required|exists:transactions,id',
+            'project_id' => 'required|exists:projects,id',
+        ]);
+
+        $fund = Fund::firstOrFail();
+        $tx = Transaction::findOrFail($validated['transaction_id']);
+
+        DB::transaction(function () use ($fund, $tx, $validated) {
+            $user = User::findOrFail($tx->user_id);
+            $oldProjectId = $tx->project_id;
+            $newProjectId = (int)$validated['project_id'];
+
+            if ($oldProjectId !== $newProjectId && $tx->status === 'approved') {
+                $this->revertTransactionImpact($fund, $user, $tx->type, $tx->amount, $oldProjectId);
+                $this->applyTransactionImpact($fund, $user, $tx->type, $tx->amount, $newProjectId);
+            }
+
+            $tx->project_id = $newProjectId;
+            $tx->save();
+        });
+
+        return redirect()->back()->with('success', 'Đã gắn thành công giao dịch #' . $tx->id . ' vào dự án!');
+    }
+
+    public function unlinkFromProject(Transaction $transaction)
+    {
+        $fund = Fund::firstOrFail();
+
+        DB::transaction(function () use ($fund, $transaction) {
+            $user = User::findOrFail($transaction->user_id);
+            $oldProjectId = $transaction->project_id;
+
+            if ($oldProjectId && $transaction->status === 'approved') {
+                $this->revertTransactionImpact($fund, $user, $transaction->type, $transaction->amount, $oldProjectId);
+                $this->applyTransactionImpact($fund, $user, $transaction->type, $transaction->amount, null);
+            }
+
+            $transaction->project_id = null;
+            $transaction->save();
+        });
+
+        return redirect()->back()->with('success', 'Đã bỏ gắn giao dịch #' . $transaction->id . ' khỏi dự án!');
+    }
+
     private function applyTransactionImpact(Fund $fund, User $user, string $type, float $amount, ?int $projectId = null): void
     {
         if (!$projectId) {
