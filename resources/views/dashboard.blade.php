@@ -776,34 +776,11 @@ class="pb-20 lg:pb-6">
 
     </div>
 
-    <!-- MOBILE FIXED BOTTOM NAVIGATION BAR -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-700 shadow-2xl safe-bottom px-2 py-1.5">
-        <div class="grid grid-cols-5 gap-1 text-center">
-            <button @click="mobileTab = 'entry'" class="flex flex-col items-center justify-center py-1 rounded-xl transition cursor-pointer" :class="mobileTab === 'entry' ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-400 hover:text-slate-600'">
-                <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Edit.svg') center/contain no-repeat; mask: url('/icons/Edit.svg') center/contain no-repeat;"></div>
-                <span class="text-[10px]">Nhập vào</span>
-            </button>
-
-            <a href="{{ route('report') }}" class="flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-indigo-600 transition cursor-pointer">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
-                <span class="text-[10px]">Báo cáo</span>
-            </a>
-
-            <a href="{{ route('history') }}" class="flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-emerald-600 transition cursor-pointer">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                <span class="text-[10px]">Lịch sử</span>
-            </a>
-
-            <button @click="showDistributionModal = true" class="flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-amber-500 transition cursor-pointer">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="text-[10px]">Chia %</span>
-            </button>
-
-            <button @click="showMemberModal = true" class="flex flex-col items-center justify-center py-1 rounded-xl text-slate-400 hover:text-blue-500 transition cursor-pointer">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <span class="text-[10px]">Thành viên</span>
-            </button>
-        </div>
+    <!-- MOBILE FLOATING ACTION BUTTON (FAB) FOR QUICK ENTRY -->
+    <div class="lg:hidden fixed bottom-16 right-4 z-30">
+        <button @click="mobileTab = 'entry'; window.scrollTo({top: 0, behavior: 'smooth'})" title="Nhập giao dịch mới" class="w-13 h-13 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl shadow-2xl border-2 border-white dark:border-slate-800 flex items-center justify-center active:scale-95 transition cursor-pointer">
+            ✏️
+        </button>
     </div>
 
     <!-- MODAL: PHÂN CHIA LỢI NHUẬN % -->
