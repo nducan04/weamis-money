@@ -114,6 +114,11 @@ class TransactionController extends Controller
             'created_at' => 'nullable|date',
         ]);
 
+        $authUser = auth()->user();
+        if (!$authUser?->isAdmin()) {
+            $validated['user_id'] = $authUser->id;
+        }
+
         $fund = Fund::firstOrFail();
         $user = User::findOrFail($validated['user_id']);
 

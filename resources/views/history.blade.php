@@ -243,12 +243,12 @@ class="pb-20 lg:pb-6">
 
                 <select x-model="filterType" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả loại GD</option>
-                    <option value="contribution">Góp quỹ (Thu)</option>
-                    <option value="expense">Chi tiêu (Chi)</option>
+                    <option value="contribution">Góp quỹ</option>
+                    <option value="expense">Chi tiêu</option>
                     <option value="loan">Vay cá nhân</option>
                     <option value="repayment">Trả nợ vay</option>
-                    <option value="withdrawal">Rút lương / Thu nhập</option>
-                    <option value="distribution">Chia tiền %</option>
+                    <option value="withdrawal">Rút lương</option>
+                    <option value="distribution">Chia tiền</option>
                 </select>
 
                 <!-- Lọc Theo Ngày Tháng Năm -->
