@@ -70,8 +70,14 @@ class ProjectController extends Controller
         return redirect()->route('projects.index')->with('success', 'Đã tạo dự án ' . $project->name . ' thành công!');
     }
 
-    public function show(Project $project)
+    public function show($projectKey)
     {
+        $project = Project::where('id', $projectKey)->orWhere('code', $projectKey)->first();
+
+        if (!$project) {
+            return redirect()->route('projects.index')->with('error', 'Dự án ID/Mã #' . $projectKey . ' không tồn tại hoặc danh sách đã được đồng bộ lại. Đã chuyển về Danh sách dự án.');
+        }
+
         $project->load(['lead', 'creator', 'members', 'projectMembers.user', 'transactions.user', 'transactions.responsibleUser', 'transactions.claimantUser']);
 
         $totalIncome = $project->transactions()->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
