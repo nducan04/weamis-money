@@ -50,8 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/analytics/networth', [AnalyticsController::class, 'networth'])->name('analytics.networth');
     Route::get('/analytics/network', [AnalyticsController::class, 'network'])->name('analytics.network');
 
-    // Transaction CRUD
+    // Transaction CRUD & Project Linking
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::post('/transactions/link-project', [TransactionController::class, 'linkToProject'])->name('transactions.linkProject');
+    Route::post('/transactions/{transaction}/unlink-project', [TransactionController::class, 'unlinkFromProject'])->name('transactions.unlinkProject');
     Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 

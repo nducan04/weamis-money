@@ -99,7 +99,14 @@ class ProjectController extends Controller
 
         $allMembers = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
-        return view('projects.show', compact('project', 'totalIncome', 'totalExpense', 'fundCut', 'distributable', 'memberPayouts', 'allMembers'));
+        $availableTransactions = Transaction::with('user')
+            ->where(function($q) use ($project) {
+                $q->whereNull('project_id')->orWhere('project_id', '!=', $project->id);
+            })
+            ->latest()
+            ->get();
+
+        return view('projects.show', compact('project', 'totalIncome', 'totalExpense', 'fundCut', 'distributable', 'memberPayouts', 'allMembers', 'availableTransactions'));
     }
 
     public function update(Request $request, Project $project)

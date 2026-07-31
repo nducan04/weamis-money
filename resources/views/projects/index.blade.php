@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6" x-data="{
     showCreateModal: false,
-    weamisFundPct: 10,
+    weamisFundPct: 0,
     memberShares: {
         @foreach($members->where('role', '!=', 'admin') as $m)
             'm_{{ $m->id }}': 0,
@@ -78,7 +78,7 @@
                             </span>
                             @if($p->release_date)
                                 <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold text-[10px] rounded-lg">
-                                    Go-live: {{ $p->release_date->format('d/m/Y') }}
+                                    Release: {{ $p->release_date->format('d/m/Y') }}
                                 </span>
                             @endif
                         </div>
