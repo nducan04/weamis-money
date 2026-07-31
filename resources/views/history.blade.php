@@ -438,6 +438,12 @@ class="pb-20 lg:pb-6">
                         <template x-if="tx.type === 'distribution'">
                             <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-bold rounded text-[10px] flex-shrink-0">Chia %</span>
                         </template>
+                        <template x-if="tx.project_name">
+                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded text-[10px] flex-shrink-0" x-text="'📂 ' + tx.project_name"></span>
+                        </template>
+                        <template x-if="tx.billing_cycle">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-bold rounded text-[10px] flex-shrink-0" x-text="'📅 ' + tx.billing_cycle"></span>
+                        </template>
                         <p class="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed" x-text="tx.description"></p>
                     </div>
 
@@ -546,6 +552,21 @@ class="pb-20 lg:pb-6">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền (VNĐ)</label>
                         <input type="number" name="amount" x-model="selectedTx.amount" required step="1000" min="1000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Gán Dự Án</label>
+                        <select name="project_id" x-model="selectedTx.project_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
+                            <option value="">-- Không gắn dự án --</option>
+                            @foreach($projects as $p)
+                                <option value="{{ $p->id }}">{{ $p->name }} ({{ $p->code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Chu Kỳ Thu Phí / Khoảng Thời Gian</label>
+                        <input type="text" name="billing_cycle" x-model="selectedTx.billing_cycle" placeholder="VD: Tháng 05/2026, Quý 2/2026..." class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
                     </div>
 
                     <div>

@@ -84,9 +84,16 @@
                 <div>
                     <!-- Code Badge & Status -->
                     <div class="flex items-center justify-between mb-3">
-                        <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs rounded-lg uppercase tracking-wider">
-                            {{ $p->code }}
-                        </span>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs rounded-lg uppercase tracking-wider">
+                                {{ $p->code }}
+                            </span>
+                            @if($p->release_date)
+                                <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold text-[10px] rounded-lg">
+                                    Go-live: {{ $p->release_date->format('d/m/Y') }}
+                                </span>
+                            @endif
+                        </div>
                         <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full {{ $p->status === 'active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' }}">
                             {{ $p->status === 'active' ? 'Đang chạy' : ($p->status === 'completed' ? 'Hoàn thành' : 'Hủy') }}
                         </span>
@@ -163,9 +170,9 @@
                     <textarea name="description" rows="2" placeholder="Ghi chú về nội dung dự án..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">% Trích Về Quỹ Chung</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">% Trích Quỹ</label>
                         <input type="number" name="weamis_fund_percentage" x-model.number="weamisFundPct" min="0" max="100" step="0.5" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-extrabold text-amber-600 focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                     <div>
@@ -176,6 +183,10 @@
                                 <option value="{{ $m->id }}">{{ $m->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ngày Go-Live</label>
+                        <input type="date" name="release_date" class="w-full px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                 </div>
 
