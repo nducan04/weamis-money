@@ -160,8 +160,6 @@ class="pb-20 lg:pb-6">
                     }
                 }">
                     @csrf
-                    <input type="hidden" name="type" :value="quickType">
-
                     <!-- Member Selector -->
                     <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
                         <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Thành viên</span>
@@ -169,6 +167,18 @@ class="pb-20 lg:pb-6">
                             @foreach($members->where('role', '!=', 'admin') as $m)
                                 <option value="{{ $m->id }}">{{ $m->name }}</option>
                             @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Transaction Type Selector -->
+                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
+                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Loại GD</span>
+                        <select name="type" x-model="quickType" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="expense">📤 Chi tiêu chung (Chi)</option>
+                            <option value="contribution">📥 Góp quỹ (Thu)</option>
+                            <option value="loan">💳 Vay cá nhân</option>
+                            <option value="repayment">💵 Trả nợ vay</option>
+                            <option value="withdrawal">💸 Rút lương / Thu nhập</option>
                         </select>
                     </div>
 

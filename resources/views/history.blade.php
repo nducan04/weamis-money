@@ -248,6 +248,7 @@ class="pb-20 lg:pb-6">
                     <option value="expense">Chi tiêu (Chi)</option>
                     <option value="loan">Vay cá nhân</option>
                     <option value="repayment">Trả nợ vay</option>
+                    <option value="withdrawal">Rút lương / Thu nhập</option>
                     <option value="distribution">Chia tiền %</option>
                 </select>
 
@@ -323,6 +324,9 @@ class="pb-20 lg:pb-6">
                                 </template>
                                 <template x-if="tx.type === 'repayment'">
                                     <span class="px-2.5 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-extrabold rounded-lg text-xs">Trả nợ</span>
+                                </template>
+                                <template x-if="tx.type === 'withdrawal'">
+                                    <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-extrabold rounded-lg text-xs">Rút lương</span>
                                 </template>
                                 <template x-if="tx.type === 'distribution'">
                                     <span class="px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-extrabold rounded-lg text-xs">Chia %</span>
@@ -425,6 +429,9 @@ class="pb-20 lg:pb-6">
                         <template x-if="tx.type === 'repayment'">
                             <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-bold rounded text-[10px] flex-shrink-0">Trả nợ</span>
                         </template>
+                        <template x-if="tx.type === 'withdrawal'">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-bold rounded text-[10px] flex-shrink-0">Rút lương</span>
+                        </template>
                         <template x-if="tx.type === 'distribution'">
                             <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-bold rounded text-[10px] flex-shrink-0">Chia %</span>
                         </template>
@@ -516,6 +523,7 @@ class="pb-20 lg:pb-6">
                             <option value="expense">Chi tiêu chung (Chi)</option>
                             <option value="loan">Vay cá nhân</option>
                             <option value="repayment">Trả nợ vay</option>
+                            <option value="withdrawal">Rút lương / Rút thu nhập</option>
                             <option value="distribution">Chia tiền %</option>
                         </select>
                     </div>

@@ -104,7 +104,7 @@ class TransactionController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'responsible_user_id' => 'nullable|exists:users,id',
             'claimant_user_id' => 'nullable|exists:users,id',
-            'type' => 'required|in:contribution,expense,loan,repayment',
+            'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal',
             'amount' => 'required|numeric|min:1000',
             'description' => 'required|string|max:255',
             'evidence_type' => 'nullable|in:file,link,text,none',
@@ -172,7 +172,7 @@ class TransactionController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'responsible_user_id' => 'nullable|exists:users,id',
             'claimant_user_id' => 'nullable|exists:users,id',
-            'type' => 'required|in:contribution,expense,loan,repayment,distribution',
+            'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal',
             'amount' => 'required|numeric|min:1000',
             'description' => 'required|string|max:255',
             'evidence_type' => 'nullable|in:file,link,text,none',
@@ -291,7 +291,7 @@ class TransactionController extends Controller
         if (!$projectId) {
             if ($type === 'contribution' || $type === 'repayment') {
                 $fund->increment('balance', $amount);
-            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution') {
+            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution' || $type === 'withdrawal') {
                 $fund->decrement('balance', $amount);
             }
         }
@@ -308,7 +308,7 @@ class TransactionController extends Controller
         if (!$projectId) {
             if ($type === 'contribution' || $type === 'repayment') {
                 $fund->decrement('balance', $amount);
-            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution') {
+            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution' || $type === 'withdrawal') {
                 $fund->increment('balance', $amount);
             }
         }
