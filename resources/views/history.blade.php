@@ -155,13 +155,6 @@ class="pb-20 lg:pb-6">
 
     <!-- Page Header & Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-            <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center space-x-2">
-                <span>📜 Lịch Sử Giao Dịch</span>
-            </h2>
-            <p class="text-xs text-slate-400 font-medium">Toàn bộ nhật ký thu, chi, vay và trả nợ nhóm</p>
-        </div>
-
         <div class="flex items-center space-x-2">
             <button @click="showCalendar = !showCalendar" class="px-3.5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-2 cursor-pointer">
                 <span>📅 Lịch Thu Chi Nhật Ký</span>
@@ -239,7 +232,7 @@ class="pb-20 lg:pb-6">
             </div>
 
             <div class="gap-2 grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap md:items-center" :class="showFilters ? 'grid' : 'hidden md:flex'">
-                <input type="text" x-model="filterSearch" placeholder="🔍 Tìm kiếm nội dung..." class="w-full md:w-56 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+                <input type="text" x-model="filterSearch" placeholder="Tìm kiếm nội dung..." class="w-full md:w-56 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
                 
                 <select x-model="filterMemberId" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả thành viên</option>
