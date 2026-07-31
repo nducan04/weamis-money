@@ -268,37 +268,37 @@
     </main>
 
     <!-- Global Mobile Bottom Navigation Bar (Visible across ALL pages on screens < sm) -->
-    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700/90 shadow-2xl safe-bottom px-1 py-1.5 transition-colors">
+    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700/90 shadow-2xl safe-bottom px-1 py-2 transition-colors">
         <div class="grid grid-cols-5 gap-0.5 text-center">
             
             <!-- Tab 1: Dashboard -->
             <a href="{{ route('dashboard') }}" 
-               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
-                <span class="text-[10px] tracking-tight">Dashboard</span>
+               class="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition cursor-pointer {{ request()->routeIs('dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-600 dark:text-slate-300 font-bold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-xs font-extrabold tracking-tight">Dashboard</span>
             </a>
 
             <!-- Tab 2: Dự Án -->
             <a href="{{ route('projects.index') }}" 
-               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('projects.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
-                <span class="text-[10px] tracking-tight">Dự Án</span>
+               class="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition cursor-pointer {{ request()->routeIs('projects.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-600 dark:text-slate-300 font-bold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-xs font-extrabold tracking-tight">Dự Án</span>
             </a>
 
             <!-- Tab 3: Tài Sản -->
             <a href="{{ route('analytics.networth') }}" 
-               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('analytics.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
-                <span class="text-[10px] tracking-tight">Tài Sản</span>
+               class="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition cursor-pointer {{ request()->routeIs('analytics.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-600 dark:text-slate-300 font-bold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-xs font-extrabold tracking-tight">Tài Sản</span>
             </a>
 
             <!-- Tab 4: Báo Cáo -->
             <a href="{{ route('report') }}" 
-               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('report') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
-                <span class="text-[10px] tracking-tight">Báo Cáo</span>
+               class="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition cursor-pointer {{ request()->routeIs('report') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-600 dark:text-slate-300 font-bold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-xs font-extrabold tracking-tight">Báo Cáo</span>
             </a>
 
             <!-- Tab 5: Lịch Sử -->
             <a href="{{ route('history') }}" 
-               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('history') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
-                <span class="text-[10px] tracking-tight">Lịch Sử</span>
+               class="flex flex-col items-center justify-center py-2 px-1 rounded-xl transition cursor-pointer {{ request()->routeIs('history') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-600 dark:text-slate-300 font-bold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-xs font-extrabold tracking-tight">Lịch Sử</span>
             </a>
 
         </div>
