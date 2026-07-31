@@ -28,6 +28,9 @@ deploy_production:
         git fetch https://git.vietnh.io.vn/general-projects/weamis-money.git main && \
         git checkout -B main FETCH_HEAD && \
         docker rm -f weamis-money-app || true && \
-        docker compose up -d --build && \
-        docker exec weamis-money-app chmod -R 777 storage bootstrap/cache database
+        docker-compose up -d --build && \
+        docker exec weamis-money-app chmod -R 777 storage bootstrap/cache database && \
+        docker exec weamis-money-app php artisan config:clear && \
+        docker exec weamis-money-app php artisan cache:clear && \
+        docker exec weamis-money-app php artisan view:clear
       "
