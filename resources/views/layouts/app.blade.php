@@ -1,36 +1,20 @@
 <!DOCTYPE html>
-<html lang="vi" x-data="{ 
-    darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
-}" 
-x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' : 'light'); if(val) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } })"
-:class="{ 'dark': darkMode }">
+<html lang="vi" x-data="{ darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches), mobileMenuOpen: false }"
+      :class="{ 'dark': darkMode }"
+      x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#059669">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>{{ config('app.name', 'Weamis Money') }} - Quản Lý Thu Chi Team</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- Favicon Logo for Browser Tab -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💲</text></svg>">
-    
-    <!-- Prevent Dark Mode FOUC on reload -->
-    <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    </script>
-    
-    <!-- Fonts -->
+    <title>{{ config('app.name', 'Weamis Money') }}</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -83,7 +67,7 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
 
         /* Safe Bottom Padding for Mobile Navigators */
         .safe-bottom {
-            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+            padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
         }
 
         /* Utility for 2 line truncation */
@@ -100,7 +84,7 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
     <!-- Top Navigation Header (Vibrant Emerald Brand Navbar) -->
     <header class="bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-700 text-white sticky top-0 z-30 shadow-md border-b border-emerald-800/50 safe-top transition-colors">
         <div class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between">
-            <div class="flex items-center space-x-4 sm:space-x-6 min-w-0">
+            <div class="flex items-center space-x-3 sm:space-x-6 min-w-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
                     <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white text-emerald-700 font-black text-base sm:text-xl flex items-center justify-center shadow-md flex-shrink-0">
                         💲
@@ -192,12 +176,47 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
                     </div>
                 </div>
                 @endauth
+
+                <!-- Mobile Hamburger Button -->
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="sm:hidden p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-lg transition flex items-center justify-center">
+                    <span x-show="!mobileMenuOpen">☰</span>
+                    <span x-show="mobileMenuOpen">✕</span>
+                </button>
             </div>
+        </div>
+
+        <!-- Mobile Slide-over Drawer -->
+        <div x-show="mobileMenuOpen" x-cloak class="sm:hidden border-t border-emerald-400/30 bg-emerald-800/95 backdrop-blur-md px-4 py-3 space-y-2 text-xs font-bold text-white shadow-xl" x-transition>
+            @auth
+            <div class="pb-2 border-b border-emerald-700/60 flex items-center justify-between">
+                <div>
+                    <p class="font-extrabold text-sm text-white">{{ auth()->user()->name }}</p>
+                    <p class="text-[10px] text-emerald-200">{{ auth()->user()->email }}</p>
+                </div>
+                @if(auth()->user()->isAdmin())
+                    <span class="px-2 py-0.5 bg-amber-400 text-slate-950 rounded-lg text-[10px] font-black uppercase">Admin</span>
+                @endif
+            </div>
+            @if(auth()->user()?->isAdmin())
+                <a href="{{ route('members.index') }}" @click="mobileMenuOpen = false" class="block py-2 px-3 rounded-xl hover:bg-emerald-700/60 transition flex items-center space-x-2">
+                    <span>👥 Quản lý người dùng</span>
+                </a>
+            @endif
+            <a href="{{ route('password.change') }}" @click="mobileMenuOpen = false" class="block py-2 px-3 rounded-xl hover:bg-emerald-700/60 transition flex items-center space-x-2">
+                <span>🔐 Đổi mật khẩu</span>
+            </a>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="w-full text-left py-2 px-3 rounded-xl hover:bg-rose-600/40 text-rose-200 flex items-center space-x-2 transition">
+                    <span>🚪 Đăng xuất</span>
+                </button>
+            </form>
+            @endauth
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-6 py-5 sm:py-8 flex-grow w-full min-h-[75vh]">
+    <main class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-6 py-5 sm:py-8 flex-grow w-full min-h-[75vh] pb-24 sm:pb-8">
         <!-- Auto-Dismissing Floating Toast Notifications (4 seconds) -->
         @if(session('success'))
             <div x-data="{ show: true }" 
@@ -247,6 +266,48 @@ x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' :
 
         @yield('content')
     </main>
+
+    <!-- Global Mobile Bottom Navigation Bar (Visible across ALL pages on screens < sm) -->
+    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700/90 shadow-2xl safe-bottom px-1 py-1.5 transition-colors">
+        <div class="grid grid-cols-5 gap-0.5 text-center">
+            
+            <!-- Tab 1: Dashboard -->
+            <a href="{{ route('dashboard') }}" 
+               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-base leading-none mb-0.5">📊</span>
+                <span class="text-[10px] tracking-tight">Dashboard</span>
+            </a>
+
+            <!-- Tab 2: Dự Án -->
+            <a href="{{ route('projects.index') }}" 
+               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('projects.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-base leading-none mb-0.5">📂</span>
+                <span class="text-[10px] tracking-tight">Dự Án</span>
+            </a>
+
+            <!-- Tab 3: Tài Sản -->
+            <a href="{{ route('analytics.networth') }}" 
+               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('analytics.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-base leading-none mb-0.5">💎</span>
+                <span class="text-[10px] tracking-tight">Tài Sản</span>
+            </a>
+
+            <!-- Tab 4: Báo Cáo -->
+            <a href="{{ route('report') }}" 
+               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('report') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-base leading-none mb-0.5">📈</span>
+                <span class="text-[10px] tracking-tight">Báo Cáo</span>
+            </a>
+
+            <!-- Tab 5: Lịch Sử -->
+            <a href="{{ route('history') }}" 
+               class="flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('history') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105' : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-900 dark:hover:text-white' }}">
+                <span class="text-base leading-none mb-0.5">📜</span>
+                <span class="text-[10px] tracking-tight">Lịch Sử</span>
+            </a>
+
+        </div>
+    </div>
 
     <!-- Compact Streamlined Footer matching Navbar Gradient -->
     <footer class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white border-t border-emerald-500/30 transition-colors shadow-inner flex-shrink-0 mt-auto">
