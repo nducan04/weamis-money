@@ -278,7 +278,7 @@ class="pb-20 lg:pb-6">
             <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
                 <thead class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-700/30 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                     <tr>
-                        <th class="py-3.5 px-4 rounded-l-xl">STT</th>
+                        <th class="py-3.5 px-4 rounded-l-xl">Mã ID</th>
                         <th class="py-3.5 px-4">Thời Gian</th>
                         <th class="py-3.5 px-4">Thành Viên</th>
                         <th class="py-3.5 px-4">Loại GD</th>
@@ -291,7 +291,7 @@ class="pb-20 lg:pb-6">
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                     <template x-for="(tx, index) in paginatedTransactions" :key="tx.id">
                         <tr class="hover:bg-indigo-50/40 dark:hover:bg-indigo-900/10 transition-colors duration-150">
-                            <th class="py-3.5 px-4 font-bold text-slate-400" x-text="(currentPage - 1) * perPage + index + 1"></th>
+                            <td class="py-3.5 px-4 font-mono font-black text-indigo-600 dark:text-indigo-400" x-text="tx.id"></td>
                             <td class="py-4 px-4 whitespace-nowrap text-slate-500 font-semibold" x-text="tx.created_at_formatted"></td>
                             <td class="py-4 px-4 font-bold text-slate-900 dark:text-white">
                                 <div class="flex items-center space-x-2.5">
@@ -405,7 +405,10 @@ class="pb-20 lg:pb-6">
                                 </template>
                             </div>
                             <div class="min-w-0">
-                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="tx.user_name"></p>
+                                <div class="flex items-center space-x-1">
+                                    <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 font-mono font-extrabold text-[10px] rounded flex-shrink-0" x-text="'ID: ' + tx.id"></span>
+                                    <p class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="tx.user_name"></p>
+                                </div>
                                 <p class="text-[10px] text-slate-400" x-text="tx.created_at_formatted"></p>
                             </div>
                         </div>

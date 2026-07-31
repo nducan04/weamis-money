@@ -99,14 +99,27 @@ class ProjectController extends Controller
 
         $allMembers = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
-        $availableTransactions = Transaction::with('user')
-            ->where(function($q) use ($project) {
-                $q->whereNull('project_id')->orWhere('project_id', '!=', $project->id);
-            })
+        $unassignedTransactions = Transaction::with(['user'])
+            ->whereNull('project_id')
             ->latest()
             ->get();
 
-        return view('projects.show', compact('project', 'totalIncome', 'totalExpense', 'fundCut', 'distributable', 'memberPayouts', 'allMembers', 'availableTransactions'));
+        return view('projects.show', compact('project', 'totalIncome', 'totalExpense', 'fundCut', 'distributable', 'memberPayouts', 'allMembers', 'unassignedTransactions'));
+    }
+
+    public function attachTransactions(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'transaction_ids' => 'required|array',
+            'transaction_ids.*' => 'exists:transactions,id',
+        ]);
+
+        Transaction::whereIn('id', $validated['transaction_ids'])
+            ->update(['project_id' => $project->id]);
+
+        $count = count($validated['transaction_ids']);
+
+        return redirect()->back()->with('success', "Đã gắn thành công {$count} giao dịch vào dự án {$project->name}!");
     }
 
     public function update(Request $request, Project $project)

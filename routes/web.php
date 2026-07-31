@@ -45,15 +45,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+    Route::post('/projects/{project}/attach-transactions', [ProjectController::class, 'attachTransactions'])->name('projects.attach-transactions');
 
     // Analytics: Net Worth & Collaboration Network Graph
     Route::get('/analytics/networth', [AnalyticsController::class, 'networth'])->name('analytics.networth');
     Route::get('/analytics/network', [AnalyticsController::class, 'network'])->name('analytics.network');
 
-    // Transaction CRUD & Project Linking
+    // Transaction CRUD
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
-    Route::post('/transactions/link-project', [TransactionController::class, 'linkToProject'])->name('transactions.linkProject');
-    Route::post('/transactions/{transaction}/unlink-project', [TransactionController::class, 'unlinkFromProject'])->name('transactions.unlinkProject');
     Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 

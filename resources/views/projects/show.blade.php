@@ -4,9 +4,9 @@
 <div class="space-y-6" x-data="{ 
     showEditModal: false, 
     showAddTxModal: false, 
-    txAddMode: 'link',
-    selectedHistoryTxId: '',
-    showAdvancedFields: false,
+    activeTxTab: 'attach',
+    txSearchQuery: '',
+    selectedTxIds: [],
     activeEvidence: null, 
     txEvidenceMode: 'none', 
     selectedFileName: '', 
@@ -183,7 +183,8 @@
             <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
                 <thead class="bg-slate-100 dark:bg-slate-700/60 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                     <tr>
-                        <th class="py-3 px-3 rounded-l-xl">Thời gian</th>
+                        <th class="py-3 px-3 rounded-l-xl">Mã ID</th>
+                        <th class="py-3 px-3">Thời gian</th>
                         <th class="py-3 px-3">Người nhập</th>
                         <th class="py-3 px-3">Nội dung</th>
                         <th class="py-3 px-3">Người trách nhiệm / Đòi tiền</th>
@@ -194,6 +195,7 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                     @forelse($project->transactions as $tx)
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                            <td class="py-3 px-3 font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs">#{{ $tx->id }}</td>
                             <td class="py-3 px-3 font-semibold text-slate-500">{{ $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                             <td class="py-3 px-3 font-bold text-slate-900 dark:text-white">{{ $tx->user->name ?? 'N/A' }}</td>
                             <td class="py-3 px-3 font-medium">
@@ -223,18 +225,8 @@
                                     <span class="text-slate-400 text-[10px]">Không có</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-3 text-right">
-                                <div class="flex items-center justify-end space-x-1.5">
-                                    <span class="font-extrabold {{ in_array($tx->type, ['contribution', 'repayment']) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
-                                        {{ in_array($tx->type, ['contribution', 'repayment']) ? '+' : '-' }}{{ number_format($tx->amount, 0, ',', '.') }}đ
-                                    </span>
-                                    @if($project->canManage(auth()->user()))
-                                        <form action="{{ route('transactions.unlinkProject', $tx) }}" method="POST" class="inline" onsubmit="return confirm('Giao dịch #{{ $tx->id }} sẽ bị bỏ gắn khỏi dự án {{ $project->name }}. Bạn có chắc chắn?')">
-                                            @csrf
-                                            <button type="submit" class="p-1 text-slate-400 hover:text-rose-500 font-extrabold text-[11px] rounded transition cursor-pointer" title="Bỏ gắn khỏi dự án">✕</button>
-                                        </form>
-                                    @endif
-                                </div>
+                            <td class="py-3 px-3 text-right font-extrabold {{ in_array($tx->type, ['contribution', 'repayment']) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                                {{ in_array($tx->type, ['contribution', 'repayment']) ? '+' : '-' }}{{ number_format($tx->amount, 0, ',', '.') }}đ
                             </td>
                         </tr>
                     @empty
@@ -367,104 +359,107 @@
         </div>
     </div>
 
-    <!-- MODAL: THÊM GIAO DỊCH CHO DỰ ÁN -->
+    <!-- MODAL: THÊM / GẮN GIAO DỊCH CHO DỰ ÁN -->
     <div x-show="showAddTxModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak x-transition>
-        <div @click.away="showAddTxModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
-            
-            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
+        <div @click.away="showAddTxModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-xl shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 flex-shrink-0">
                 <div>
-                    <h3 class="text-base font-black text-emerald-600 dark:text-emerald-400">Thêm Giao Dịch Cho Dự Án</h3>
-                    <p class="text-[11px] text-slate-400 font-semibold">{{ $project->name }} ({{ $project->code }})</p>
+                    <h3 class="text-base font-black text-slate-900 dark:text-white">Thêm Giao Dịch Cho Dự Án</h3>
+                    <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{ $project->name }} ({{ $project->code }})</p>
                 </div>
-                <button @click="showAddTxModal = false" class="text-slate-400 hover:text-slate-600 font-bold text-base">✕</button>
+                <button @click="showAddTxModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold p-1 text-lg leading-none cursor-pointer">✕</button>
             </div>
 
-            <!-- Mode Selection Tabs -->
-            <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl mb-4 text-xs font-extrabold">
-                <button type="button" @click="txAddMode = 'link'" class="py-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer" :class="txAddMode === 'link' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
-                    <span>⚡ Chọn Giao Dịch Có Sẵn</span>
+            <!-- Tab Navigation Header -->
+            <div class="flex items-center space-x-2 my-3 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl flex-shrink-0">
+                <button type="button" @click="activeTxTab = 'attach'"
+                        :class="activeTxTab === 'attach' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'"
+                        class="flex-1 py-2 text-xs font-extrabold rounded-xl transition-all text-center cursor-pointer flex items-center justify-center space-x-1.5">
+                    <span>Gắn GD Có Sẵn</span>
+                    <span class="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black">
+                        {{ $unassignedTransactions->count() }}
+                    </span>
                 </button>
-                <button type="button" @click="txAddMode = 'create'" class="py-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer" :class="txAddMode === 'create' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm font-black' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
-                    <span>✏️ Tạo Mới Giao Dịch</span>
+                <button type="button" @click="activeTxTab = 'create'"
+                        :class="activeTxTab === 'create' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'"
+                        class="flex-1 py-2 text-xs font-extrabold rounded-xl transition-all text-center cursor-pointer flex items-center justify-center space-x-1.5">
+                    <span>Tạo GD Mới</span>
                 </button>
             </div>
 
-            <!-- MODE 1: CHỌN GIAO DỊCH CÓ SẴN (GẮN ID GIAO DỊCH TỪ LỊCH SỬ) -->
-            <div x-show="txAddMode === 'link'" x-cloak>
-                <form action="{{ route('transactions.linkProject') }}" method="POST" class="space-y-4">
+            <!-- TAB 1: GẮN GIAO DỊCH CÓ SẴN (CHƯA THUỘC DỰ ÁN NÀO) -->
+            <div x-show="activeTxTab === 'attach'" class="flex-1 overflow-y-auto min-h-0 space-y-3 pt-1">
+                <div>
+                    <input type="text" x-model="txSearchQuery" placeholder="Tìm theo ID, nội dung,..." class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <form action="{{ route('projects.attach-transactions', $project) }}" method="POST" class="space-y-3">
                     @csrf
-                    <input type="hidden" name="project_id" value="{{ $project->id }}">
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chọn giao dịch từ Lịch Sử</label>
-                        <select name="transaction_id" x-model="selectedHistoryTxId" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="">-- Chọn giao dịch cần gán vào dự án --</option>
-                            @foreach($availableTransactions as $avTx)
-                                <option value="{{ $avTx->id }}">
-                                    #{{ $avTx->id }} - {{ $avTx->created_at ? $avTx->created_at->format('d/m/Y') : '' }} | {{ $avTx->user->name ?? 'N/A' }} | {{ Str::limit($avTx->description, 28) }} ({{ number_format($avTx->amount, 0, ',', '.') }}đ)
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+                        @forelse($unassignedTransactions as $uTx)
+                            <label x-show="!txSearchQuery || '{{ $uTx->id }} {{ strtolower(addslashes($uTx->description)) }} {{ strtolower(addslashes($uTx->user->name ?? '')) }}'.includes(txSearchQuery.trim().toLowerCase())"
+                                   class="flex items-start space-x-3 p-3 bg-slate-50 dark:bg-slate-700/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 rounded-2xl border border-slate-200/80 dark:border-slate-700 transition cursor-pointer">
+                                <input type="checkbox" name="transaction_ids[]" value="{{ $uTx->id }}" x-model="selectedTxIds" class="mt-1 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-1.5 min-w-0">
+                                            <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 rounded font-mono font-extrabold text-[10px] flex-shrink-0">
+                                                ID: {{ $uTx->id }}
+                                            </span>
+                                            <p class="text-xs font-extrabold text-slate-900 dark:text-white truncate">{{ $uTx->description }}</p>
+                                        </div>
+                                        <span class="text-xs font-black flex-shrink-0 ml-2 {{ in_array($uTx->type, ['contribution', 'repayment']) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                                            {{ in_array($uTx->type, ['contribution', 'repayment']) ? '+' : '-' }}{{ number_format($uTx->amount, 0, ',', '.') }}đ
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                                        <span>{{ $uTx->user->name ?? 'N/A' }} • {{ $uTx->created_at ? $uTx->created_at->format('d/m/Y H:i') : '' }}</span>
+                                        <span class="uppercase text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300">
+                                            {{ $uTx->type === 'contribution' ? 'Doanh thu' : ($uTx->type === 'expense' ? 'Chi tiêu' : $uTx->type) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </label>
+                        @empty
+                            <div class="text-center py-8 text-xs text-slate-400">
+                                Không có giao dịch nào chưa gắn dự án trong Lịch sử GD.
+                            </div>
+                        @endforelse
                     </div>
 
-                    <!-- Selected Transaction Preview -->
-                    @foreach($availableTransactions as $avTx)
-                        <div x-show="selectedHistoryTxId == '{{ $avTx->id }}'" x-cloak class="p-3 bg-slate-50 dark:bg-slate-700/40 rounded-2xl border border-slate-200/80 dark:border-slate-600 text-xs space-y-1.5">
-                            <div class="flex items-center justify-between font-bold">
-                                <span class="text-slate-500">Mã GD: #{{ $avTx->id }}</span>
-                                <span class="px-2 py-0.5 rounded-md text-[10px] uppercase font-black {{ $avTx->type === 'contribution' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
-                                    {{ $avTx->type === 'contribution' ? 'Thu / Doanh Thu' : ($avTx->type === 'expense' ? 'Chi Tiêu' : $avTx->type) }}
-                                </span>
-                            </div>
-                            <p class="font-extrabold text-slate-900 dark:text-white">Nội dung: {{ $avTx->description }}</p>
-                            <div class="flex items-center justify-between text-[11px] font-semibold text-slate-500">
-                                <span>Thành viên: <strong class="text-slate-700 dark:text-slate-200">{{ $avTx->user->name ?? 'N/A' }}</strong></span>
-                                <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">{{ number_format($avTx->amount, 0, ',', '.') }}đ</span>
-                            </div>
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            Đã chọn: <strong class="text-emerald-600 dark:text-emerald-400" x-text="selectedTxIds.length"></strong> giao dịch
+                        </span>
+                        <div class="flex space-x-2">
+                            <button type="button" @click="showAddTxModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 transition cursor-pointer">Hủy</button>
+                            <button type="submit" :disabled="selectedTxIds.length === 0" :class="selectedTxIds.length === 0 ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-emerald-600 hover:bg-emerald-700'" class="px-5 py-2 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">
+                                Gắn Vào Dự Án
+                            </button>
                         </div>
-                    @endforeach
-
-                    <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end space-x-2">
-                        <button type="button" @click="showAddTxModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 transition cursor-pointer">Hủy</button>
-                        <button type="submit" :disabled="!selectedHistoryTxId" :class="!selectedHistoryTxId ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-emerald-600 hover:bg-emerald-700'" class="px-5 py-2 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">
-                            Gắn Giao Dịch Vào Dự Án
-                        </button>
                     </div>
                 </form>
             </div>
 
-            <!-- MODE 2: TẠO GIAO DỊCH MỚI (TỐI GIẢN UX) -->
-            <div x-show="txAddMode === 'create'" x-cloak>
+            <!-- TAB 2: TẠO MỚI GIAO DỊCH TỐI GIẢN (5 TRƯỜNG CHÍNH) -->
+            <div x-show="activeTxTab === 'create'" class="flex-1 overflow-y-auto min-h-0 pt-1">
                 <form action="{{ route('transactions.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3.5">
                     @csrf
                     <input type="hidden" name="project_id" value="{{ $project->id }}">
+                    <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại giao dịch</label>
-                            <select name="type" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <option value="contribution">Thừa nhận Thu Dự Án</option>
-                                <option value="expense">Chi tiêu dự án</option>
-                                <option value="loan">Vay dự án</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Thành viên nộp/chi</label>
-                            <select name="user_id" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <option value="">-- Chọn thành viên --</option>
-                                @foreach($allMembers->where('role', '!=', 'admin') as $m)
-                                    <option value="{{ $m->id }}" {{ auth()->id() === $m->id ? 'selected' : '' }}>{{ $m->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
+                    <!-- 1. Loại giao dịch -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ghi chú nội dung</label>
-                        <input type="text" name="description" required placeholder="VD: Mua Server AWS cho dự án..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
+                        <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="contribution">Doanh thu dự án</option>
+                            <option value="expense">Chi tiêu dự án</option>
+                            <option value="loan">Vay dự án</option>
+                        </select>
                     </div>
 
+                    <!-- 2. Số tiền -->
                     <div x-data="{
                         rawAmount: '',
                         get formattedAmount() {
@@ -477,7 +472,7 @@
                             this.rawAmount = clean;
                         }
                     }">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Số tiền (VNĐ)</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Số Tiền (VNĐ)</label>
                         <div class="relative">
                             <input type="text" x-model="formattedAmount" required placeholder="0" class="w-full px-3.5 py-2.5 pr-8 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             <input type="hidden" name="amount" :value="rawAmount">
@@ -485,83 +480,60 @@
                         </div>
                     </div>
 
-                    <!-- Collapsible Advanced Optional Fields -->
-                    <div>
-                        <button type="button" @click="showAdvancedFields = !showAdvancedFields" class="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] hover:underline flex items-center space-x-1 cursor-pointer">
-                            <span x-text="showAdvancedFields ? '▼ Ẩn chi tiết tùy chọn (Phụ trách, Đòi tiền, Chu kỳ)' : '▶ Thêm chi tiết tùy chọn (Người phụ trách, Đòi tiền, Chu kỳ)'"></span>
-                        </button>
-
-                        <div x-show="showAdvancedFields" x-cloak class="mt-2.5 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-200/60 dark:border-slate-600 space-y-3">
-                            <div class="grid grid-cols-2 gap-2.5">
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Người phụ trách</label>
-                                    <select name="responsible_user_id" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
-                                        <option value="">-- Chọn --</option>
-                                        @foreach($allMembers->where('role', '!=', 'admin') as $m)
-                                            <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Người đòi/nhận tiền</label>
-                                    <select name="claimant_user_id" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
-                                        <option value="">-- Chọn --</option>
-                                        @foreach($allMembers->where('role', '!=', 'admin') as $m)
-                                            <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Chu kỳ thu phí</label>
-                                <input type="text" name="billing_cycle" placeholder="VD: Tháng 05/2026..." class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
-                            </div>
+                    <!-- 3. Ghi chú nội dung & 4. Chu kỳ thu phí -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ghi Chú Nội Dung</label>
+                            <input type="text" name="description" required placeholder="VD: Phí vận hành Server..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chu Kỳ Thu Phí</label>
+                            <input type="text" name="billing_cycle" placeholder="VD: Tháng 05/2026, Quý 2/2026..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                     </div>
 
-                    <!-- Bằng Chứng Attachment -->
+                    <!-- 5. Đính Kèm Bằng Chứng -->
                     <div class="space-y-1.5 pt-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Đính kèm bằng chứng</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Đính Kèm Bằng Chứng</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <button type="button" @click="triggerTxFilePick()" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="txEvidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'">
-                                <span>🖼️ Bill</span>
+                            <button type="button" @click="triggerTxFilePick()" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 text-center" :class="txEvidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white ring-2 ring-emerald-500' : 'bg-slate-50 dark:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'">
+                                <span>Bill</span>
                             </button>
-                            <button type="button" @click="txEvidenceMode = txEvidenceMode === 'link' ? 'none' : 'link'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="txEvidenceMode === 'link' ? 'bg-blue-600 text-white ring-2 ring-blue-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-blue-900/30'">
-                                <span>🔗 Link</span>
+                            <button type="button" @click="txEvidenceMode = txEvidenceMode === 'link' ? 'none' : 'link'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 text-center" :class="txEvidenceMode === 'link' ? 'bg-blue-600 text-white ring-2 ring-blue-500' : 'bg-slate-50 dark:bg-slate-700/60 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-blue-900/30'">
+                                <span>Link</span>
                             </button>
-                            <button type="button" @click="txEvidenceMode = txEvidenceMode === 'text' ? 'none' : 'text'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="txEvidenceMode === 'text' ? 'bg-amber-600 text-white ring-2 ring-amber-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'">
-                                <span>📝 Momo</span>
+                            <button type="button" @click="txEvidenceMode = txEvidenceMode === 'text' ? 'none' : 'text'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 text-center" :class="txEvidenceMode === 'text' ? 'bg-amber-600 text-white ring-2 ring-amber-500' : 'bg-slate-50 dark:bg-slate-700/60 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'">
+                                <span>Momo</span>
                             </button>
+                        </div>
+
+                        <input type="hidden" name="evidence_type" :value="txEvidenceMode">
+                        <input type="file" x-ref="txEvidenceFileInput" name="evidence_file" accept="image/*,.pdf" class="hidden" @change="onTxFileSelected($event)">
+
+                        <div x-show="txEvidenceMode === 'file' && selectedFileName" x-cloak class="flex items-center justify-between p-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/50 rounded-xl mt-2">
+                            <div class="flex items-center space-x-2 min-w-0">
+                                <template x-if="selectedFilePreview">
+                                    <img :src="selectedFilePreview" class="w-8 h-8 object-cover rounded-lg shadow-sm flex-shrink-0">
+                                </template>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate" x-text="selectedFileName"></span>
+                            </div>
+                            <button type="button" @click="clearTxFile()" class="p-1 text-rose-500 hover:text-rose-700 font-bold text-xs">✕</button>
+                        </div>
+
+                        <div x-show="txEvidenceMode === 'link'" x-cloak class="mt-2">
+                            <input type="url" name="evidence_link" placeholder="https://momo.vn/transaction/..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white">
+                        </div>
+                        <div x-show="txEvidenceMode === 'text'" x-cloak class="mt-2">
+                            <textarea name="evidence_text" rows="2" placeholder="Dán thông tin sao kê MoMo..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white"></textarea>
                         </div>
                     </div>
 
-                    <input type="hidden" name="evidence_type" :value="txEvidenceMode">
-                    <input type="file" x-ref="txEvidenceFileInput" name="evidence_file" accept="image/*,.pdf" class="hidden" @change="onTxFileSelected($event)">
-
-                    <div x-show="txEvidenceMode === 'file' && selectedFileName" x-cloak class="flex items-center justify-between p-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/50 rounded-xl">
-                        <div class="flex items-center space-x-2 min-w-0">
-                            <template x-if="selectedFilePreview">
-                                <img :src="selectedFilePreview" class="w-8 h-8 object-cover rounded-lg shadow-sm flex-shrink-0">
-                            </template>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate" x-text="selectedFileName"></span>
-                        </div>
-                        <button type="button" @click="clearTxFile()" class="p-1 text-rose-500 hover:text-rose-700 font-bold text-xs">✕</button>
-                    </div>
-
-                    <div x-show="txEvidenceMode === 'link'" x-cloak>
-                        <input type="url" name="evidence_link" placeholder="https://momo.vn/transaction/..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white">
-                    </div>
-                    <div x-show="txEvidenceMode === 'text'" x-cloak>
-                        <textarea name="evidence_text" rows="2" placeholder="Dán thông tin sao kê MoMo..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white"></textarea>
-                    </div>
-
-                    <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end space-x-2">
-                        <button type="button" @click="showAddTxModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 transition cursor-pointer">Hủy</button>
-                        <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">Lưu Giao Dịch Mới</button>
+                    <div class="pt-3 mt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end space-x-2">
+                        <button type="button" @click="showAddTxModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition cursor-pointer">Hủy</button>
+                        <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">Lưu Giao Dịch</button>
                     </div>
                 </form>
             </div>
-
         </div>
     </div>
 
