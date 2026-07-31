@@ -29,15 +29,13 @@
         { key: 'electric', name: 'Tiền điện', fullName: 'Tiền điện', icon: '/icons/Electric.svg', color: 'bg-yellow-500' },
         { key: 'transport', name: 'Đi lại', fullName: 'Đi lại', icon: '/icons/Transport.svg', color: 'bg-orange-500' },
         { key: 'contact', name: 'Phí liên lạc', fullName: 'Phí liên lạc', icon: '/icons/Contact.svg', color: 'bg-cyan-500' },
-        { key: 'house', name: 'Tiền nhà', fullName: 'Tiền nhà', icon: '/icons/HouseRent.svg', color: 'bg-rose-500' },
-        { key: 'other', name: 'Chỉnh sửa', fullName: '', icon: '/icons/Edit.svg', color: 'bg-slate-400' }
+        { key: 'house', name: 'Tiền nhà', fullName: 'Tiền nhà', icon: '/icons/HouseRent.svg', color: 'bg-rose-500' }
     ],
     incomeCategories: [
         { key: 'salary', name: 'Tiền lương', fullName: 'Tiền lương', icon: '/icons/Salary.svg', color: 'bg-emerald-500' },
         { key: 'bonus', name: 'Tiền thưởng', fullName: 'Tiền thưởng', icon: '/icons/Bonus.svg', color: 'bg-amber-500' },
         { key: 'invest', name: 'Đầu tư', fullName: 'Lợi nhuận đầu tư', icon: '/icons/Invest.svg', color: 'bg-blue-500' },
-        { key: 'other_income', name: 'Thu khác', fullName: 'Góp quỹ / Thu khác', icon: '/icons/Exchange.svg', color: 'bg-purple-500' },
-        { key: 'other', name: 'Chỉnh sửa', fullName: '', icon: '/icons/Edit.svg', color: 'bg-slate-400' }
+        { key: 'other_income', name: 'Thu khác', fullName: 'Góp quỹ / Thu khác', icon: '/icons/Exchange.svg', color: 'bg-purple-500' }
     ],
     get activeCategories() {
         return this.quickType === 'expense' ? this.expenseCategories : this.incomeCategories;
@@ -292,8 +290,10 @@ class="pb-20 lg:pb-6">
 
                     <!-- Submit Button -->
                     <div class="pt-2">
-                        <button type="submit" class="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md transition-all duration-150 active:scale-98 cursor-pointer flex items-center justify-center space-x-2">
-                            <span x-text="quickType === 'expense' ? 'Nhập khoản Tiền chi' : 'Nhập khoản Thu nhập'"></span>
+                        <button type="submit" 
+                                class="w-full py-3 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition-all duration-200 active:scale-98 cursor-pointer flex items-center justify-center space-x-2"
+                                :class="quickType === 'expense' ? 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-rose-500/25' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/25'">
+                            <span x-text="quickType === 'expense' ? 'Thêm' : 'Thêm'"></span>
                         </button>
                     </div>
                 </form>
@@ -302,22 +302,6 @@ class="pb-20 lg:pb-6">
 
         <!-- CỘT PHẢI (RIGHT PANEL): DASHBOARD OVERVIEW, CHARTS & MEMBER STATS -->
         <div class="lg:col-span-7 xl:col-span-8 space-y-6" :class="mobileTab !== 'entry' ? 'block' : 'hidden lg:block'">
-
-            <!-- Top Desktop Action Buttons -->
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                        Tổng quan
-                    </h2>
-                </div>
-                <div class="flex items-center space-x-2">
-                    @if(auth()->user()?->isAdmin())
-                        <button @click="showDistributionModal = true" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
-                            <span>Chia % Quỹ</span>
-                        </button>
-                    @endif
-                </div>
-            </div>
 
             <!-- 1. Top Stat Cards Row -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" :class="mobileTab === 'stats' || mobileTab === 'all' ? 'block' : 'hidden lg:grid'">
@@ -363,81 +347,8 @@ class="pb-20 lg:pb-6">
             </div>
 
             <!-- ApexCharts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5"
-                 :class="mobileTab === 'stats' || mobileTab === 'all' ? 'grid' : 'hidden lg:grid'"
-                 x-data="{
-                isDark: document.documentElement.classList.contains('dark'),
-                donutChart: null,
-                barChart: null,
-                updateTheme() {
-                    this.isDark = document.documentElement.classList.contains('dark');
-                    const textColor = this.isDark ? '#94a3b8' : '#64748b';
-                    const valueColor = this.isDark ? '#f8fafc' : '#0f172a';
-                    const foreColor = this.isDark ? '#f1f5f9' : '#1e293b';
-                    const bgColor = this.isDark ? '#1e293b' : '#ffffff';
-                    const gridColor = this.isDark ? '#334155' : '#e2e8f0';
-
-                    if (this.donutChart) {
-                        this.donutChart.updateOptions({
-                            chart: { foreColor: foreColor },
-                            stroke: { colors: [bgColor] },
-                            legend: { labels: { colors: foreColor } },
-                            tooltip: { theme: this.isDark ? 'dark' : 'light' }
-                        });
-                    }
-
-                    if (this.barChart) {
-                        this.barChart.updateOptions({
-                            chart: { foreColor: foreColor },
-                            xaxis: { labels: { style: { colors: foreColor } } },
-                            yaxis: { labels: { style: { colors: foreColor } } },
-                            dataLabels: { style: { colors: [this.isDark ? '#ffffff' : '#0f172a'] } },
-                            grid: { borderColor: gridColor },
-                            tooltip: { theme: this.isDark ? 'dark' : 'light' }
-                        });
-                    }
-                },
-                initCharts() {
-                    this.isDark = document.documentElement.classList.contains('dark');
-                    const textColor = this.isDark ? '#94a3b8' : '#64748b';
-                    const valueColor = this.isDark ? '#f8fafc' : '#0f172a';
-                    const foreColor = this.isDark ? '#f1f5f9' : '#1e293b';
-                    const bgColor = this.isDark ? '#1e293b' : '#ffffff';
-                    const gridColor = this.isDark ? '#334155' : '#e2e8f0';
-
-                    // Donut chart is rendered as custom SVG (no ApexCharts needed)
-
-                    // 2. Bar Chart: Member Shares
-                    const memberNames = [@foreach($members as $m)'{{ $m->name }}',@endforeach];
-                    const memberShares = [@foreach($members as $m){{ $m->share_percentage }},@endforeach];
-
-                    this.barChart = new ApexCharts(this.$refs.barChart, {
-                        chart: { type: 'bar', height: 260, background: 'transparent', fontFamily: 'Plus Jakarta Sans, sans-serif', toolbar: { show: false }, foreColor: foreColor },
-                        series: [{ name: 'Cổ phần (%)', data: memberShares }],
-                        xaxis: {
-                            categories: memberNames,
-                            labels: { style: { fontSize: '10px', fontWeight: 600, colors: foreColor }, formatter: (val) => val + '%' }
-                        },
-                        yaxis: { labels: { style: { fontSize: '10px', fontWeight: 700, colors: foreColor } }, max: Math.max(...memberShares) + 5 },
-                        plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
-                        colors: ['#6366f1', '#8b5cf6', '#a78bfa', '#c084fc', '#e879f9', '#f472b6', '#fb7185', '#f87171'],
-                        dataLabels: {
-                            enabled: true,
-                            formatter: (val) => val + '%',
-                            style: { fontSize: '11px', fontWeight: 800, colors: [this.isDark ? '#ffffff' : '#0f172a'] },
-                            dropShadow: { enabled: true, top: 1, left: 1, blur: 2, opacity: 0.2 }
-                        },
-                        legend: { show: false },
-                        grid: { borderColor: gridColor },
-                        tooltip: { y: { formatter: (val) => val + '% cổ phần' }, theme: this.isDark ? 'dark' : 'light' }
-                    });
-                    this.barChart.render();
-
-                    const observer = new MutationObserver(() => { this.updateTheme(); });
-                    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-                }
-             }"
-                 x-init="$nextTick(() => initCharts())"
+            <div class="grid grid-cols-1 gap-4 sm:gap-5"
+                 :class="mobileTab === 'stats' || mobileTab === 'all' ? 'block' : 'hidden lg:block'"
             >
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
                     <div class="flex items-center space-x-3 mb-3 pb-2.5 border-b border-slate-100 dark:border-slate-700">
@@ -526,19 +437,6 @@ class="pb-20 lg:pb-6">
                         @endforeach
                     </div>
                 </div>
-
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-                    <div class="flex items-center space-x-3 mb-3 pb-2.5 border-b border-slate-100 dark:border-slate-700">
-                        <div class="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        </div>
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Cổ Phần Thành Viên</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">Tỷ lệ % góp vốn của từng thành viên</p>
-                        </div>
-                    </div>
-                    <div x-ref="barChart"></div>
-                </div>
             </div>
 
             <!-- Admin Pending Requests Alert Bar (Admin Only) -->
@@ -602,7 +500,6 @@ class="pb-20 lg:pb-6">
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Thống Kê Cá Nhân</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">Chi tiết cổ phần & tài chính từng thành viên</p>
                         </div>
                     </div>
                 </div>
@@ -613,12 +510,10 @@ class="pb-20 lg:pb-6">
                         <thead class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-700/30 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                             <tr>
                                 <th class="py-3 px-4 rounded-l-xl">Thành viên</th>
-                                <th class="py-3 px-4">Cổ phần</th>
                                 <th class="py-3 px-4">Đã Góp</th>
                                 <th class="py-3 px-4">Đã Vay</th>
                                 <th class="py-3 px-4">Đã Trả</th>
-                                <th class="py-3 px-4">Dư Nợ Vay</th>
-                                <th class="py-3 px-4 text-right rounded-r-xl">Dự Nhận Chia</th>
+                                <th class="py-3 px-4 text-right rounded-r-xl">Còn Vay</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -636,9 +531,6 @@ class="pb-20 lg:pb-6">
                                             <span>{{ $stat['name'] }}</span>
                                         </div>
                                     </td>
-                                    <td class="py-3.5 px-4 font-extrabold text-blue-600 dark:text-blue-400">
-                                        {{ $stat['share_percentage'] }}%
-                                    </td>
                                     <td class="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">
                                         +{{ number_format($stat['contributions'], 0, ',', '.') }}đ
                                     </td>
@@ -648,7 +540,7 @@ class="pb-20 lg:pb-6">
                                     <td class="py-3.5 px-4 font-bold text-teal-600 dark:text-teal-400">
                                         {{ number_format($stat['repaid'], 0, ',', '.') }}đ
                                     </td>
-                                    <td class="py-3.5 px-4 font-bold">
+                                    <td class="py-3.5 px-4 font-bold text-right">
                                         @if($stat['debt'] > 0)
                                             <span class="px-2 py-0.5 bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 rounded-full font-extrabold text-[11px]">
                                                 {{ number_format($stat['debt'], 0, ',', '.') }}đ
@@ -656,9 +548,6 @@ class="pb-20 lg:pb-6">
                                         @else
                                             <span class="text-slate-400">0đ</span>
                                         @endif
-                                    </td>
-                                    <td class="py-3.5 px-4 font-extrabold text-right text-emerald-600 dark:text-emerald-400 text-sm">
-                                        {{ number_format($stat['estimated_share_amount'], 0, ',', '.') }}đ
                                     </td>
                                 </tr>
                             @endforeach
@@ -681,12 +570,7 @@ class="pb-20 lg:pb-6">
                                     </div>
                                     <div>
                                         <p class="text-xs font-bold text-slate-900 dark:text-white">{{ $stat['name'] }}</p>
-                                        <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Cổ phần: {{ $stat['share_percentage'] }}%</p>
                                     </div>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase">Dự nhận chia</p>
-                                    <p class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">{{ number_format($stat['estimated_share_amount'], 0, ',', '.') }}đ</p>
                                 </div>
                             </div>
 

@@ -62,11 +62,11 @@ class SyncProductionData extends Command
                     }
                 }
 
-                // 4. Project_User
-                if (!empty($data['project_user'])) {
-                    DB::table('project_user')->delete();
-                    foreach ($data['project_user'] as $row) {
-                        DB::table('project_user')->insert((array)$row);
+                // 4. Project_Members
+                if (!empty($data['project_members'])) {
+                    DB::table('project_members')->delete();
+                    foreach ($data['project_members'] as $row) {
+                        DB::table('project_members')->insert((array)$row);
                     }
                 }
 
@@ -86,6 +86,26 @@ class SyncProductionData extends Command
                     }
                 }
 
+                // 7. Seed Project Members locally since Production API doesn't export them (fallback)
+                if (empty($data['project_members'])) {
+                    DB::table('project_members')->delete();
+                    $nhv = \App\Models\User::where('username', 'nhv')->orWhere('name', 'LIKE', '%Hoàng Việt%')->first();
+                    $tqm = \App\Models\User::where('username', 'tqm')->orWhere('name', 'LIKE', '%Quang Minh%')->first();
+                    $ntk = \App\Models\User::where('username', 'ntk')->orWhere('name', 'LIKE', '%Trung Kiên%')->first();
+                    
+                    $projects = \App\Models\Project::all();
+                    foreach ($projects as $p) {
+                        if (in_array($p->code, ['W-LALOT', 'W-BMG', 'W-EB'])) {
+                            if ($nhv) \App\Models\ProjectMember::create(['project_id' => $p->id, 'user_id' => $nhv->id, 'share_percentage' => 10.00]);
+                            if ($ntk) \App\Models\ProjectMember::create(['project_id' => $p->id, 'user_id' => $ntk->id, 'share_percentage' => 40.00]);
+                            if ($tqm) \App\Models\ProjectMember::create(['project_id' => $p->id, 'user_id' => $tqm->id, 'share_percentage' => 40.00]);
+                        } elseif ($p->code === 'BMG') {
+                            if ($ntk) \App\Models\ProjectMember::create(['project_id' => $p->id, 'user_id' => $ntk->id, 'share_percentage' => 40.00]);
+                            if ($tqm) \App\Models\ProjectMember::create(['project_id' => $p->id, 'user_id' => $tqm->id, 'share_percentage' => 50.00]);
+                        }
+                    }
+                }
+
                 DB::statement('PRAGMA foreign_keys = ON;');
             });
 
@@ -97,7 +117,7 @@ class SyncProductionData extends Command
                     ['👥 Users (Thành viên)', count($data['users'] ?? [])],
                     ['🏛️ Funds (Quỹ chung)', count($data['funds'] ?? [])],
                     ['📂 Projects (Dự án)', count($data['projects'] ?? [])],
-                    ['🤝 Project_User (Bảng phân bổ)', count($data['project_user'] ?? [])],
+                    ['🤝 Project_Members (Bảng phân bổ)', count($data['project_members'] ?? [])],
                     ['📜 Transactions (Lịch sử GD)', count($data['transactions'] ?? [])],
                     ['📊 Distributions (Phân chia)', count($data['distributions'] ?? [])],
                 ]
