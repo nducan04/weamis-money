@@ -155,7 +155,7 @@ class ProjectController extends Controller
                     'amount' => $fundCut,
                     'description' => 'Trích Về Quỹ Chung (' . number_format($project->weamis_fund_percentage, 0) . '%) khi Hoàn Thành Dự Án: ' . $project->name,
                     'status' => 'approved',
-                    'approved_by_user_id' => auth()->id(),
+                    'approved_by' => auth()->id(),
                 ]);
 
                 $project->update(['fund_credited_amount' => $fundCut]);
