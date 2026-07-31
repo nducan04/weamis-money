@@ -163,11 +163,18 @@ class="pb-20 lg:pb-6">
                     <!-- Member Selector -->
                     <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
                         <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Thành viên</span>
-                        <select name="user_id" x-model="quickUserId" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            @foreach($members->where('role', '!=', 'admin') as $m)
-                                <option value="{{ $m->id }}">{{ $m->name }}</option>
-                            @endforeach
-                        </select>
+                        @if(auth()->user()?->isAdmin())
+                            <select name="user_id" x-model="quickUserId" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                                @foreach($members->where('role', '!=', 'admin') as $m)
+                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <div class="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                                <span>{{ auth()->user()->name }}</span>
+                                <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Transaction Type Selector -->
