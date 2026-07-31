@@ -8,6 +8,9 @@ use App\Http\Controllers\DistributionController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\DatabaseSyncController;
+
+Route::get('/api/db-dump', [DatabaseSyncController::class, 'export'])->name('api.dbDump');
 
 /*
 |--------------------------------------------------------------------------

@@ -125,7 +125,7 @@
                 <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <span class="text-xs text-slate-400 font-medium">Lead: <strong class="text-slate-700 dark:text-slate-200">{{ $p->lead ? $p->lead->name : 'N/A' }}</strong></span>
                     <a href="{{ route('projects.show', $p) }}" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition flex items-center space-x-1 cursor-pointer">
-                        <span>Chi tiết Audit ➔</span>
+                        <span>Chi tiết</span>
                     </a>
                 </div>
             </div>
