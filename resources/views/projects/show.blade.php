@@ -158,10 +158,10 @@
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
             <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                <span>Nhật Ký Giao Dịch Audit Dự Án ({{ $project->transactions->count() }})</span>
+                <span>Nhật Ký Giao Dịch Dự Án ({{ $project->transactions->count() }})</span>
             </h3>
             <button @click="showAddTxModal = true" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto">
-                <span>Thêm Giao Dịch Dự Án</span>
+                <span>Thêm Giao Dịch</span>
             </button>
         </div>
 
@@ -240,7 +240,7 @@
     <div x-show="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak x-transition>
         <div @click.away="showEditModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
-                <h3 class="text-lg font-black text-slate-900 dark:text-white">⚙️ Cấu Hình Dự Án</h3>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white">Cấu Hình Dự Án</h3>
                 <button @click="showEditModal = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
 
@@ -273,9 +273,9 @@
                         <input type="number" name="weamis_fund_percentage" x-model.number="weamisFundPct" min="0" max="100" step="0.5" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-extrabold text-amber-600 focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Project Lead</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Quản lý dự án</label>
                         <select name="lead_user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="">-- Chọn Lead --</option>
+                            <option value="">-- Chọn lead --</option>
                             @foreach($allMembers->where('role', '!=', 'admin') as $m)
                                 <option value="{{ $m->id }}" {{ $project->lead_user_id == $m->id ? 'selected' : '' }}>{{ $m->name }}</option>
                             @endforeach
@@ -330,7 +330,7 @@
     <div x-show="showAddTxModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak x-transition>
         <div @click.away="showAddTxModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
-                <h3 class="text-base font-black text-slate-900 dark:text-white">➕ Thêm Giao Dịch Cho Dự Án: <span class="text-emerald-600 dark:text-emerald-400">{{ $project->name }}</span></h3>
+                <h3 class="text-base font-black text-slate-900 dark:text-white">Thêm Giao Dịch Cho Dự Án: <span class="text-emerald-600 dark:text-emerald-400">{{ $project->name }}</span></h3>
                 <button @click="showAddTxModal = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
 
@@ -342,9 +342,9 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
                         <select name="type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="contribution">🟢 Thừa Nhận Thu Dự Án</option>
-                            <option value="expense">🔴 Chi Tiêu Dự Án</option>
-                            <option value="loan">🟣 Vay Dự Án</option>
+                            <option value="contribution">Thừa Nhận Thu Dự Án</option>
+                            <option value="expense">Chi Tiêu Dự Án</option>
+                            <option value="loan">Vay Dự Án</option>
                         </select>
                     </div>
 
@@ -360,7 +360,7 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Người Trách Nhiệm (Audit)</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Người Trách Nhiệm</label>
                         <select name="responsible_user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             <option value="">-- Chọn người phụ trách --</option>
                             @foreach($allMembers->where('role', '!=', 'admin') as $m)
