@@ -25,7 +25,7 @@
             </h2>
         </div>
         <button @click="showCreateModal = true" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all duration-200 flex items-center space-x-2 cursor-pointer">
-            <span>➕ Tạo Dự Án Mới</span>
+            <span>Tạo Dự Án Mới</span>
         </button>
     </div>
 
@@ -141,7 +141,7 @@
     <div x-show="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak x-transition>
         <div @click.away="showCreateModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
-                <h3 class="text-lg font-black text-slate-900 dark:text-white">🚀 Tạo Dự Án Mới</h3>
+                <h3 class="text-lg font-black text-slate-900 dark:text-white">Tạo Dự Án Mới</h3>
                 <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
 
