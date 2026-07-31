@@ -167,6 +167,11 @@ class TransactionController extends Controller
 
     public function update(Request $request, Transaction $transaction)
     {
+        $authUser = auth()->user();
+        if (!$authUser?->isAdmin() && $transaction->user_id !== $authUser?->id) {
+            return redirect()->back()->with('error', 'Bạn chỉ có quyền chỉnh sửa giao dịch của chính mình!');
+        }
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'project_id' => 'nullable|exists:projects,id',
@@ -181,6 +186,10 @@ class TransactionController extends Controller
             'evidence_file' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
             'created_at' => 'nullable|date',
         ]);
+
+        if (!$authUser?->isAdmin()) {
+            $validated['user_id'] = $transaction->user_id;
+        }
 
         $fund = Fund::firstOrFail();
 

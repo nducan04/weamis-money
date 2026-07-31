@@ -16,6 +16,12 @@
     sortOrder: 'desc',
     currentPage: 1,
     perPage: 15,
+    currentUserId: {{ auth()->id() }},
+    isCurrentUserAdmin: {{ auth()->user()?->isAdmin() ? 'true' : 'false' }},
+    canEditTx(tx) {
+        if (!tx) return false;
+        return this.isCurrentUserAdmin || tx.user_id === this.currentUserId;
+    },
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
     get filteredTransactions() {
         let search = this.filterSearch.toLowerCase().trim();
@@ -372,8 +378,12 @@ class="pb-20 lg:pb-6">
                                 </template>
                             </td>
                             <td class="py-4 px-4 text-right whitespace-nowrap space-x-1.5">
-                                <button @click="selectedTx = tx; showEditModal = true" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-bold transition cursor-pointer">✏️ Sửa</button>
-                                <button @click="selectedTx = tx; showDeleteModal = true" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-600 hover:text-white text-rose-600 font-bold rounded-lg transition cursor-pointer">🗑️ Xóa</button>
+                                <template x-if="canEditTx(tx)">
+                                    <div class="inline-flex items-center space-x-1.5">
+                                        <button @click="selectedTx = tx; showEditModal = true" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-bold transition cursor-pointer">✏️ Sửa</button>
+                                        <button @click="selectedTx = tx; showDeleteModal = true" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-600 hover:text-white text-rose-600 font-bold rounded-lg transition cursor-pointer">🗑️ Xóa</button>
+                                    </div>
+                                </template>
                             </td>
                         </tr>
                     </template>
@@ -451,8 +461,12 @@ class="pb-20 lg:pb-6">
                             </template>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button @click="selectedTx = tx; showEditModal = true" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold active:scale-95 transition cursor-pointer">✏️ Sửa</button>
-                            <button @click="selectedTx = tx; showDeleteModal = true" class="px-3 py-1.5 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-lg text-xs font-bold active:scale-95 transition cursor-pointer">🗑️ Xóa</button>
+                            <template x-if="canEditTx(tx)">
+                                <div class="flex items-center space-x-2">
+                                    <button @click="selectedTx = tx; showEditModal = true" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold active:scale-95 transition cursor-pointer">✏️ Sửa</button>
+                                    <button @click="selectedTx = tx; showDeleteModal = true" class="px-3 py-1.5 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-lg text-xs font-bold active:scale-95 transition cursor-pointer">🗑️ Xóa</button>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -509,22 +523,30 @@ class="pb-20 lg:pb-6">
                     @method('PUT')
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thành viên</label>
-                        <select name="user_id" x-model="selectedTx.user_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
-                            @foreach($members->where('role', '!=', 'admin') as $m)
-                                <option value="{{ $m->id }}">{{ $m->name }}</option>
-                            @endforeach
-                        </select>
+                        <template x-if="isCurrentUserAdmin">
+                            <select name="user_id" x-model="selectedTx.user_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
+                                @foreach($members->where('role', '!=', 'admin') as $m)
+                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                @endforeach
+                            </select>
+                        </template>
+                        <template x-if="!isCurrentUserAdmin">
+                            <div class="px-3 py-2.5 bg-slate-100 dark:bg-slate-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-200">
+                                <span x-text="selectedTx.user_name"></span>
+                                <input type="hidden" name="user_id" :value="selectedTx.user_id">
+                            </div>
+                        </template>
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
                         <select name="type" x-model="selectedTx.type" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
-                            <option value="contribution">Góp quỹ (Thu)</option>
-                            <option value="expense">Chi tiêu chung (Chi)</option>
+                            <option value="contribution">Góp quỹ</option>
+                            <option value="expense">Chi tiêu chung</option>
                             <option value="loan">Vay cá nhân</option>
                             <option value="repayment">Trả nợ vay</option>
-                            <option value="withdrawal">Rút lương / Rút thu nhập</option>
-                            <option value="distribution">Chia tiền %</option>
+                            <option value="withdrawal">Rút lương</option>
+                            <option value="distribution">Chia tiền</option>
                         </select>
                     </div>
 
