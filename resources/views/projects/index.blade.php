@@ -18,19 +18,14 @@
 }">
 
     <!-- Header Section -->
-    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
-                <span>Quản Lý Dự Án</span>
-            </h2>
-        </div>
+    <div class="flex items-center justify-end">
         <button @click="showCreateModal = true" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all duration-200 flex items-center space-x-2 cursor-pointer">
             <span>Tạo Dự Án Mới</span>
         </button>
     </div>
 
     <!-- Summary Metrics Header -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         @php
             $totalProjectsCount = $projects->count();
             $activeProjectsCount = $projects->where('status', 'active')->count();
@@ -60,13 +55,6 @@
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trích Về Quỹ Chung</p>
                 <p class="text-lg font-black text-amber-600 dark:text-amber-400">{{ number_format($totalFundCutAll, 0, ',', '.') }}đ</p>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đội Ngũ Phụ Trách</p>
-                <p class="text-lg font-black text-teal-600 dark:text-teal-400">{{ $members->count() }} Thành viên</p>
             </div>
         </div>
     </div>
@@ -148,7 +136,6 @@
     <div x-show="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak x-transition>
         <div @click.away="showCreateModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
-                <h3 class="text-lg font-black text-slate-900 dark:text-white">Tạo Dự Án Mới</h3>
                 <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
 
@@ -156,7 +143,7 @@
                 @csrf
                 <div class="grid grid-cols-3 gap-3">
                     <div class="col-span-2">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tên Dự Án</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tên dự án</label>
                         <input type="text" name="name" placeholder="VD: Everbloom" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                     <div>
@@ -167,14 +154,10 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Mô tả dự án</label>
-                    <textarea name="description" rows="2" placeholder="Ghi chú về nội dung dự án..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                    <textarea name="description" rows="2" placeholder="Tóm tắt dự án..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">% Trích Quỹ</label>
-                        <input type="number" name="weamis_fund_percentage" x-model.number="weamisFundPct" min="0" max="100" step="0.5" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-extrabold text-amber-600 focus:ring-2 focus:ring-emerald-500 outline-none">
-                    </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Quản lý dự án</label>
                         <select name="lead_user_id" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -193,7 +176,7 @@
                 <!-- Member Shares Config -->
                 <div class="pt-2">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Tỷ lệ % Cổ Phần Thành Viên</label>
+                        <label class="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Tỷ lệ % Phân Bổ Thành Viên</label>
                         <span class="px-2.5 py-1 rounded-lg text-xs font-black transition-all"
                               :class="{
                                   'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300': totalPct === 100,
@@ -207,11 +190,22 @@
                     <template x-if="totalPct > 100">
                         <div class="p-2.5 mb-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-800 flex items-center space-x-1.5">
                             <span>⚠️</span>
-                            <span>Cảnh báo: Tổng % (Trích Quỹ + Cổ phần thành viên) là <strong x-text="totalPct + '%'"></strong>, vượt quá 100%! Vui lòng điều chỉnh lại.</span>
+                            <span>Cảnh báo: Tổng % (Trích Quỹ + Phân bổ thành viên) là <strong x-text="totalPct + '%'"></strong>, vượt quá 100%! Vui lòng điều chỉnh lại.</span>
                         </div>
                     </template>
 
                     <div class="space-y-2 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-700">
+                        <!-- Quỹ Weamis (Tương tự 1 thành viên nhận) -->
+                        <div class="flex items-center justify-between text-xs pb-2 mb-1 border-b border-slate-200/60 dark:border-slate-700/60">
+                            <span class="font-bold text-amber-600 dark:text-amber-400 w-1/2 flex items-center space-x-1">
+                                <span>Quỹ Weamis</span>
+                            </span>
+                            <div class="flex items-center space-x-1 w-1/3">
+                                <input type="number" name="weamis_fund_percentage" x-model.number="weamisFundPct" min="0" max="100" step="0.5" required class="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 dark:bg-slate-700 font-extrabold text-xs text-amber-600 dark:text-amber-400 text-center outline-none">
+                                <span class="font-bold text-slate-400">%</span>
+                            </div>
+                        </div>
+
                         @foreach($members->where('role', '!=', 'admin') as $index => $m)
                             <div class="flex items-center justify-between text-xs">
                                 <span class="font-bold text-slate-800 dark:text-slate-200 w-1/2">{{ $m->name }}</span>

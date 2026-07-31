@@ -16,7 +16,7 @@ class AnalyticsController extends Controller
         $members = User::where('role', '!=', 'admin')->get();
         $projects = Project::with('members')->get();
 
-        // 1. Net Worth calculation per member
+        // Net Worth calculation per member
         $netWorthData = [];
         foreach ($members as $m) {
             $contributions = Transaction::where('user_id', $m->id)->where('status', 'approved')->where('type', 'contribution')->whereNull('project_id')->sum('amount');
@@ -53,7 +53,15 @@ class AnalyticsController extends Controller
             return $b['net_worth'] <=> $a['net_worth'];
         });
 
-        // 2. Collaboration Network Graph data (Nodes and Edges)
+        return view('analytics.networth', compact('netWorthData'));
+    }
+
+    public function network()
+    {
+        $members = User::where('role', '!=', 'admin')->get();
+        $projects = Project::with('members')->get();
+
+        // Collaboration Network Graph data (Nodes and Edges)
         $nodes = [];
         $edges = [];
 
@@ -140,6 +148,6 @@ class AnalyticsController extends Controller
         });
         $topPairs = array_slice($topPairs, 0, 5);
 
-        return view('analytics.networth', compact('netWorthData', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
+        return view('analytics.network', compact('nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
     }
 }

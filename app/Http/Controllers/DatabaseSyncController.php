@@ -29,7 +29,7 @@ class DatabaseSyncController extends Controller
             'funds' => Schema::hasTable('funds') ? Fund::all() : [],
             'users' => Schema::hasTable('users') ? User::all() : [],
             'projects' => Schema::hasTable('projects') ? Project::all() : [],
-            'project_user' => Schema::hasTable('project_user') ? DB::table('project_user')->get() : [],
+            'project_members' => Schema::hasTable('project_members') ? DB::table('project_members')->get() : [],
             'transactions' => Schema::hasTable('transactions') ? Transaction::all() : [],
             'distributions' => Schema::hasTable('distributions') ? Distribution::all() : [],
             'timestamp' => now()->toIso8601String(),

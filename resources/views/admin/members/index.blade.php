@@ -7,24 +7,20 @@
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
             <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
-                <span>👥</span>
-                <span>Quản Lý Tài Khoản Thành Viên (Admin Panel)</span>
+                <span>Quản Lý Tài Khoản Thành Viên</span>
             </h2>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
                 Xem toàn bộ danh sách tài khoản, tên đăng nhập, reset mật khẩu và phân quyền hệ thống.
             </p>
         </div>
         <button @click="showCreateModal = true" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all duration-200 flex items-center space-x-2 cursor-pointer">
-            <span>➕ Thêm Tài Khoản Mới</span>
+            <span>Thêm Tài Khoản Mới</span>
         </button>
     </div>
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-lg flex items-center justify-center flex-shrink-0">
-                👥
-            </div>
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Số Tài Khoản</p>
                 <p class="text-lg font-black text-slate-900 dark:text-white">{{ $members->count() }} Thành viên</p>
@@ -32,9 +28,6 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-black text-lg flex items-center justify-center flex-shrink-0">
-                👑
-            </div>
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tài Khoản Admin</p>
                 <p class="text-lg font-black text-amber-600 dark:text-amber-400">{{ $members->where('role', 'admin')->count() }} Quản trị viên</p>
@@ -42,9 +35,6 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-lg flex items-center justify-center flex-shrink-0">
-                💼
-            </div>
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thành Viên Thường</p>
                 <p class="text-lg font-black text-indigo-600 dark:text-indigo-400">{{ $members->where('role', 'member')->count() }} Thành viên</p>
@@ -59,12 +49,11 @@
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-700 text-[11px] font-black uppercase text-slate-400">
                         <th class="pb-3 px-3">Thành viên</th>
-                        <th class="pb-3 px-3">Username</th>
+                        <th class="pb-3 px-3">Tài khoản</th>
                         <th class="pb-3 px-3">Email</th>
-                        <th class="pb-3 px-3 text-center">Vai Trò</th>
-                        <th class="pb-3 px-3 text-center">% Cổ Phần Quỹ</th>
-                        <th class="pb-3 px-3 text-right">Dư Nợ Vay</th>
-                        <th class="pb-3 px-3 text-center">Thao Tác Admin</th>
+                        <th class="pb-3 px-3 text-center">Vai trò</th>
+                        <th class="pb-3 px-3 text-right">Còn nợ</th>
+                        <th class="pb-3 px-3 text-center">Hành động</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60 text-xs font-semibold">
@@ -110,11 +99,6 @@
                                         👤 Member
                                     </span>
                                 @endif
-                            </td>
-
-                            <!-- Share Percentage -->
-                            <td class="py-3.5 px-3 text-center font-extrabold text-indigo-600 dark:text-indigo-400">
-                                {{ number_format($m->share_percentage, 1) }}%
                             </td>
 
                             <!-- Current Debt -->
@@ -185,18 +169,12 @@
                     <input type="email" name="email" required placeholder="nam.tv@weamis.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Vai Trò</label>
-                        <select name="role" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="member">👤 Member (Thành viên)</option>
-                            <option value="admin">👑 Admin (Quản trị)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">% Cổ phần Quỹ</label>
-                        <input type="number" name="share_percentage" value="0" min="0" max="100" step="0.5" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-indigo-600 dark:text-indigo-300 outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Vai Trò</label>
+                    <select name="role" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="member">👤 Member (Thành viên)</option>
+                        <option value="admin">👑 Admin (Quản trị)</option>
+                    </select>
                 </div>
 
                 <div class="pt-3 flex justify-end space-x-2">
@@ -235,18 +213,12 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Vai Trò</label>
-                            <select name="role" x-model="editMember.role" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
-                                <option value="member">👤 Member (Thành viên)</option>
-                                <option value="admin">👑 Admin (Quản trị)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">% Cổ phần Quỹ</label>
-                            <input type="number" name="share_percentage" x-model="editMember.share_percentage" min="0" max="100" step="0.5" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-indigo-600 dark:text-indigo-300 outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Vai Trò</label>
+                        <select name="role" x-model="editMember.role" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="member">👤 Member (Thành viên)</option>
+                            <option value="admin">👑 Admin (Quản trị)</option>
+                        </select>
                     </div>
 
                     <div class="pt-3 flex justify-end space-x-2">

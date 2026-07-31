@@ -261,8 +261,8 @@ class="pb-20 lg:pb-6">
 
                 <!-- Sắp Xếp Ngày Giao Dịch -->
                 <select x-model="sortOrder" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
-                    <option value="desc">⬇️ Mới nhất ➔ Cũ nhất</option>
-                    <option value="asc">⬆️ Cũ nhất ➔ Mới nhất</option>
+                    <option value="desc">Mới nhất ➔ Cũ nhất</option>
+                    <option value="asc">Cũ nhất ➔ Mới nhất</option>
                 </select>
 
                 <template x-if="filterSearch || filterMemberId || filterType || filterDateFrom || filterDateTo || sortOrder !== 'desc'">

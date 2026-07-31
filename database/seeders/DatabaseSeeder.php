@@ -212,5 +212,8 @@ class DatabaseSeeder extends Seeder
 
         // Run UserPasswordSeeder to assign usernames and Bcrypt hashed passwords
         $this->call(UserPasswordSeeder::class);
+
+        // Run ProjectSeeder to seed exact 4 Product projects and their member shares
+        $this->call(ProjectSeeder::class);
     }
 }

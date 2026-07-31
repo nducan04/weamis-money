@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
 
     // Analytics: Net Worth & Collaboration Network Graph
     Route::get('/analytics/networth', [AnalyticsController::class, 'networth'])->name('analytics.networth');
+    Route::get('/analytics/network', [AnalyticsController::class, 'network'])->name('analytics.network');
 
     // Transaction CRUD
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
