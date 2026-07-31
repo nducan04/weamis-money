@@ -79,29 +79,29 @@
                         <input type="hidden" name="members[{{ $index }}][share_percentage]" value="{{ $pm->share_percentage }}">
                     @endforeach
                     <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer active:scale-95">
-                        <span>✅ Đánh Dấu Hoàn Thành & Trích Quỹ</span>
+                        <span>Đánh Dấu Hoàn Thành & Trích Quỹ</span>
                     </button>
                 </form>
             @elseif($project->status === 'completed')
                 <span class="px-3.5 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-extrabold text-xs rounded-xl flex items-center space-x-1">
-                    <span>🎉 Dự Án Đã Hoàn Thành (+{{ number_format($project->fund_credited_amount, 0, ',', '.') }}đ Vào Quỹ)</span>
+                    <span>Dự Án Đã Hoàn Thành (+{{ number_format($project->fund_credited_amount, 0, ',', '.') }}đ Vào Quỹ)</span>
                 </span>
             @endif
 
             <button @click="showEditModal = true" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
-                <span>⚙️ Cấu Hình Dự Án</span>
+                <span>Cấu Hình Dự Án</span>
             </button>
             <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa dự án này?')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="px-3 py-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-extrabold text-xs rounded-xl transition cursor-pointer">
-                    🗑️ Xóa
+                    Xóa
                 </button>
             </form>
         </div>
         @else
         <div class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-semibold rounded-xl">
-            🔒 Chỉ Lead/Admin mới có quyền sửa/xóa
+            Chỉ Lead/Admin mới có quyền sửa/xóa
         </div>
         @endif
     </div>
@@ -158,10 +158,10 @@
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
             <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                <span>📜 Nhật Ký Giao Dịch Audit Dự Án ({{ $project->transactions->count() }})</span>
+                <span>Nhật Ký Giao Dịch Audit Dự Án ({{ $project->transactions->count() }})</span>
             </h3>
             <button @click="showAddTxModal = true" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto">
-                <span>➕ Thêm Giao Dịch Dự Án</span>
+                <span>Thêm Giao Dịch Dự Án</span>
             </button>
         </div>
 
