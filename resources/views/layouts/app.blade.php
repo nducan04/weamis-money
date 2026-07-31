@@ -216,7 +216,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-6 py-5 sm:py-8 flex-grow w-full min-h-[75vh] pb-24 sm:pb-8">
+    <main class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-6 py-5 sm:py-8 flex-grow w-full min-h-[75vh] pb-6 sm:pb-8">
         <!-- Auto-Dismissing Floating Toast Notifications (4 seconds) -->
         @if(session('success'))
             <div x-data="{ show: true }" 
@@ -310,7 +310,7 @@
     </div>
 
     <!-- Compact Streamlined Footer matching Navbar Gradient -->
-    <footer class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white border-t border-emerald-500/30 transition-colors shadow-inner flex-shrink-0 mt-auto">
+    <footer class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white border-t border-emerald-500/30 transition-colors shadow-inner flex-shrink-0 mt-auto mb-16 sm:mb-0">
         <div class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div class="flex items-center space-x-3">
                 <div class="w-7 h-7 rounded-lg bg-white text-emerald-700 font-black text-sm flex items-center justify-center shadow">
