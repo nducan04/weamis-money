@@ -14,10 +14,15 @@ class Project extends Model
         'code',
         'description',
         'status',
+        'release_date',
         'weamis_fund_percentage',
         'fund_credited_amount',
         'lead_user_id',
         'created_by_user_id',
+    ];
+
+    protected $casts = [
+        'release_date' => 'date',
     ];
 
     public function lead()

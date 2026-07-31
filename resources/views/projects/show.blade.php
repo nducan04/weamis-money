@@ -54,6 +54,11 @@
                 <span class="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs rounded-lg uppercase tracking-wider">
                     {{ $project->code }}
                 </span>
+                @if($project->release_date)
+                    <span class="px-2.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold text-xs rounded-lg">
+                        Go-Live: {{ $project->release_date->format('d/m/Y') }}
+                    </span>
+                @endif
             </div>
             <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
                 <span>{{ $project->name }}</span>
@@ -182,7 +187,14 @@
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                             <td class="py-3 px-3 font-semibold text-slate-500">{{ $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                             <td class="py-3 px-3 font-bold text-slate-900 dark:text-white">{{ $tx->user->name ?? 'N/A' }}</td>
-                            <td class="py-3 px-3 font-medium">{{ $tx->description }}</td>
+                            <td class="py-3 px-3 font-medium">
+                                <div>{{ $tx->description }}</div>
+                                @if($tx->billing_cycle)
+                                    <span class="inline-block mt-0.5 px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] rounded">
+                                        📅 {{ $tx->billing_cycle }}
+                                    </span>
+                                @endif
+                            </td>
                             <td class="py-3 px-3 text-[11px]">
                                 @if($tx->responsibleUser)
                                     <span class="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-bold rounded">TN: {{ $tx->responsibleUser->name }}</span>
@@ -267,9 +279,9 @@
                     <textarea name="description" rows="2" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">{{ $project->description }}</textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">% Trích Về Quỹ Chung</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">% Trích Quỹ</label>
                         <input type="number" name="weamis_fund_percentage" x-model.number="weamisFundPct" min="0" max="100" step="0.5" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-extrabold text-amber-600 focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                     <div>
@@ -280,6 +292,10 @@
                                 <option value="{{ $m->id }}" {{ $project->lead_user_id == $m->id ? 'selected' : '' }}>{{ $m->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ngày Go-Live</label>
+                        <input type="date" name="release_date" value="{{ $project->release_date ? $project->release_date->format('Y-m-d') : '' }}" class="w-full px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                 </div>
 
@@ -380,9 +396,15 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ghi Chú Nội Dung</label>
-                    <input type="text" name="description" required placeholder="VD: Mua Server AWS cho dự án..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ghi Chú Nội Dung</label>
+                        <input type="text" name="description" required placeholder="VD: Phí vận hành Server..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chu Kỳ Thu Phí / Khoảng Thời Gian</label>
+                        <input type="text" name="billing_cycle" placeholder="VD: Tháng 05/2026, Quý 2/2026..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
                 </div>
 
                 <div>

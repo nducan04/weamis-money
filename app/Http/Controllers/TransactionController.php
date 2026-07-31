@@ -33,6 +33,7 @@ class TransactionController extends Controller
                 'type' => $tx->type,
                 'amount' => (float)$tx->amount,
                 'description' => $tx->description,
+                'billing_cycle' => $tx->billing_cycle ?? null,
                 'evidence_type' => $tx->evidence_type ?? 'none',
                 'evidence_value' => $tx->evidence_value ?? null,
                 'status' => $tx->status,
@@ -69,6 +70,7 @@ class TransactionController extends Controller
                 'type' => $tx->type,
                 'amount' => (float)$tx->amount,
                 'description' => $tx->description,
+                'billing_cycle' => $tx->billing_cycle ?? null,
                 'evidence_type' => $tx->evidence_type ?? 'none',
                 'evidence_value' => $tx->evidence_value ?? null,
                 'status' => $tx->status,
@@ -107,6 +109,7 @@ class TransactionController extends Controller
             'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal',
             'amount' => 'required|numeric|min:1000',
             'description' => 'required|string|max:255',
+            'billing_cycle' => 'nullable|string|max:100',
             'evidence_type' => 'nullable|in:file,link,text,none',
             'evidence_link' => 'nullable|string',
             'evidence_text' => 'nullable|string',
@@ -150,6 +153,7 @@ class TransactionController extends Controller
                 'type' => $validated['type'],
                 'amount' => $validated['amount'],
                 'description' => $validated['description'],
+                'billing_cycle' => $validated['billing_cycle'] ?? null,
                 'evidence_type' => $evidenceType,
                 'evidence_value' => $evidenceValue,
                 'status' => $status,
@@ -185,6 +189,7 @@ class TransactionController extends Controller
             'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal',
             'amount' => 'required|numeric|min:1000',
             'description' => 'required|string|max:255',
+            'billing_cycle' => 'nullable|string|max:100',
             'evidence_type' => 'nullable|in:file,link,text,none',
             'evidence_link' => 'nullable|string',
             'evidence_text' => 'nullable|string',
@@ -228,6 +233,7 @@ class TransactionController extends Controller
             $transaction->type = $validated['type'];
             $transaction->amount = $validated['amount'];
             $transaction->description = $validated['description'];
+            $transaction->billing_cycle = $validated['billing_cycle'] ?? null;
             $transaction->evidence_type = $evidenceType;
             $transaction->evidence_value = $evidenceValue;
             if (!empty($validated['created_at'])) {
