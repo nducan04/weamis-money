@@ -122,6 +122,24 @@ class AnalyticsController extends Controller
             }
         }
 
-        return view('analytics.networth', compact('netWorthData', 'nodes', 'edges', 'edgeMap', 'members', 'projects'));
+        // Top collaborating member pairs
+        $topPairs = [];
+        $memberMap = $members->keyBy('id');
+        foreach ($edgeMap as $key => $sharedCount) {
+            list($u1, $u2) = explode('_', $key);
+            if (isset($memberMap[$u1]) && isset($memberMap[$u2])) {
+                $topPairs[] = [
+                    'm1' => $memberMap[$u1],
+                    'm2' => $memberMap[$u2],
+                    'count' => $sharedCount
+                ];
+            }
+        }
+        usort($topPairs, function ($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
+        $topPairs = array_slice($topPairs, 0, 5);
+
+        return view('analytics.networth', compact('netWorthData', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
     }
 }

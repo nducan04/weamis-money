@@ -47,7 +47,10 @@ class TransactionController extends Controller
     public function report(Request $request)
     {
         $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
-        $projects = Project::all();
+        $projects = Project::with(['members' => function($q) {
+            $q->where('role', '!=', 'admin');
+        }])->get();
+
         $fund = Fund::firstOrCreate(
             ['id' => 1],
             ['name' => 'Trả nợ thuê Ltd', 'balance' => 7028106.00, 'total_profit' => 126160.00]
@@ -74,7 +77,24 @@ class TransactionController extends Controller
             ];
         });
 
-        return view('report', compact('members', 'projects', 'fund', 'allTransactions'));
+        $projectsData = $projects->map(function($p) {
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'code' => $p->code,
+                'status' => $p->status,
+                'weamis_fund_percentage' => (float)$p->weamis_fund_percentage,
+                'members' => $p->members->map(function($m) {
+                    return [
+                        'id' => $m->id,
+                        'name' => $m->name,
+                        'share_percentage' => (float)$m->pivot->share_percentage,
+                    ];
+                }),
+            ];
+        });
+
+        return view('report', compact('members', 'projects', 'projectsData', 'fund', 'allTransactions'));
     }
 
     public function store(Request $request)
