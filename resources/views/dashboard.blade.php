@@ -97,9 +97,9 @@ class="pb-20 lg:pb-6">
 
     <!-- Mobile View Switcher Tabs (hidden on desktop) -->
     <div class="lg:hidden flex items-center space-x-1 p-1 bg-slate-200 dark:bg-slate-700/60 rounded-2xl mb-4">
-        <button @click="mobileTab = 'entry'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'entry' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">✏️ Nhập vào</button>
-        <button @click="mobileTab = 'stats'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'stats' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">📊 Thống kê</button>
-        <a href="{{ route('report') }}" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-center text-slate-500 dark:text-slate-400">📈 Báo cáo ➔</a>
+        <button @click="mobileTab = 'entry'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'entry' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">Nhập vào</button>
+        <button @click="mobileTab = 'stats'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'stats' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">Thống kê</button>
+        <a href="{{ route('report') }}" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-center text-slate-500 dark:text-slate-400">Báo cáo</a>
     </div>
 
     <!-- Main Container: Desktop Multi-Column Grid -->
@@ -174,11 +174,11 @@ class="pb-20 lg:pb-6">
                     <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
                         <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Loại GD</span>
                         <select name="type" x-model="quickType" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="expense">📤 Chi tiêu chung (Chi)</option>
-                            <option value="contribution">📥 Góp quỹ (Thu)</option>
-                            <option value="loan">💳 Vay cá nhân</option>
-                            <option value="repayment">💵 Trả nợ vay</option>
-                            <option value="withdrawal">💸 Rút lương / Thu nhập</option>
+                            <option value="expense">Chi tiêu chung</option>
+                            <option value="contribution">Góp quỹ</option>
+                            <option value="loan">Vay cá nhân</option>
+                            <option value="repayment">Trả nợ vay</option>
+                            <option value="withdrawal">Rút lương / Thu nhập</option>
                         </select>
                     </div>
 
@@ -306,7 +306,7 @@ class="pb-20 lg:pb-6">
                 <div class="flex items-center space-x-2">
                     @if(auth()->user()?->isAdmin())
                         <button @click="showDistributionModal = true" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
-                            <span>📊 Chia % Quỹ</span>
+                            <span>Chia % Quỹ</span>
                         </button>
                     @endif
                 </div>
@@ -318,7 +318,6 @@ class="pb-20 lg:pb-6">
                 <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Số Dư Quỹ</span>
-                        <span class="p-1.5 sm:p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300">💵</span>
                     </div>
                     <p class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1.5">
                         {{ number_format($fund->balance, 0, ',', '.') }}<span class="text-base sm:text-lg font-bold">đ</span>
@@ -329,7 +328,6 @@ class="pb-20 lg:pb-6">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Thu</span>
-                        <span class="p-1.5 sm:p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300">📥</span>
                     </div>
                     <p class="text-lg sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1.5">
                         +{{ number_format($totalIncome, 0, ',', '.') }}<span class="text-sm sm:text-lg font-bold">đ</span>
@@ -340,7 +338,6 @@ class="pb-20 lg:pb-6">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Chi</span>
-                        <span class="p-1.5 sm:p-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300">📤</span>
                     </div>
                     <p class="text-lg sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1.5">
                         -{{ number_format($totalExpense, 0, ',', '.') }}<span class="text-sm sm:text-lg font-bold">đ</span>
@@ -351,7 +348,6 @@ class="pb-20 lg:pb-6">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Đang Cho Vay</span>
-                        <span class="p-1.5 sm:p-2 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300">🤝</span>
                     </div>
                     <p class="text-lg sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1.5">
                         {{ number_format($totalLoans, 0, ',', '.') }}<span class="text-sm sm:text-lg font-bold">đ</span>
@@ -767,20 +763,13 @@ class="pb-20 lg:pb-6">
 
                 <div class="mt-4 text-center">
                     <a href="{{ route('history') }}" class="inline-block w-full py-2.5 bg-slate-100 dark:bg-slate-700/60 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-xl transition">
-                        📜 Xem Toàn Bộ Lịch Sử Giao Dịch ➔
+                        Xem Toàn Bộ Lịch Sử Giao Dịch
                     </a>
                 </div>
             </div>
 
         </div>
 
-    </div>
-
-    <!-- MOBILE FLOATING ACTION BUTTON (FAB) FOR QUICK ENTRY -->
-    <div class="lg:hidden fixed bottom-16 right-4 z-30">
-        <button @click="mobileTab = 'entry'; window.scrollTo({top: 0, behavior: 'smooth'})" title="Nhập giao dịch mới" class="w-13 h-13 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl shadow-2xl border-2 border-white dark:border-slate-800 flex items-center justify-center active:scale-95 transition cursor-pointer">
-            ✏️
-        </button>
     </div>
 
     <!-- MODAL: PHÂN CHIA LỢI NHUẬN % -->

@@ -36,7 +36,6 @@
                 <!-- Export Button -->
                 <button type="button" @click="exportToExcel()" 
                         class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition cursor-pointer flex items-center space-x-1.5">
-                    <span>📥</span>
                     <span>Xuất Excel/CSV</span>
                 </button>
             </div>
@@ -72,8 +71,7 @@
         <!-- Income Metric -->
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-extrabold uppercase text-emerald-600 dark:text-emerald-400">💵 Tổng Thu Nhập</span>
-                <span class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-sm">📈</span>
+                <span class="text-xs font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Tổng Thu Nhập</span>
             </div>
             <p class="text-2xl font-black tracking-tight text-emerald-600 dark:text-emerald-400" x-text="new Intl.NumberFormat('vi-VN').format(periodIncomeTotal) + 'đ'"></p>
             <p class="text-[11px] text-slate-400 font-semibold mt-1">Bao gồm nộp quỹ & thu từ dự án</p>
@@ -82,8 +80,7 @@
         <!-- Expense Metric -->
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">💸 Tổng Chi Tiêu</span>
-                <span class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-bold text-sm">📉</span>
+                <span class="text-xs font-extrabold uppercase text-rose-600 dark:text-rose-400">Tổng Chi Tiêu</span>
             </div>
             <p class="text-2xl font-black tracking-tight text-rose-600 dark:text-rose-400" x-text="new Intl.NumberFormat('vi-VN').format(periodExpenseTotal) + 'đ'"></p>
             <p class="text-[11px] text-slate-400 font-semibold mt-1">Bao gồm chi tiêu & khoản cho vay</p>
@@ -92,8 +89,7 @@
         <!-- Net Total Metric -->
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-extrabold uppercase text-indigo-600 dark:text-indigo-400">⚖️ Dòng Tiền Ròng</span>
-                <span class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold text-sm">💰</span>
+                <span class="text-xs font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Dòng Tiền Ròng</span>
             </div>
             <p class="text-2xl font-black tracking-tight" :class="periodNetTotal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'" x-text="new Intl.NumberFormat('vi-VN').format(periodNetTotal) + 'đ'"></p>
             <p class="text-[11px] text-slate-400 font-semibold mt-1">Thu nhập trừ tổng chi tiêu</p>
@@ -102,8 +98,7 @@
         <!-- Active Projects Count Metric -->
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-extrabold uppercase text-amber-600 dark:text-amber-400">📁 Dự Án Phát Sinh</span>
-                <span class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold text-sm">🚀</span>
+                <span class="text-xs font-extrabold uppercase text-amber-600 dark:text-amber-400">Dự Án Phát Sinh</span>
             </div>
             <p class="text-2xl font-black tracking-tight text-slate-900 dark:text-white" x-text="projectBreakdown.length + ' Dự án'"></p>
             <p class="text-[11px] text-slate-400 font-semibold mt-1">Dự án có giao dịch thu/chi</p>
@@ -115,10 +110,8 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <h3 class="font-black text-slate-900 dark:text-white text-base sm:text-lg flex items-center space-x-2">
-                    <span>📊</span>
-                    <span>Biểu Đồ So Sánh Thu Nhập vs Chi Tiêu (ApexCharts)</span>
+                    <span>Biểu Đồ So Sánh Thu Nhập vs Chi Tiêu</span>
                 </h3>
-                <p class="text-xs text-slate-400 font-medium">Trực quan hóa đối sánh dòng tiền vào và ra theo tháng</p>
             </div>
         </div>
 
@@ -130,7 +123,6 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <h3 class="font-black text-slate-900 dark:text-white text-base sm:text-lg flex items-center space-x-2">
-                    <span>📁</span>
                     <span>Báo Cáo Thu Chi & Doanh Thu Phân Rã Theo Dự Án</span>
                 </h3>
                 <p class="text-xs text-slate-400 font-medium">Chi tiết dòng tiền, % Trích Về Quỹ Chung và chia lợi nhuận thành viên cho từng dự án</p>
@@ -154,7 +146,6 @@
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition">
                             <td class="py-3 px-4 font-black">
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-base">📁</span>
                                     <div>
                                         <p class="font-extrabold text-slate-900 dark:text-white" x-text="p.name"></p>
                                         <p class="text-[10px] text-slate-400 font-mono" x-text="'#' + p.code"></p>

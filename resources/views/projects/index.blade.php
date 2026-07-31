@@ -43,9 +43,6 @@
             });
         @endphp
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-lg flex items-center justify-center flex-shrink-0">
-                📁
-            </div>
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Số Dự Án</p>
                 <p class="text-lg font-black text-slate-900 dark:text-white">{{ $totalProjectsCount }} <span class="text-xs font-semibold text-slate-400">({{ $activeProjectsCount }} đang chạy)</span></p>
@@ -53,9 +50,6 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-lg flex items-center justify-center flex-shrink-0">
-                💰
-            </div>
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Doanh Thu Dự Án</p>
                 <p class="text-lg font-black text-indigo-600 dark:text-indigo-400">+{{ number_format($totalProjectsIncome, 0, ',', '.') }}đ</p>
@@ -63,9 +57,6 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-black text-lg flex items-center justify-center flex-shrink-0">
-                🏛️
-            </div>
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trích Về Quỹ Chung</p>
                 <p class="text-lg font-black text-amber-600 dark:text-amber-400">{{ number_format($totalFundCutAll, 0, ',', '.') }}đ</p>
@@ -73,9 +64,6 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 font-black text-lg flex items-center justify-center flex-shrink-0">
-                👥
-            </div>
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đội Ngũ Phụ Trách</p>
                 <p class="text-lg font-black text-teal-600 dark:text-teal-400">{{ $members->count() }} Thành viên</p>

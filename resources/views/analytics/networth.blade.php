@@ -102,7 +102,7 @@
                     <span class="flex items-center space-x-1.5"><span class="w-6 h-0.5 bg-emerald-500 inline-block"></span> <span>Cổ phần (%)</span></span>
                 </div>
                 <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center space-x-1">
-                    <span>💡 Tap/Click vào 1 nút để bật Chế Độ Focus</span>
+                    <span>Tap/Click vào 1 nút để bật Chế Độ Focus</span>
                 </span>
             </div>
         </div>
