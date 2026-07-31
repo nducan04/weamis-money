@@ -106,7 +106,7 @@ class ProjectManagementTest extends TestCase
         $response = $this->get('/analytics/networth');
         $response->assertStatus(200);
         $response->assertSee('Tài Sản Ròng');
-        $response->assertSee('Collaboration Graph');
+        $response->assertSee('Đồ Thị Mạng Lưới Tương Quan Hợp Tác');
     }
 
     public function test_project_completion_credits_weamis_fund()
