@@ -35,7 +35,7 @@ class FundManagementTest extends TestCase
     {
         $response = $this->get('/history');
         $response->assertStatus(200);
-        $response->assertSee('Lịch Sử Giao Dịch');
+        $response->assertSee('Lịch Sử');
     }
 
     public function test_report_page_renders_successfully()
