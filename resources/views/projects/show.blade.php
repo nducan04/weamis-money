@@ -83,7 +83,7 @@
                         <input type="hidden" name="members[{{ $index }}][user_id]" value="{{ $pm->user_id }}">
                         <input type="hidden" name="members[{{ $index }}][share_percentage]" value="{{ $pm->share_percentage }}">
                     @endforeach
-                    <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer active:scale-95">
+                    <button type="submit" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
                         <span>Đánh Dấu Hoàn Thành & Trích Quỹ</span>
                     </button>
                 </form>
@@ -94,7 +94,7 @@
             @endif
 
             <button @click="showEditModal = true" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
-                <span>Cấu Hình Dự Án</span>
+                <span>Chỉnh Sửa Dự Án</span>
             </button>
             <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa dự án này?')">
                 @csrf
@@ -294,7 +294,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ngày Go-Live</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ngày release</label>
                         <input type="date" name="release_date" value="{{ $project->release_date ? $project->release_date->format('Y-m-d') : '' }}" class="w-full px-2 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
                 </div>
