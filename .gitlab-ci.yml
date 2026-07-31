@@ -1,7 +1,5 @@
 variables:
   AUTO_DEVOPS_EXPLICITLY_DISABLED: "1"
-  SERVER_USER: "vietnh"
-  PROJECT_PATH: "/home/vietnh/apps/weamis-money"
 
 include: []
 
@@ -10,27 +8,19 @@ stages:
 
 deploy_production:
   stage: deploy
-  image: alpine:latest
+  image: docker:cli
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   before_script:
-    - 'which ssh-agent || ( apk update && apk add --no-cache openssh-client bash )'
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts || true
-    - chmod 644 ~/.ssh/known_hosts || true
+    - apk add --no-cache git docker-compose
   script:
-    - |
-      ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
-        cd $PROJECT_PATH && \
-        git fetch https://git.vietnh.io.vn/general-projects/weamis-money.git main && \
-        git checkout -B main FETCH_HEAD && \
-        docker rm -f weamis-money-app || true && \
-        docker-compose up -d --build && \
-        docker exec weamis-money-app chmod -R 777 storage bootstrap/cache database && \
-        docker exec weamis-money-app php artisan config:clear && \
-        docker exec weamis-money-app php artisan cache:clear && \
-        docker exec weamis-money-app php artisan view:clear
-      "
+    - cd /home/vietnh/apps/weamis-money
+    - git fetch https://git.vietnh.io.vn/general-projects/weamis-money.git main
+    - git checkout -B main FETCH_HEAD
+    - docker rm -f weamis-money-app || true
+    - docker-compose up -d --build
+    - docker exec weamis-money-app chmod -R 777 storage bootstrap/cache database
+    - docker exec weamis-money-app php artisan config:clear
+    - docker exec weamis-money-app php artisan cache:clear
+    - docker exec weamis-money-app php artisan view:clear
+
