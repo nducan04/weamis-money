@@ -19,6 +19,7 @@ deploy_production:
     - git checkout -B main FETCH_HEAD
     - docker rm -f weamis-money-app || true
     - docker-compose up -d --build
+    - docker exec weamis-money-app php artisan migrate --force
     - docker exec weamis-money-app chmod -R 777 storage bootstrap/cache database
     - docker exec weamis-money-app php artisan config:clear
     - docker exec weamis-money-app php artisan cache:clear
