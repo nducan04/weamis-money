@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             'total_profit' => 1200000.00,
         ]);
 
-        // 2. Create Admin Account and All Team Members + Túi Thần Tài
+        // 2. Create Admin Account and All 8 Real Team Members
         $admin = User::create([
             'name' => 'Quản Trị Viên (Admin)',
             'username' => 'admin',
@@ -125,21 +125,10 @@ class DatabaseSeeder extends Seeder
             'current_debt' => 0.00,
         ]);
 
-        $tuithantai = User::create([
-            'name' => 'Túi Thần Tài',
-            'username' => 'tuithantai',
-            'email' => 'tui.thantai@weamis.com',
-            'password' => Hash::make('1234'),
-            'role' => 'member',
-            'avatar' => 'TTT',
-            'share_percentage' => 0.00,
-            'current_debt' => 0.00,
-        ]);
-
         // 3. Exact 41 Transactions from Google Sheet
         $transactionsData = [
             ['user' => $viet, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-02-12 15:10:00'],
-            ['user' => $tuithantai, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Nạp tiền vào Túi Thần Tài', 'datetime' => '2026-02-12 15:10:00'],
+            ['user' => $admin, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Nạp tiền vào Túi Thần Tài (Tích lũy sinh lời)', 'datetime' => '2026-02-12 15:10:00'],
             ['user' => $viet, 'type' => 'contribution', 'amount' => 5000000, 'desc' => 'Tiền Everbloom', 'datetime' => '2026-02-15 17:37:00'],
             ['user' => $son, 'type' => 'contribution', 'amount' => 2000000, 'desc' => 'đóng bát năm mới', 'datetime' => '2026-02-16 23:16:00'],
             ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'CTO vắt cổ chày ra nước ủng hộ kèo 3', 'datetime' => '2026-02-17 12:11:00'],

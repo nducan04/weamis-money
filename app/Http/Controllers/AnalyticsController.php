@@ -31,7 +31,6 @@ class AnalyticsController extends Controller
                 'contributions' => $contributions,
                 'withdrawals' => $withdrawals,
                 'net_worth' => $netWorth,
-                'is_investment_fund' => strtolower($m->username) === 'tuithantai' || str_contains(strtolower($m->name), 'túi thần tài'),
             ];
         }
 
@@ -40,15 +39,14 @@ class AnalyticsController extends Controller
             return $b['net_worth'] <=> $a['net_worth'];
         });
 
-        // Find max positive (human) and min negative Net Worth
-        $humanMembers = array_filter($rawNetWorth, fn($item) => !$item['is_investment_fund']);
+        // Find max positive and min negative Net Worth
         $maxPositiveId = null;
         $minNegativeId = null;
 
         $maxVal = -PHP_FLOAT_MAX;
         $minVal = PHP_FLOAT_MAX;
 
-        foreach ($humanMembers as $hm) {
+        foreach ($rawNetWorth as $hm) {
             if ($hm['net_worth'] > 0 && $hm['net_worth'] > $maxVal) {
                 $maxVal = $hm['net_worth'];
                 $maxPositiveId = $hm['id'];
@@ -60,9 +58,7 @@ class AnalyticsController extends Controller
         }
 
         $netWorthData = array_map(function ($item) use ($maxPositiveId, $minNegativeId) {
-            if ($item['is_investment_fund']) {
-                $statusLabel = 'Quỹ đầu tư tích lũy sinh lời';
-            } elseif ($item['id'] === $maxPositiveId) {
+            if ($item['id'] === $maxPositiveId) {
                 $statusLabel = 'Chủ nợ lớn nhất của quỹ';
             } elseif ($item['net_worth'] > 0) {
                 $statusLabel = 'Chủ nợ của quỹ';
