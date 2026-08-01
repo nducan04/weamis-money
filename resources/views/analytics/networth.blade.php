@@ -42,8 +42,8 @@
                                 {{ str_contains($nw['status_label'], 'Chủ nợ lớn nhất') ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : '' }}
                                 {{ str_contains($nw['status_label'], 'Chủ nợ của quỹ') ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : '' }}
                                 {{ str_contains($nw['status_label'], 'tích lũy') ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : '' }}
-                                {{ str_contains($nw['status_label'], 'mượn rồng') ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' : '' }}
-                                {{ str_contains($nw['status_label'], 'âm rồng nhiều nhất') ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' : '' }}">
+                                {{ str_contains($nw['status_label'], 'mượn ròng') ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' : '' }}
+                                {{ str_contains($nw['status_label'], 'âm ròng nhiều nhất') ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' : '' }}">
                                 {{ $nw['status_label'] }}
                             </span>
                         </div>
@@ -51,7 +51,7 @@
 
                     <!-- Net Worth Value -->
                     <div class="bg-slate-50 dark:bg-slate-700/40 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700/60 mb-3 text-center">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tài Sản Ròng (Ví thể rồng)</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tài Sản Ròng (Vị thế ròng)</p>
                         <p class="text-2xl font-black tracking-tight {{ $nw['net_worth'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                             {{ number_format($nw['net_worth'], 0, ',', '.') }}<span class="text-base font-extrabold">đ</span>
                         </p>

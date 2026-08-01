@@ -67,9 +67,9 @@ class AnalyticsController extends Controller
             } elseif ($item['net_worth'] > 0) {
                 $statusLabel = 'Chủ nợ của quỹ';
             } elseif ($item['id'] === $minNegativeId) {
-                $statusLabel = 'Đang âm rồng nhiều nhất (Lương + Vay)';
+                $statusLabel = 'Đang âm ròng nhiều nhất (Lương + Vay)';
             } elseif ($item['net_worth'] < 0) {
-                $statusLabel = 'Đang mượn rồng của quỹ';
+                $statusLabel = 'Đang mượn ròng của quỹ';
             } else {
                 $statusLabel = 'Thành viên';
             }
