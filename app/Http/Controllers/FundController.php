@@ -12,10 +12,7 @@ class FundController extends Controller
 {
     public function index(Request $request)
     {
-        $fund = Fund::firstOrCreate(
-            ['id' => 1],
-            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7028106.00, 'total_profit' => 126160.00]
-        );
+        $fund = Fund::first();
 
         $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
         $projects = Project::all();
@@ -23,8 +20,8 @@ class FundController extends Controller
         // 1. Stat Totals
         $approvedTxs = Transaction::where('status', 'approved')->get();
         $totalIncome = $approvedTxs->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-        $totalExpense = $approvedTxs->where('type', 'expense')->sum('amount');
-        $totalLoans = $members->sum('current_debt');
+        $totalExpense = $approvedTxs->whereIn('type', ['expense', 'withdrawal'])->sum('amount');
+        $totalLoans = $approvedTxs->where('type', 'loan')->sum('amount') - $approvedTxs->where('type', 'repayment')->sum('amount');
 
         // 2. Member Statistics Breakdown
         $memberStats = $members->map(function ($m) use ($approvedTxs, $fund) {
