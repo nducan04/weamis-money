@@ -2,6 +2,30 @@
 
 @section('content')
 <div class="space-y-6">
+    <!-- Túi Thần Tài Widget Card -->
+    @if($fund && $fund->total_profit > 0)
+    <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent rounded-3xl p-5 border border-amber-500/20 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-amber-950 font-black text-xl flex items-center justify-center shadow-md shadow-amber-500/20 flex-shrink-0">
+                💰
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h4 class="font-extrabold text-base text-slate-900 dark:text-white">Túi Thần Tài</h4>
+                    <span class="px-2.5 py-0.5 text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full border border-amber-500/30">Quỹ Tích Lũy Sinh Lời</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Khoản đầu tư tích lũy sinh lời của Quỹ chung (Khởi tạo 12/02/2026)</p>
+            </div>
+        </div>
+        <div class="text-left sm:text-right bg-white/80 dark:bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-amber-200 dark:border-slate-700 w-full sm:w-auto">
+            <p class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Tổng Tích Lũy</p>
+            <p class="text-2xl font-black text-amber-600 dark:text-amber-400">
+                +{{ number_format($fund->total_profit, 0, ',', '.') }}<span class="text-base font-extrabold">đ</span>
+            </p>
+        </div>
+    </div>
+    @endif
+
     <!-- 1. Ranked Net Worth Member Cards -->
     <div class="space-y-3">
         <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">

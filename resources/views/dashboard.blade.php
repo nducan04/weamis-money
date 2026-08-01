@@ -304,9 +304,9 @@ class="pb-20 lg:pb-6">
         <div class="lg:col-span-7 xl:col-span-8 space-y-6" :class="mobileTab !== 'entry' ? 'block' : 'hidden lg:block'">
 
             <!-- 1. Top Stat Cards Row -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" :class="mobileTab === 'stats' || mobileTab === 'all' ? 'block' : 'hidden lg:grid'">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4" :class="mobileTab === 'stats' || mobileTab === 'all' ? 'block' : 'hidden lg:grid'">
                 <!-- Card 1: Số Dư Quỹ -->
-                <div class="col-span-2 sm:col-span-1 bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Số Dư Quỹ</span>
                     </div>
@@ -315,7 +315,18 @@ class="pb-20 lg:pb-6">
                     </p>
                 </div>
 
-                <!-- Card 2: Tổng Thu -->
+                <!-- Card 2: Túi Thần Tài (Tích Lũy) -->
+                <div class="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-amber-300 dark:border-amber-700/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Túi Thần Tài</span>
+                        <span class="px-1.5 py-0.5 text-[9px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full">Tích Lũy</span>
+                    </div>
+                    <p class="text-lg sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1.5">
+                        +{{ number_format($fund->total_profit, 0, ',', '.') }}<span class="text-sm sm:text-lg font-bold">đ</span>
+                    </p>
+                </div>
+
+                <!-- Card 3: Tổng Thu -->
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Thu</span>
@@ -325,7 +336,7 @@ class="pb-20 lg:pb-6">
                     </p>
                 </div>
 
-                <!-- Card 3: Tổng Chi -->
+                <!-- Card 4: Tổng Chi -->
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng Chi</span>
@@ -335,12 +346,12 @@ class="pb-20 lg:pb-6">
                     </p>
                 </div>
 
-                <!-- Card 4: Tổng Cho Vay -->
+                <!-- Card 5: Tổng Cho Vay -->
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Đang Cho Vay</span>
                     </div>
-                    <p class="text-lg sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1.5">
+                    <p class="text-lg sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1.5">
                         {{ number_format($totalLoans, 0, ',', '.') }}<span class="text-sm sm:text-lg font-bold">đ</span>
                     </p>
                 </div>

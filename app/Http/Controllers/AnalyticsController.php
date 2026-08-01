@@ -74,7 +74,9 @@ class AnalyticsController extends Controller
             return $item;
         }, $rawNetWorth);
 
-        return view('analytics.networth', compact('netWorthData'));
+        $fund = \App\Models\Fund::first();
+
+        return view('analytics.networth', compact('netWorthData', 'fund'));
     }
 
     public function network()
