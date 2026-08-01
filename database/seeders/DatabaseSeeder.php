@@ -6,25 +6,31 @@ use App\Models\User;
 use App\Models\Fund;
 use App\Models\Transaction;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Clear existing data cleanly for fresh re-seeding
+        Transaction::query()->delete();
+        User::query()->delete();
+        Fund::query()->delete();
+
         // 1. Create Fund
         $fund = Fund::create([
             'name' => 'Trả nợ thuê Ltd',
-            'balance' => 0.00,
-            'total_profit' => 126160.00,
+            'balance' => 6720466.00,
+            'total_profit' => 1200000.00,
         ]);
 
-        // 2. Create Admin Account and All 8 Team Members
+        // 2. Create Admin Account and All Team Members + Túi Thần Tài
         $admin = User::create([
             'name' => 'Quản Trị Viên (Admin)',
             'username' => 'admin',
             'email' => 'admin@weamis.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('1322'),
+            'password' => Hash::make('1322'),
             'role' => 'admin',
             'avatar' => 'AD',
             'share_percentage' => 0.00,
@@ -35,7 +41,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Nguyễn Hoàng Việt',
             'username' => 'nhv',
             'email' => 'viet.nh@weamis.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('1234'),
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'HV',
             'share_percentage' => 25.00,
@@ -43,8 +49,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $son = User::create([
-            'name' => 'Hồ Trung Sơn',
+            'name' => 'Hồ Trùng Sơn',
+            'username' => 'sonht',
             'email' => 'son.ht@weamis.com',
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'TS',
             'share_percentage' => 20.00,
@@ -53,7 +61,9 @@ class DatabaseSeeder extends Seeder
 
         $duc = User::create([
             'name' => 'Nguyễn Quý Đức',
+            'username' => 'ducnq',
             'email' => 'duc.nq@weamis.com',
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'QĐ',
             'share_percentage' => 15.00,
@@ -62,7 +72,9 @@ class DatabaseSeeder extends Seeder
 
         $hung = User::create([
             'name' => 'Nguyễn Đăng Phúc Hưng',
+            'username' => 'hungndp',
             'email' => 'hung.ndp@weamis.com',
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'PH',
             'share_percentage' => 15.00,
@@ -71,7 +83,9 @@ class DatabaseSeeder extends Seeder
 
         $kien = User::create([
             'name' => 'Nguyễn Trung Kiên',
+            'username' => 'kiennt',
             'email' => 'kien.nt@weamis.com',
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'TK',
             'share_percentage' => 10.00,
@@ -80,7 +94,9 @@ class DatabaseSeeder extends Seeder
 
         $hoanganh = User::create([
             'name' => 'Vũ Đức Hoàng Anh',
+            'username' => 'anhvdh',
             'email' => 'anh.vdh@weamis.com',
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'HA',
             'share_percentage' => 5.00,
@@ -89,7 +105,9 @@ class DatabaseSeeder extends Seeder
 
         $thanhan = User::create([
             'name' => 'Lê Văn Thành An',
+            'username' => 'anlvt',
             'email' => 'an.lvt@weamis.com',
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'TA',
             'share_percentage' => 5.00,
@@ -98,122 +116,85 @@ class DatabaseSeeder extends Seeder
 
         $minh = User::create([
             'name' => 'Trịnh Quang Minh',
+            'username' => 'minhtq',
             'email' => 'minh.tq@weamis.com',
+            'password' => Hash::make('1234'),
             'role' => 'member',
             'avatar' => 'QM',
             'share_percentage' => 5.00,
             'current_debt' => 0.00,
         ]);
 
-        // 3. Create Real Chronological Transactions from anh1.jpg to anh13.jpg
-        $now = Carbon::now();
+        $tuithantai = User::create([
+            'name' => 'Túi Thần Tài',
+            'username' => 'tuithantai',
+            'email' => 'tui.thantai@weamis.com',
+            'password' => Hash::make('1234'),
+            'role' => 'member',
+            'avatar' => 'TTT',
+            'share_percentage' => 0.00,
+            'current_debt' => 0.00,
+        ]);
 
+        // 3. Exact 41 Transactions from Google Sheet
         $transactionsData = [
-            // anh1.jpg & anh4.jpg (6 - 5 tháng trước)
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Góp vào quỹ chung', 'days' => 180],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 5000000, 'desc' => 'Tiền Everbloom', 'days' => 155],
-            ['user' => $son, 'type' => 'contribution', 'amount' => 2000000, 'desc' => 'đóng bát năm mới', 'days' => 150],
-            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'thèm bánh mì que cay', 'days' => 148],
-            ['user' => $duc, 'type' => 'contribution', 'amount' => 200000, 'desc' => 'Góp vào quỹ chung', 'days' => 146],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'CTO vắt cổ chày ra nước ủng hộ kèo 360', 'days' => 144],
-
-            // anh10.jpg & anh5.jpg (5 tháng trước)
-            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Chí phèo cào mặt ăn vạ vay quỹ', 'days' => 142],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 2250000, 'desc' => 'Rút tiền lương', 'days' => 140],
-            ['user' => $son, 'type' => 'contribution', 'amount' => 247766, 'desc' => 'Góp vào quỹ chung', 'days' => 138],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 920000, 'desc' => 'Tiền đớp ăn vặt hp', 'days' => 136],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 390000, 'desc' => 'Chi tiền mặt + nước: Minh, Hưng, Việt', 'days' => 134],
-            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Kin vay', 'days' => 132],
-            ['user' => $kien, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ vay ngày 08/03', 'days' => 130],
-
-            // anh10.jpg & anh2.jpg (4 - 3 tháng trước)
-            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'loc dau thang', 'days' => 125],
-            ['user' => $duc, 'type' => 'contribution', 'amount' => 600000, 'desc' => 'Góp vào quỹ chung', 'days' => 120],
-            ['user' => $duc, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Giả lọ quỹ. Cảm ơn ae', 'days' => 118],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 1000000, 'desc' => 'tiền chí phèo bao thịt chó', 'days' => 116],
-
-            // anh2.jpg, anh8.jpg, anh7.jpg, anh3.jpg (3 tháng trước)
-            ['user' => $hung, 'type' => 'expense', 'amount' => 1700000, 'desc' => 'Mmb villa', 'days' => 100],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 1400000, 'desc' => 'Dư cọc villa', 'days' => 98],
-            ['user' => $viet, 'type' => 'loan', 'amount' => 5477300, 'desc' => 'Bú tiền ứng cát bà', 'days' => 96],
-            ['user' => $kien, 'type' => 'loan', 'amount' => 500000, 'desc' => 'Mượn đi đánh lô', 'days' => 94],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp vào quỹ chung', 'days' => 92],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 650000, 'desc' => 'Góp vào quỹ chung', 'days' => 90],
-            ['user' => $son, 'type' => 'repayment', 'amount' => 710000, 'desc' => 'bat ca', 'days' => 88],
-            ['user' => $kien, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Góp vào quỹ chung', 'days' => 86],
-            ['user' => $kien, 'type' => 'contribution', 'amount' => 560000, 'desc' => 'Góp vào quỹ chung', 'days' => 84],
-            ['user' => $son, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'trang trải cuộc sống cuối tháng', 'days' => 82],
-            ['user' => $viet, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ tiền răng cho chí phèo', 'days' => 80],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Chộ nhận sứng', 'days' => 78],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 60000, 'desc' => 'Góp vào quỹ chung', 'days' => 76],
-            ['user' => $duc, 'type' => 'expense', 'amount' => 1000000, 'desc' => 'Đi rửa chân', 'days' => 74],
-
-            // anh12.jpg, anh11.jpg, anh6.jpg (2 tháng trước)
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Wifi lalot', 'days' => 65],
-            ['user' => $thanhan, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'ngon ngay', 'days' => 60],
-            ['user' => $viet, 'type' => 'repayment', 'amount' => 1700000, 'desc' => 'Trả nợ + tiền cát bà chí phèo', 'days' => 58],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Chộ nhận sứng', 'days' => 56],
-            ['user' => $hung, 'type' => 'expense', 'amount' => 170000, 'desc' => 'Gac', 'days' => 54],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Góp vào quỹ chung', 'days' => 50],
-
-            // anh6.jpg & anh9.jpg (1 tháng trước)
-            ['user' => $hoanganh, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Đói kém, xin lương :(((', 'days' => 35],
-            ['user' => $duc, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Giai cuu Chi Pheo mua World cup 😭', 'days' => 34],
-            ['user' => $viet, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'vay 3 củ đóng học phí', 'days' => 32],
-            ['user' => $viet, 'type' => 'repayment', 'amount' => 3000000, 'desc' => 'CTO trả nợ tiền học', 'days' => 30],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp 10% cns', 'days' => 28],
-            ['user' => $viet, 'type' => 'expense', 'amount' => 3233520, 'desc' => 'Chuyển tiền đến BBBTHANGLONG CN Lau Phan Dao Duy Anh (PVComBank Pay) thanh toan don hang 634248107', 'days' => 25],
-            ['user' => $kien, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'Mua ram, đói kém', 'days' => 22],
-
-            // anh13.jpg (Gần đây nhất: 19 ngày -> 1 ngày trước)
-            ['user' => $kien, 'type' => 'repayment', 'amount' => 3000000, 'desc' => 'Trả nợ mua ram', 'days' => 19],
-            ['user' => $hung, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Tán lộc', 'days' => 18],
-            ['user' => $minh, 'type' => 'expense', 'amount' => 150000, 'desc' => 'mua kìm đấu wifi', 'days' => 10],
-            ['user' => $kien, 'type' => 'expense', 'amount' => 535000, 'desc' => 'Quỹ networking với anh 3T - Tri ân vi da den', 'days' => 1],
-            ['user' => $viet, 'type' => 'contribution', 'amount' => 900000, 'desc' => 'CTO góp cns tháng 7', 'days' => 1],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-02-12 15:10:00'],
+            ['user' => $tuithantai, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Nạp tiền vào Túi Thần Tài', 'datetime' => '2026-02-12 15:10:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 5000000, 'desc' => 'Tiền Everbloom', 'datetime' => '2026-02-15 17:37:00'],
+            ['user' => $son, 'type' => 'contribution', 'amount' => 2000000, 'desc' => 'đóng bát năm mới', 'datetime' => '2026-02-16 23:16:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'CTO vắt cổ chày ra nước ủng hộ kèo 3', 'datetime' => '2026-02-17 12:11:00'],
+            ['user' => $duc, 'type' => 'contribution', 'amount' => 200000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-02-17 12:11:00'],
+            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'thèm bánh mì que cay', 'datetime' => '2026-02-23 11:27:00'],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 920000, 'desc' => 'Tiền đớp ăn vặt hp', 'datetime' => '2026-03-01 18:28:00'],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 390000, 'desc' => 'Chi tiền mặt + nước: Minh Hưng Việt', 'datetime' => '2026-03-01 22:33:00'],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Kin vay', 'datetime' => '2026-03-08 12:33:00'],
+            ['user' => $kien, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ vay ngày 08/03', 'datetime' => '2026-03-09 11:36:00'],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Chí phèo cào mặt ăn va quy', 'datetime' => '2026-03-10 21:25:00'],
+            ['user' => $hoanganh, 'type' => 'withdrawal', 'amount' => 2250000, 'desc' => 'Rút tiền lương', 'datetime' => '2026-03-11 20:03:00'],
+            ['user' => $son, 'type' => 'contribution', 'amount' => 247766, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-03-13 03:01:00'],
+            ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'loc dau thang', 'datetime' => '2026-04-02 09:58:00'],
+            ['user' => $duc, 'type' => 'contribution', 'amount' => 600000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-04-11 10:39:00'],
+            ['user' => $duc, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Giả lọ quỹ. Cảm ơn ae', 'datetime' => '2026-04-11 10:40:00'],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'tiền chí phèo bao thịt', 'datetime' => '2026-04-11 19:00:00'],
+            ['user' => $hung, 'type' => 'expense', 'amount' => 1700000, 'desc' => 'Mmb villa', 'datetime' => '2026-04-17 21:17:00'],
+            ['user' => $son, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'trang trải cuộc sống cuối tháng', 'datetime' => '2026-04-22 15:36:00'],
+            ['user' => $viet, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ tiền răng cho chí phèo', 'datetime' => '2026-04-23 21:26:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Chộ nhận sứng', 'datetime' => '2026-04-23 21:31:00'],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 60000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-04-28 23:26:00'],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 1400000, 'desc' => 'Dư cọc villa', 'datetime' => '2026-04-28 23:42:00'],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 5477300, 'desc' => 'Bú tiền ứng cát bà', 'datetime' => '2026-04-29 00:18:00'],
+            ['user' => $kien, 'type' => 'loan', 'amount' => 500000, 'desc' => 'Mượn đi đánh lô', 'datetime' => '2026-05-07 09:43:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-05-07 10:40:00'],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 650000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-05-07 10:58:00'],
+            ['user' => $son, 'type' => 'contribution', 'amount' => 710000, 'desc' => 'bat ca', 'datetime' => '2026-05-07 13:04:00'],
+            ['user' => $kien, 'type' => 'contribution', 'amount' => 500000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-05-07 15:55:00'],
+            ['user' => $kien, 'type' => 'contribution', 'amount' => 560000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-05-07 20:31:00'],
+            ['user' => $duc, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Đi rửa chân', 'datetime' => '2026-05-08 16:13:00'],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Wifi lalot', 'datetime' => '2026-05-18 14:29:00'],
+            ['user' => $hung, 'type' => 'expense', 'amount' => 170000, 'desc' => 'Gac', 'datetime' => '2026-05-19 21:27:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Chộ nhận sứng', 'datetime' => '2026-06-04 22:57:00'],
+            ['user' => $viet, 'type' => 'repayment', 'amount' => 1700000, 'desc' => 'Trả nợ + tiền cát bà chí phèo', 'datetime' => '2026-06-04 22:58:00'],
+            ['user' => $thanhan, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'ngon ngay', 'datetime' => '2026-06-05 10:43:00'],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 3250000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-06-05 13:24:00'],
+            ['user' => $hoanganh, 'type' => 'withdrawal', 'amount' => 1000000, 'desc' => 'Đói kém xin lương :((((', 'datetime' => '2026-06-16 16:52:00'],
+            ['user' => $duc, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Giai cuu Chi Pheo mua World cup', 'datetime' => '2026-06-16 19:09:00'],
+            ['user' => $viet, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'vay 3 củ đóng học phí', 'datetime' => '2026-06-16 19:12:00'],
         ];
 
-        $currentBalance = 0;
-
         foreach ($transactionsData as $item) {
-            $u = $item['user'];
-            $type = $item['type'];
-            $amount = $item['amount'];
-
-            // Calculate balance impact
-            if ($type === 'contribution' || $type === 'repayment') {
-                $currentBalance += $amount;
-                if ($type === 'repayment') {
-                    $u->current_debt = max(0, $u->current_debt - $amount);
-                }
-            } else if ($type === 'expense' || $type === 'loan') {
-                $currentBalance -= $amount;
-                if ($type === 'loan') {
-                    $u->current_debt += $amount;
-                }
-            }
-            $u->save();
-
             Transaction::create([
                 'fund_id' => $fund->id,
-                'user_id' => $u->id,
-                'type' => $type,
-                'amount' => $amount,
+                'user_id' => $item['user']->id,
+                'type' => $item['type'],
+                'amount' => $item['amount'],
                 'description' => $item['desc'],
                 'status' => 'approved',
                 'approved_by' => $admin->id,
-                'created_at' => $now->copy()->subDays($item['days']),
+                'created_at' => Carbon::parse($item['datetime']),
             ]);
         }
 
-        // Set exact real MoMo balance on Fund
-        $fund->balance = 7028106.00;
-        $fund->save();
-
-        // Run UserPasswordSeeder to assign usernames and Bcrypt hashed passwords
-        $this->call(UserPasswordSeeder::class);
-
-        // Run ProjectSeeder to seed exact 4 Product projects and their member shares
+        // Run ProjectSeeder to seed projects and members
         $this->call(ProjectSeeder::class);
     }
 }

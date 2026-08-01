@@ -14,44 +14,69 @@ class AnalyticsController extends Controller
     public function networth()
     {
         $members = User::where('role', '!=', 'admin')->get();
-        $projects = Project::with('members')->get();
 
-        // Net Worth calculation per member
-        $netWorthData = [];
+        // Net Worth calculation per member matching Google Sheet formula
+        $rawNetWorth = [];
         foreach ($members as $m) {
-            $contributions = Transaction::where('user_id', $m->id)->where('status', 'approved')->where('type', 'contribution')->whereNull('project_id')->sum('amount');
-            $loans = (float) $m->current_debt;
+            $userTxs = Transaction::where('user_id', $m->id)->where('status', 'approved')->get();
+            $contributions = $userTxs->whereIn('type', ['contribution', 'repayment', 'profit'])->sum('amount');
+            $withdrawals = $userTxs->whereIn('type', ['expense', 'loan', 'withdrawal'])->sum('amount');
+            $netWorth = $contributions - $withdrawals;
 
-            // Estimated payouts from active & completed projects
-            $projectEarnings = 0;
-            foreach ($projects as $p) {
-                $pIncome = $p->transactions()->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-                $pCut = ($pIncome * $p->weamis_fund_percentage) / 100;
-                $pDistributable = max(0, $pIncome - $pCut);
-                $pMember = $p->members->where('id', $m->id)->first();
-                if ($pMember) {
-                    $projectEarnings += ($pDistributable * $pMember->pivot->share_percentage) / 100;
-                }
-            }
-
-            $netWorth = ($contributions + $projectEarnings) - $loans;
-
-            $netWorthData[] = [
+            $rawNetWorth[] = [
                 'id' => $m->id,
                 'name' => $m->name,
                 'username' => $m->username,
                 'avatar' => $m->avatar,
                 'contributions' => $contributions,
-                'project_earnings' => $projectEarnings,
-                'loans' => $loans,
+                'withdrawals' => $withdrawals,
                 'net_worth' => $netWorth,
+                'is_investment_fund' => strtolower($m->username) === 'tuithantai' || str_contains(strtolower($m->name), 'túi thần tài'),
             ];
         }
 
         // Sort descending by Net Worth
-        usort($netWorthData, function ($a, $b) {
+        usort($rawNetWorth, function ($a, $b) {
             return $b['net_worth'] <=> $a['net_worth'];
         });
+
+        // Find max positive (human) and min negative Net Worth
+        $humanMembers = array_filter($rawNetWorth, fn($item) => !$item['is_investment_fund']);
+        $maxPositiveId = null;
+        $minNegativeId = null;
+
+        $maxVal = -PHP_FLOAT_MAX;
+        $minVal = PHP_FLOAT_MAX;
+
+        foreach ($humanMembers as $hm) {
+            if ($hm['net_worth'] > 0 && $hm['net_worth'] > $maxVal) {
+                $maxVal = $hm['net_worth'];
+                $maxPositiveId = $hm['id'];
+            }
+            if ($hm['net_worth'] < 0 && $hm['net_worth'] < $minVal) {
+                $minVal = $hm['net_worth'];
+                $minNegativeId = $hm['id'];
+            }
+        }
+
+        $netWorthData = array_map(function ($item) use ($maxPositiveId, $minNegativeId) {
+            if ($item['is_investment_fund']) {
+                $statusLabel = 'Quỹ đầu tư tích lũy sinh lời';
+            } elseif ($item['id'] === $maxPositiveId) {
+                $statusLabel = 'Chủ nợ lớn nhất của quỹ';
+            } elseif ($item['net_worth'] > 0) {
+                $statusLabel = 'Chủ nợ của quỹ';
+            } elseif ($item['id'] === $minNegativeId) {
+                $statusLabel = 'Đang âm rồng nhiều nhất (Lương + Vay)';
+            } elseif ($item['net_worth'] < 0) {
+                $statusLabel = 'Đang mượn rồng của quỹ';
+            } else {
+                $statusLabel = 'Thành viên';
+            }
+
+            $item['status_label'] = $statusLabel;
+            return $item;
+        }, $rawNetWorth);
 
         return view('analytics.networth', compact('netWorthData'));
     }
