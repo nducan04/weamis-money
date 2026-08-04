@@ -244,11 +244,10 @@ class="pb-20 lg:pb-6">
                 <select x-model="filterType" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả loại GD</option>
                     <option value="contribution">Góp quỹ</option>
-                    <option value="expense">Chi tiêu</option>
+                    <option value="expense">Chi tiêu chung</option>
                     <option value="loan">Vay cá nhân</option>
-                    <option value="repayment">Trả nợ vay</option>
+                    <option value="repayment">Trả nợ</option>
                     <option value="withdrawal">Rút lương</option>
-                    <option value="distribution">Chia tiền</option>
                 </select>
 
                 <!-- Lọc Theo Ngày Tháng Năm -->
@@ -316,19 +315,16 @@ class="pb-20 lg:pb-6">
                                     <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-extrabold rounded-lg text-xs">Góp quỹ</span>
                                 </template>
                                 <template x-if="tx.type === 'expense'">
-                                    <span class="px-2.5 py-1 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-extrabold rounded-lg text-xs">Chi tiêu</span>
+                                    <span class="px-2.5 py-1 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-extrabold rounded-lg text-xs">Chi tiêu chung</span>
                                 </template>
                                 <template x-if="tx.type === 'loan'">
-                                    <span class="px-2.5 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-extrabold rounded-lg text-xs">Vay</span>
+                                    <span class="px-2.5 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-extrabold rounded-lg text-xs">Vay cá nhân</span>
                                 </template>
                                 <template x-if="tx.type === 'repayment'">
                                     <span class="px-2.5 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-extrabold rounded-lg text-xs">Trả nợ</span>
                                 </template>
-                                <template x-if="tx.type === 'withdrawal'">
+                                <template x-if="tx.type === 'withdrawal' || tx.type === 'distribution'">
                                     <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-extrabold rounded-lg text-xs">Rút lương</span>
-                                </template>
-                                <template x-if="tx.type === 'distribution'">
-                                    <span class="px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-extrabold rounded-lg text-xs">Chia %</span>
                                 </template>
                             </td>
                             <td class="py-4 px-4 font-black text-sm whitespace-nowrap">
@@ -427,19 +423,16 @@ class="pb-20 lg:pb-6">
                             <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded text-[10px] flex-shrink-0">Góp quỹ</span>
                         </template>
                         <template x-if="tx.type === 'expense'">
-                            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-bold rounded text-[10px] flex-shrink-0">Chi tiêu</span>
+                            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-bold rounded text-[10px] flex-shrink-0">Chi tiêu chung</span>
                         </template>
                         <template x-if="tx.type === 'loan'">
-                            <span class="px-2 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-bold rounded text-[10px] flex-shrink-0">Vay</span>
+                            <span class="px-2 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-bold rounded text-[10px] flex-shrink-0">Vay cá nhân</span>
                         </template>
                         <template x-if="tx.type === 'repayment'">
                             <span class="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-bold rounded text-[10px] flex-shrink-0">Trả nợ</span>
                         </template>
-                        <template x-if="tx.type === 'withdrawal'">
+                        <template x-if="tx.type === 'withdrawal' || tx.type === 'distribution'">
                             <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-bold rounded text-[10px] flex-shrink-0">Rút lương</span>
-                        </template>
-                        <template x-if="tx.type === 'distribution'">
-                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-bold rounded text-[10px] flex-shrink-0">Chia %</span>
                         </template>
                         <template x-if="tx.project_name">
                             <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded text-[10px] flex-shrink-0" x-text="'📂 ' + tx.project_name"></span>

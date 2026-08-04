@@ -478,9 +478,10 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
                         <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="contribution">Doanh thu dự án</option>
-                            <option value="expense">Chi tiêu dự án</option>
-                            <option value="loan">Vay dự án</option>
+                            <option value="contribution">Góp quỹ</option>
+                            <option value="expense">Chi tiêu chung</option>
+                            <option value="loan">Vay cá nhân</option>
+                            <option value="repayment">Trả nợ</option>
                         </select>
                     </div>
 
@@ -598,10 +599,11 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
                         <select name="type" x-model="editTxForm.type" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
-                            <option value="contribution">Góp quỹ / Doanh thu</option>
-                            <option value="expense">Chi tiêu dự án</option>
-                            <option value="repayment">Trả nợ vay</option>
+                            <option value="contribution">Góp quỹ</option>
+                            <option value="expense">Chi tiêu chung</option>
                             <option value="loan">Vay cá nhân</option>
+                            <option value="repayment">Trả nợ</option>
+                            <option value="withdrawal">Rút lương</option>
                         </select>
                     </div>
                     <div>

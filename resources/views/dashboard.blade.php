@@ -182,8 +182,8 @@ class="pb-20 lg:pb-6">
                             <option value="expense">Chi tiêu chung</option>
                             <option value="contribution">Góp quỹ</option>
                             <option value="loan">Vay cá nhân</option>
-                            <option value="repayment">Trả nợ vay</option>
-                            <option value="withdrawal">Rút lương / Thu nhập</option>
+                            <option value="repayment">Trả nợ</option>
+                            <option value="withdrawal">Rút lương</option>
                         </select>
                     </div>
 
