@@ -20,7 +20,7 @@ class AnalyticsController extends Controller
         foreach ($members as $m) {
             $userTxs = Transaction::where('user_id', $m->id)->where('status', 'approved')->get();
             $contributions = $userTxs->whereIn('type', ['contribution', 'repayment', 'profit'])->sum('amount');
-            $withdrawals = $userTxs->whereIn('type', ['expense', 'loan', 'withdrawal'])->sum('amount');
+            $withdrawals = $userTxs->whereIn('type', ['loan', 'withdrawal'])->sum('amount');
             $netWorth = $contributions - $withdrawals;
 
             $rawNetWorth[] = [
