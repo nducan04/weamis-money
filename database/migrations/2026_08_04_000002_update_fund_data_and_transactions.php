@@ -75,16 +75,6 @@ return new class extends Migration
             $fund->total_profit = 1200000.00;
             $fund->save();
         }
-
-        // 5. Also run seeder to be 100% sure
-        try {
-            Artisan::call('db:seed', [
-                '--class' => 'Database\Seeders\DatabaseSeeder',
-                '--force' => true,
-            ]);
-        } catch (\Throwable $e) {
-            // Ignore if seeding throws due to existing records
-        }
     }
 
     public function down(): void
