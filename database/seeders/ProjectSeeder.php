@@ -14,11 +14,28 @@ class ProjectSeeder extends Seeder
 {
     public function run(): void
     {
+        $nda = User::where('username', 'nda')->orWhere('name', 'LIKE', '%Đức An%')->first();
         $nhv = User::where('username', 'nhv')->orWhere('name', 'LIKE', '%Hoàng Việt%')->first();
         $tqm = User::where('username', 'tqm')->orWhere('name', 'LIKE', '%Quang Minh%')->first();
         $ntk = User::where('username', 'ntk')->orWhere('name', 'LIKE', '%Trung Kiên%')->first();
 
         $leadId = $tqm ? $tqm->id : ($nhv ? $nhv->id : 1);
+
+        // Project 0: WM (Weamis Money)
+        $wmLeadId = $nda ? $nda->id : $leadId;
+        $p0 = Project::firstOrCreate(
+            ['code' => 'WM'],
+            [
+                'name' => 'Weamis Money',
+                'description' => 'Quản lý tiền Weamis',
+                'release_date' => '2026-07-31',
+                'weamis_fund_percentage' => 0.00,
+                'lead_user_id' => $wmLeadId,
+                'created_by_user_id' => $wmLeadId,
+                'status' => 'active',
+            ]
+        );
+        if ($nda) ProjectMember::firstOrCreate(['project_id' => $p0->id, 'user_id' => $nda->id], ['share_percentage' => 100.00]);
 
         // Project 1: W-LALOT
         $p1 = Project::firstOrCreate(
@@ -82,5 +99,20 @@ class ProjectSeeder extends Seeder
         );
         if ($ntk) ProjectMember::firstOrCreate(['project_id' => $p4->id, 'user_id' => $ntk->id], ['share_percentage' => 40.00]);
         if ($tqm) ProjectMember::firstOrCreate(['project_id' => $p4->id, 'user_id' => $tqm->id], ['share_percentage' => 50.00]);
+
+        // Attach 3.25M transactions to projects
+        $txLalot = \App\Models\Transaction::where('description', 'like', '%Wifi lalot%')->where('amount', 3250000)->first();
+        if ($txLalot) {
+            $txLalot->project_id = $p1->id;
+            $txLalot->save();
+        }
+
+        $txEb = \App\Models\Transaction::where('amount', 3250000)
+            ->where('description', 'Góp vào quỹ chung')
+            ->first();
+        if ($txEb) {
+            $txEb->project_id = $p3->id;
+            $txEb->save();
+        }
     }
 }

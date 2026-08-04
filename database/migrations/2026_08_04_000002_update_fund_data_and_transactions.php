@@ -75,6 +75,60 @@ return new class extends Migration
             $fund->total_profit = 1200000.00;
             $fund->save();
         }
+
+        // 5. Ensure User Nguyễn Đức An exists
+        $nda = User::firstOrCreate(
+            ['username' => 'nda'],
+            [
+                'name' => 'Nguyễn Đức An',
+                'email' => 'an.nd@weamis.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('1234'),
+                'role' => 'member',
+                'avatar' => 'DA',
+                'share_percentage' => 0.00,
+                'current_debt' => 0.00,
+            ]
+        );
+
+        // 6. Ensure Project WM (Weamis Money) exists
+        $wmLeadId = $nda->id;
+        $wm = \App\Models\Project::firstOrCreate(
+            ['code' => 'WM'],
+            [
+                'name' => 'Weamis Money',
+                'description' => 'Quản lý tiền Weamis',
+                'release_date' => '2026-07-31',
+                'weamis_fund_percentage' => 0.00,
+                'lead_user_id' => $wmLeadId,
+                'created_by_user_id' => $wmLeadId,
+                'status' => 'active',
+            ]
+        );
+        \App\Models\ProjectMember::firstOrCreate(
+            ['project_id' => $wm->id, 'user_id' => $nda->id],
+            ['share_percentage' => 100.00]
+        );
+
+        // 7. Ensure transactions attached to W-LALOT and W-EB
+        $wLalot = \App\Models\Project::where('code', 'W-LALOT')->first();
+        if ($wLalot) {
+            $txLalot = Transaction::where('description', 'like', '%Wifi lalot%')->where('amount', 3250000)->first();
+            if ($txLalot) {
+                $txLalot->project_id = $wLalot->id;
+                $txLalot->save();
+            }
+        }
+
+        $wEb = \App\Models\Project::where('code', 'W-EB')->first();
+        if ($wEb) {
+            $txEb = Transaction::where('amount', 3250000)
+                ->where('description', 'Góp vào quỹ chung')
+                ->first();
+            if ($txEb) {
+                $txEb->project_id = $wEb->id;
+                $txEb->save();
+            }
+        }
     }
 
     public function down(): void

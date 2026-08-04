@@ -125,6 +125,17 @@ class DatabaseSeeder extends Seeder
             'current_debt' => 0.00,
         ]);
 
+        $ducAn = User::create([
+            'name' => 'Nguyễn Đức An',
+            'username' => 'nda',
+            'email' => 'an.nd@weamis.com',
+            'password' => Hash::make('1234'),
+            'role' => 'member',
+            'avatar' => 'DA',
+            'share_percentage' => 0.00,
+            'current_debt' => 0.00,
+        ]);
+
         // 3. Exact 41 Transactions from Google Sheet
         $transactionsData = [
             ['user' => $viet, 'type' => 'contribution', 'amount' => 1200000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-02-12 15:10:00'],
