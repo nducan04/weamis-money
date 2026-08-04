@@ -87,9 +87,14 @@ class ProjectController extends Controller
         $fundCut = ($totalIncome * $project->weamis_fund_percentage) / 100;
         $distributable = max(0, $totalIncome - $fundCut);
 
+        $sumMemberShares = $project->projectMembers->sum('share_percentage');
+
         $memberPayouts = [];
         foreach ($project->projectMembers as $pm) {
-            $amount = ($distributable * $pm->share_percentage) / 100;
+            $amount = ($sumMemberShares > 0)
+                ? ($distributable * $pm->share_percentage) / $sumMemberShares
+                : ($distributable * $pm->share_percentage) / 100;
+
             $memberPayouts[] = [
                 'user' => $pm->user,
                 'share_percentage' => $pm->share_percentage,

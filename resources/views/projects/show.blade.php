@@ -4,6 +4,12 @@
 <div class="space-y-6" x-data="{ 
     showEditModal: false, 
     showAddTxModal: false, 
+    showEditTxModal: false,
+    editTxForm: { id: null, user_id: null, type: 'contribution', amount: '', description: '', billing_cycle: '' },
+    openEditTxModal(tx) {
+        this.editTxForm = Object.assign({}, tx);
+        this.showEditTxModal = true;
+    },
     activeTxTab: 'attach',
     txSearchQuery: '',
     selectedTxIds: [],
@@ -187,9 +193,10 @@
                         <th class="py-3 px-3">Thời gian</th>
                         <th class="py-3 px-3">Người nhập</th>
                         <th class="py-3 px-3">Nội dung</th>
-                        <th class="py-3 px-3">Người trách nhiệm / Đòi tiền</th>
+                        <th class="py-3 px-3">Chu kỳ thu phí</th>
                         <th class="py-3 px-3">Bằng chứng</th>
-                        <th class="py-3 px-3 text-right rounded-r-xl">Số tiền</th>
+                        <th class="py-3 px-3 text-right">Số tiền</th>
+                        <th class="py-3 px-3 text-center rounded-r-xl">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -198,29 +205,25 @@
                             <td class="py-3 px-3 font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs">#{{ $tx->id }}</td>
                             <td class="py-3 px-3 font-semibold text-slate-500">{{ $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                             <td class="py-3 px-3 font-bold text-slate-900 dark:text-white">{{ $tx->user->name ?? 'N/A' }}</td>
-                            <td class="py-3 px-3 font-medium">
-                                <div>{{ $tx->description }}</div>
+                            <td class="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
+                                {{ $tx->description }}
+                            </td>
+                            <td class="py-3 px-3 font-semibold text-xs">
                                 @if($tx->billing_cycle)
-                                    <span class="inline-block mt-0.5 px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] rounded">
+                                    <span class="inline-flex items-center px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 font-extrabold text-[11px] rounded-lg border border-indigo-200 dark:border-indigo-800">
                                         📅 {{ $tx->billing_cycle }}
                                     </span>
-                                @endif
-                            </td>
-                            <td class="py-3 px-3 text-[11px]">
-                                @if($tx->responsibleUser)
-                                    <span class="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-bold rounded">TN: {{ $tx->responsibleUser->name }}</span>
-                                @endif
-                                @if($tx->claimantUser)
-                                    <span class="px-1.5 py-0.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 font-bold rounded ml-1">Đòi: {{ $tx->claimantUser->name }}</span>
+                                @else
+                                    <span class="text-slate-400 text-[11px]">—</span>
                                 @endif
                             </td>
                             <td class="py-3 px-3">
                                 @if($tx->evidence_type === 'file' && $tx->evidence_value)
-                                    <button @click="activeEvidence = { type: 'image', value: '{{ $tx->evidence_value }}' }" class="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold rounded text-[10px] cursor-pointer">🖼️ Xem ảnh bill</button>
+                                    <button @click="activeEvidence = { type: 'image', value: '{{ $tx->evidence_value }}' }" class="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold rounded-lg text-[10px] cursor-pointer">🖼️ Xem bill</button>
                                 @elseif($tx->evidence_type === 'link' && $tx->evidence_value)
-                                    <a href="{{ $tx->evidence_value }}" target="_blank" class="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold rounded text-[10px]">🔗 Mở Link</a>
+                                    <a href="{{ $tx->evidence_value }}" target="_blank" class="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold rounded-lg text-[10px]">🔗 Mở Link</a>
                                 @elseif($tx->evidence_type === 'text' && $tx->evidence_value)
-                                    <button @click="activeEvidence = { type: 'text', value: `{{ addslashes($tx->evidence_value) }}` }" class="px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold rounded text-[10px] cursor-pointer">📝 Momo text</button>
+                                    <button @click="activeEvidence = { type: 'text', value: `{{ addslashes($tx->evidence_value) }}` }" class="px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold rounded-lg text-[10px] cursor-pointer">📝 Momo text</button>
                                 @else
                                     <span class="text-slate-400 text-[10px]">Không có</span>
                                 @endif
@@ -228,10 +231,32 @@
                             <td class="py-3 px-3 text-right font-extrabold {{ in_array($tx->type, ['contribution', 'repayment']) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                                 {{ in_array($tx->type, ['contribution', 'repayment']) ? '+' : '-' }}{{ number_format($tx->amount, 0, ',', '.') }}đ
                             </td>
+                            <td class="py-3 px-3 text-center">
+                                <div class="flex items-center justify-center space-x-1.5">
+                                    <button @click="openEditTxModal({
+                                        id: {{ $tx->id }},
+                                        user_id: {{ $tx->user_id }},
+                                        user_name: `{{ addslashes($tx->user->name ?? '') }}`,
+                                        type: '{{ $tx->type }}',
+                                        amount: {{ $tx->amount }},
+                                        description: `{{ addslashes($tx->description) }}`,
+                                        billing_cycle: `{{ addslashes($tx->billing_cycle ?? '') }}`
+                                    })" title="Chỉnh sửa giao dịch" class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition text-xs font-bold cursor-pointer">
+                                        ✏️
+                                    </button>
+                                    <form action="{{ route('transactions.destroy', $tx) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa giao dịch #{{ $tx->id }} này?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" title="Xóa giao dịch (Soft Delete)" class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition text-xs font-bold cursor-pointer">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-6 text-center text-slate-400">Chưa có giao dịch thu chi nào gắn với dự án này.</td>
+                            <td colspan="8" class="py-6 text-center text-slate-400">Chưa có giao dịch thu chi nào gắn với dự án này.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -534,6 +559,75 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHỈNH SỬA GIAO DỊCH -->
+    <div x-show="showEditTxModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak x-transition>
+        <div @click.away="showEditTxModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
+                <h4 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
+                    <span>✏️ Chỉnh Sửa Giao Dịch</span>
+                    <span class="text-xs font-mono text-indigo-600 dark:text-indigo-400" x-text="'#' + editTxForm.id"></span>
+                </h4>
+                <button @click="showEditTxModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold p-1 text-lg leading-none cursor-pointer">✕</button>
+            </div>
+
+            <form :action="'/transactions/' + editTxForm.id" method="POST" class="space-y-4">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="project_id" value="{{ $project->id }}">
+
+                <!-- Member Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Thành viên thực hiện</label>
+                    @if(auth()->user()?->isAdmin())
+                        <select name="user_id" x-model="editTxForm.user_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
+                            @foreach($allMembers as $m)
+                                <option value="{{ $m->id }}">{{ $m->name }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <input type="hidden" name="user_id" :value="editTxForm.user_id">
+                        <input type="text" :value="editTxForm.user_name || '{{ auth()->user()->name }}'" readonly class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700/50 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none">
+                    @endif
+                </div>
+
+                <!-- Transaction Type & Amount -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
+                        <select name="type" x-model="editTxForm.type" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
+                            <option value="contribution">Góp quỹ / Doanh thu</option>
+                            <option value="expense">Chi tiêu dự án</option>
+                            <option value="repayment">Trả nợ vay</option>
+                            <option value="loan">Vay cá nhân</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Số Tiền (VNĐ)</label>
+                        <input type="number" name="amount" x-model="editTxForm.amount" min="1000" step="1000" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-black text-slate-900 dark:text-white outline-none">
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nội dung ghi chú</label>
+                    <input type="text" name="description" x-model="editTxForm.description" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
+                </div>
+
+                <!-- Billing Cycle -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chu kỳ thu phí</label>
+                    <input type="text" name="billing_cycle" x-model="editTxForm.billing_cycle" placeholder="VD: Tháng 08/2026..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-3 flex justify-end space-x-2 border-t border-slate-100 dark:border-slate-700">
+                    <button type="button" @click="showEditTxModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition cursor-pointer">Hủy</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">Lưu Thay Đổi</button>
+                </div>
+            </form>
         </div>
     </div>
 
