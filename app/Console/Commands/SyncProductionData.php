@@ -35,8 +35,8 @@ class SyncProductionData extends Command
             }
 
             DB::transaction(function () use ($data) {
-                // Disable Foreign Keys for SQLite
-                DB::statement('PRAGMA foreign_keys = OFF;');
+                // Disable Foreign Keys
+                \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
 
                 // 1. Funds
                 if (!empty($data['funds'])) {
@@ -106,7 +106,7 @@ class SyncProductionData extends Command
                     }
                 }
 
-                DB::statement('PRAGMA foreign_keys = ON;');
+                \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
             });
 
             $this->newLine();

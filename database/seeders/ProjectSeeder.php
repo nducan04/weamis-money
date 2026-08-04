@@ -8,14 +8,16 @@ use App\Models\User;
 use App\Models\ProjectMember;
 use Illuminate\Support\Facades\DB;
 
+use Illuminate\Support\Facades\Schema;
+
 class ProjectSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys = OFF;');
+        Schema::disableForeignKeyConstraints();
         DB::table('project_members')->delete();
         DB::table('projects')->delete();
-        DB::statement('PRAGMA foreign_keys = ON;');
+        Schema::enableForeignKeyConstraints();
 
         $nhv = User::where('username', 'nhv')->orWhere('name', 'LIKE', '%Hoàng Việt%')->first();
         $tqm = User::where('username', 'tqm')->orWhere('name', 'LIKE', '%Quang Minh%')->first();

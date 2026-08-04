@@ -172,7 +172,7 @@ class ProjectController extends Controller
             if ($fundCut > 0) {
                 $fund = \App\Models\Fund::firstOrCreate(
                     ['id' => 1],
-                    ['name' => 'Trả nợ thuê Ltd', 'balance' => 7028106.00, 'total_profit' => 126160.00]
+                    ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00, 'total_profit' => 1200000.00]
                 );
                 $fund->increment('balance', $fundCut);
                 $fund->increment('total_profit', $fundCut);
