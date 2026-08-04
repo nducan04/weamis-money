@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         // 1. Create Fund
         $fund = Fund::create([
             'name' => 'Trả nợ thuê Ltd',
-            'balance' => 6720466.00,
+            'balance' => 7133503.00,
             'total_profit' => 1200000.00,
         ]);
 
@@ -139,7 +139,7 @@ class DatabaseSeeder extends Seeder
             ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Kin vay', 'datetime' => '2026-03-08 12:33:00'],
             ['user' => $kien, 'type' => 'repayment', 'amount' => 1000000, 'desc' => 'Trả nợ vay ngày 08/03', 'datetime' => '2026-03-09 11:36:00'],
             ['user' => $viet, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Chí phèo cào mặt ăn va quy', 'datetime' => '2026-03-10 21:25:00'],
-            ['user' => $hoanganh, 'type' => 'withdrawal', 'amount' => 2250000, 'desc' => 'Rút tiền lương', 'datetime' => '2026-03-11 20:03:00'],
+            ['user' => $hoanganh, 'type' => 'withdrawal', 'amount' => 2250000, 'desc' => 'Rút tiền lương', 'datetime' => '2026-03-11 20:03:00'],  // Sheet: Hoàng Anh
             ['user' => $son, 'type' => 'contribution', 'amount' => 247766, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-03-13 03:01:00'],
             ['user' => $son, 'type' => 'contribution', 'amount' => 1000000, 'desc' => 'loc dau thang', 'datetime' => '2026-04-02 09:58:00'],
             ['user' => $duc, 'type' => 'contribution', 'amount' => 600000, 'desc' => 'Góp vào quỹ chung', 'datetime' => '2026-04-11 10:39:00'],
@@ -168,6 +168,19 @@ class DatabaseSeeder extends Seeder
             ['user' => $hoanganh, 'type' => 'withdrawal', 'amount' => 1000000, 'desc' => 'Đói kém xin lương :((((', 'datetime' => '2026-06-16 16:52:00'],
             ['user' => $duc, 'type' => 'loan', 'amount' => 1000000, 'desc' => 'Giai cuu Chi Pheo mua World cup', 'datetime' => '2026-06-16 19:09:00'],
             ['user' => $viet, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'vay 3 củ đóng học phí', 'datetime' => '2026-06-16 19:12:00'],
+
+            // === Post-sheet transactions (after 16/06/2026) ===
+            ['user' => $viet, 'type' => 'repayment', 'amount' => 3000000, 'desc' => 'CTO trả nợ tiền học', 'datetime' => '2026-06-30 12:00:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Góp 10% cns', 'datetime' => '2026-07-02 12:00:00'],
+            ['user' => $viet, 'type' => 'expense', 'amount' => 3233520, 'desc' => 'Chuyển tiền đến BBBTHANGLONG CN Lau Phan Dao Duy Anh (PVComBank Pay) thanh toan don hang 634248107', 'datetime' => '2026-07-05 12:00:00'],
+            ['user' => $kien, 'type' => 'loan', 'amount' => 3000000, 'desc' => 'Mua ram, đói kém', 'datetime' => '2026-07-08 12:00:00'],
+            ['user' => $kien, 'type' => 'repayment', 'amount' => 3000000, 'desc' => 'Trả nợ mua ram', 'datetime' => '2026-07-11 12:00:00'],
+            ['user' => $hung, 'type' => 'contribution', 'amount' => 700000, 'desc' => 'Tán lộc', 'datetime' => '2026-07-12 12:00:00'],
+            ['user' => $minh, 'type' => 'expense', 'amount' => 150000, 'desc' => 'mua kìm đấu wifi', 'datetime' => '2026-07-20 12:00:00'],
+            ['user' => $kien, 'type' => 'expense', 'amount' => 535000, 'desc' => 'Quỹ networking với anh 3T - Tri ân vi da den', 'datetime' => '2026-07-29 12:00:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 900000, 'desc' => 'CTO góp cns tháng 7', 'datetime' => '2026-07-29 18:00:00'],
+            ['user' => $viet, 'type' => 'contribution', 'amount' => 200000, 'desc' => 'Trả nợ giúp em Phúc Đăng 200k tiền cát bà, còn lại nợ 500k', 'datetime' => '2026-08-01 10:00:00'],
+            ['user' => $minh, 'type' => 'expense', 'amount' => 100000, 'desc' => 'tiền ăn chè', 'datetime' => '2026-08-04 12:00:00'],
         ];
 
         foreach ($transactionsData as $item) {
