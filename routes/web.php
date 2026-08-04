@@ -11,6 +11,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\DatabaseSyncController;
 
 Route::get('/api/db-dump', [DatabaseSyncController::class, 'export'])->name('api.dbDump');
+Route::get('/api/db-resync', [DatabaseSyncController::class, 'resync'])->name('api.dbResync');
 
 /*
 |--------------------------------------------------------------------------
