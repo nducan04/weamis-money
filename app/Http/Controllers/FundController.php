@@ -29,7 +29,8 @@ class FundController extends Controller
             $contributed = $userTxs->where('type', 'contribution')->sum('amount');
             $loans = $userTxs->where('type', 'loan')->sum('amount');
             $repaid = $userTxs->where('type', 'repayment')->sum('amount');
-            $withdrawn = $userTxs->where('type', 'expense')->sum('amount');
+            $withdrawn = $userTxs->whereIn('type', ['expense', 'withdrawal'])->sum('amount');
+            $remainingDebt = max(0, $loans - $repaid);
             $estimatedPayout = round(($fund->balance * $m->share_percentage) / 100, 0);
 
             return [
@@ -43,7 +44,7 @@ class FundController extends Controller
                 'loans' => $loans,
                 'repaid' => $repaid,
                 'withdrawn' => $withdrawn,
-                'debt' => $m->current_debt,
+                'debt' => $remainingDebt,
                 'share' => $m->share_percentage,
                 'estimated_payout' => $estimatedPayout,
                 'estimated_share_amount' => $estimatedPayout,
