@@ -100,6 +100,22 @@ class ProjectSeeder extends Seeder
         if ($ntk) ProjectMember::firstOrCreate(['project_id' => $p4->id, 'user_id' => $ntk->id], ['share_percentage' => 40.00]);
         if ($tqm) ProjectMember::firstOrCreate(['project_id' => $p4->id, 'user_id' => $tqm->id], ['share_percentage' => 50.00]);
 
+        // Project 5: EVB ([Landing Page] Everbloom)
+        $son = User::where('username', 'sonht')->orWhere('name', 'LIKE', '%Trùng Sơn%')->first();
+        $p5 = Project::firstOrCreate(
+            ['code' => 'EVB'],
+            [
+                'name' => '[Landing Page] Everbloom',
+                'description' => 'Dự án Everbloom 5 triệu',
+                'weamis_fund_percentage' => 10.00,
+                'lead_user_id' => $son ? $son->id : $leadId,
+                'created_by_user_id' => $leadId,
+                'status' => 'active',
+            ]
+        );
+        if ($nhv) ProjectMember::firstOrCreate(['project_id' => $p5->id, 'user_id' => $nhv->id], ['share_percentage' => 45.00]);
+        if ($son) ProjectMember::firstOrCreate(['project_id' => $p5->id, 'user_id' => $son->id], ['share_percentage' => 45.00]);
+
         // Attach 3.25M transactions to projects
         $txLalot = \App\Models\Transaction::where('description', 'like', '%Wifi lalot%')->where('amount', 3250000)->first();
         if ($txLalot) {
@@ -113,6 +129,13 @@ class ProjectSeeder extends Seeder
         if ($txEb) {
             $txEb->project_id = $p3->id;
             $txEb->save();
+        }
+
+        // Attach 5M transaction to EVB
+        $tx5m = \App\Models\Transaction::where('amount', 5000000)->where('description', 'like', '%Everbloom%')->first();
+        if ($tx5m) {
+            $tx5m->project_id = $p5->id;
+            $tx5m->save();
         }
     }
 }

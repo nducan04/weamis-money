@@ -63,6 +63,35 @@ return new class extends Migration
                 $txEb->save();
             }
         }
+
+        // 4. Restore Project EVB ([Landing Page] Everbloom - 5 triệu)
+        $nhv = User::where('username', 'nhv')->orWhere('name', 'LIKE', '%Hoàng Việt%')->first();
+        $son = User::where('username', 'sonht')->orWhere('name', 'LIKE', '%Trùng Sơn%')->first();
+        $tqm = User::where('username', 'tqm')->orWhere('name', 'LIKE', '%Quang Minh%')->first();
+
+        $leadEvb = $son ? $son->id : ($tqm ? $tqm->id : 1);
+        $creatorEvb = $tqm ? $tqm->id : $leadEvb;
+
+        $evb = Project::firstOrCreate(
+            ['code' => 'EVB'],
+            [
+                'name' => '[Landing Page] Everbloom',
+                'description' => 'Dự án Everbloom 5 triệu',
+                'weamis_fund_percentage' => 10.00,
+                'lead_user_id' => $leadEvb,
+                'created_by_user_id' => $creatorEvb,
+                'status' => 'active',
+            ]
+        );
+        if ($nhv) ProjectMember::firstOrCreate(['project_id' => $evb->id, 'user_id' => $nhv->id], ['share_percentage' => 45.00]);
+        if ($son) ProjectMember::firstOrCreate(['project_id' => $evb->id, 'user_id' => $son->id], ['share_percentage' => 45.00]);
+
+        // 5. Attach 5,000,000đ transaction to EVB
+        $tx5m = Transaction::where('amount', 5000000)->where('description', 'like', '%Everbloom%')->first();
+        if ($tx5m) {
+            $tx5m->project_id = $evb->id;
+            $tx5m->save();
+        }
     }
 
     public function down(): void
