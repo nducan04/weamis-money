@@ -13,6 +13,6 @@ Artisan::command('verify:networth', function () {
         $c = $txs->whereIn('type', ['contribution', 'repayment', 'profit'])->sum('amount');
         $w = $txs->whereIn('type', ['expense', 'loan', 'withdrawal'])->sum('amount');
         $nw = $c - $w;
-        $this->line("{$m->name} | Góp: " . number_format($c) . " | Rút/Vay: " . number_format($w) . " | Net Worth: " . number_format($nw));
+        $this->line("{$m->name} (username: {$m->username}) | Góp: " . number_format($c) . " | Rút/Vay: " . number_format($w) . " | Net Worth: " . number_format($nw));
     }
 });
