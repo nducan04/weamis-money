@@ -58,10 +58,12 @@ class ProjectMember extends Model
     public static function getPeriods(int $projectId)
     {
         return static::where('project_id', $projectId)
+            ->orderBy('effective_from', 'asc')
             ->get()
             ->map(fn($pm) => $pm->effective_from ? $pm->effective_from->format('Y-m-d') : null)
             ->filter()
             ->unique()
+            ->sort()
             ->values();
     }
 }
