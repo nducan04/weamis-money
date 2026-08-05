@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
 
         $son = User::create([
             'name' => 'Hồ Trùng Sơn',
-            'username' => 'sonht',
+            'username' => 'hts',
             'email' => 'son.ht@weamis.com',
             'password' => Hash::make('1234'),
             'role' => 'member',
@@ -61,7 +61,7 @@ class DatabaseSeeder extends Seeder
 
         $duc = User::create([
             'name' => 'Nguyễn Quý Đức',
-            'username' => 'ducnq',
+            'username' => 'nqd',
             'email' => 'duc.nq@weamis.com',
             'password' => Hash::make('1234'),
             'role' => 'member',
@@ -72,7 +72,7 @@ class DatabaseSeeder extends Seeder
 
         $hung = User::create([
             'name' => 'Nguyễn Đăng Phúc Hưng',
-            'username' => 'hungndp',
+            'username' => 'ndph',
             'email' => 'hung.ndp@weamis.com',
             'password' => Hash::make('1234'),
             'role' => 'member',
@@ -83,7 +83,7 @@ class DatabaseSeeder extends Seeder
 
         $kien = User::create([
             'name' => 'Nguyễn Trung Kiên',
-            'username' => 'kiennt',
+            'username' => 'ntk',
             'email' => 'kien.nt@weamis.com',
             'password' => Hash::make('1234'),
             'role' => 'member',
@@ -94,7 +94,7 @@ class DatabaseSeeder extends Seeder
 
         $hoanganh = User::create([
             'name' => 'Vũ Đức Hoàng Anh',
-            'username' => 'anhvdh',
+            'username' => 'vdha',
             'email' => 'anh.vdh@weamis.com',
             'password' => Hash::make('1234'),
             'role' => 'member',
@@ -105,7 +105,7 @@ class DatabaseSeeder extends Seeder
 
         $thanhan = User::create([
             'name' => 'Lê Văn Thành An',
-            'username' => 'anlvt',
+            'username' => 'lvta',
             'email' => 'an.lvt@weamis.com',
             'password' => Hash::make('1234'),
             'role' => 'member',
@@ -116,7 +116,7 @@ class DatabaseSeeder extends Seeder
 
         $minh = User::create([
             'name' => 'Trịnh Quang Minh',
-            'username' => 'minhtq',
+            'username' => 'tqm',
             'email' => 'minh.tq@weamis.com',
             'password' => Hash::make('1234'),
             'role' => 'member',
