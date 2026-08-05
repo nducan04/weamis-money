@@ -153,6 +153,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
             <!-- 1. Weamis Fund Cut Card -->
+            @if($project->weamis_fund_percentage > 0)
             <div class="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-500/30 space-y-2.5 shadow-sm">
                 <div class="flex items-start justify-between">
                     <div>
@@ -176,6 +177,7 @@
                     {{ $project->status === 'completed' ? '✓ Đã cộng vào Quỹ Chung' : '➔ Cộng vào Quỹ khi Đánh dấu Hoàn Thành' }}
                 </p>
             </div>
+            @endif
 
             <!-- 2. Member Payout Cards -->
             @foreach($memberPayouts as $payout)

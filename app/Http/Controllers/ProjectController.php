@@ -60,7 +60,7 @@ class ProjectController extends Controller
         ]);
 
         if (!empty($validated['members'])) {
-            $effectiveFrom = $validated['release_date'] ?? now()->format('Y-m-d');
+            $effectiveFrom = '2020-01-01'; // Default to a very early date so it always becomes the first period
             foreach ($validated['members'] as $m) {
                 if ($m['share_percentage'] > 0) {
                     ProjectMember::create([
