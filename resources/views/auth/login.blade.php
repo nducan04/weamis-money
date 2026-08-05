@@ -68,13 +68,39 @@
                 @endif
 
                 <!-- Login Form -->
-                <form action="{{ route('login') }}" method="POST" class="space-y-4" x-data="{ showPassword: false }">
+                <form action="{{ route('login') }}" method="POST" class="space-y-4" x-data="{ 
+                    showPassword: false, 
+                    loginInput: '{{ old('login') }}',
+                    selectAccount(username) {
+                        this.loginInput = username;
+                    }
+                }">
                     @csrf
+
+                    <!-- Quick Account Selector Chips -->
+                    @if(isset($users) && $users->count() > 0)
+                        <div>
+                            <label class="block text-xs font-extrabold text-slate-700 mb-1.5 flex items-center justify-between">
+                                <span>Bấm chọn nhanh tài khoản của bạn:</span>
+                                <span class="text-[10px] text-emerald-600 font-bold">Mật khẩu: 1234</span>
+                            </label>
+                            <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200">
+                                @foreach($users as $u)
+                                    <button type="button" @click="selectAccount('{{ $u->username }}')" 
+                                            :class="loginInput === '{{ $u->username }}' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500' : 'bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700'"
+                                            class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center space-x-1">
+                                        <span>{{ $u->role === 'admin' ? '👑' : '👤' }} {{ $u->name }}</span>
+                                        <span class="text-[10px] opacity-75 font-mono">({{ $u->username }})</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                     
                     <!-- Username/Email Field -->
                     <div>
-                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Tên đăng nhập</label>
-                        <input type="text" name="login" value="{{ old('login') }}" required placeholder="username" 
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1.5">Tên đăng nhập / Email</label>
+                        <input type="text" name="login" x-model="loginInput" required placeholder="Username (vd: minhtq, nhv, sonht...)" 
                                class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white outline-none transition-all duration-200">
                     </div>
 
