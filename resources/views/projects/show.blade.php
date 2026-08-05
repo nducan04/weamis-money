@@ -126,45 +126,89 @@
         @endif
     </div>
 
-    <!-- Financial Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tổng Doanh Thu</p>
-            <p class="text-lg font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
+    <!-- High Level Overview Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Doanh Thu Dự Án</p>
+                <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-xl flex-shrink-0">
+                💰
+            </div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">Trích Về Quỹ Chung ({{ number_format($project->weamis_fund_percentage, 0) }}%)</p>
-            <p class="text-lg font-black text-amber-600 dark:text-amber-400">{{ number_format($fundCut, 0, ',', '.') }}đ</p>
-            <p class="text-[9px] text-slate-400 font-semibold mt-0.5">➔ Cộng vào Quỹ khi Hoàn Thành</p>
+
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thành Viên Tham Gia</p>
+                <p class="text-2xl font-black text-slate-900 dark:text-white">{{ $project->projectMembers->count() }} <span class="text-sm font-bold text-slate-500">Thành viên</span></p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-xl flex-shrink-0">
+                👥
+            </div>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tiền Đem Chia Thành Viên</p>
-            <p class="text-lg font-black text-indigo-600 dark:text-indigo-400">{{ number_format($distributable, 0, ',', '.') }}đ</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tổng Chi Phí Phát Sinh</p>
-            <p class="text-lg font-black text-rose-600 dark:text-rose-400">-{{ number_format($totalExpense, 0, ',', '.') }}đ</p>
+
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Giao Dịch Ghi Nhận</p>
+                <p class="text-2xl font-black text-slate-900 dark:text-white">{{ $project->transactions->where('status', 'approved')->count() }} <span class="text-sm font-bold text-slate-500">Giao dịch</span></p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xl flex-shrink-0">
+                🧾
+            </div>
         </div>
     </div>
 
-    <!-- Member Payouts Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-        <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center space-x-2">
-            <span>Phân Bổ Tiền Dự Án Cho Các Thành Viên</span>
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+    <!-- Member & Fund Revenue Distribution Section -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                <span>Phân Bổ Tiền Dự Án Cho Quỹ & Các Thành Viên</span>
+            </h3>
+            <span class="text-xs font-bold text-slate-400">Doanh thu khả dụng: +{{ number_format($totalIncome, 0, ',', '.') }}đ</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+            <!-- 1. Weamis Fund Cut Card -->
+            <div class="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-500/30 space-y-2.5 shadow-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="text-base">🏛️</span>
+                            <p class="text-xs font-black text-amber-950 dark:text-amber-300">Quỹ Chung Weamis</p>
+                        </div>
+                        <p class="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold mt-0.5">Tỷ lệ trích: {{ number_format($project->weamis_fund_percentage, 0) }}%</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-amber-600/80 dark:text-amber-400/80 font-bold uppercase">Trích về Quỹ</p>
+                        <p class="text-sm font-black text-amber-600 dark:text-amber-400">+{{ number_format($fundCut, 0, ',', '.') }}đ</p>
+                    </div>
+                </div>
+
+                <!-- Fund Cut Progress Bar -->
+                <div class="w-full bg-amber-200/50 dark:bg-amber-900/30 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-gradient-to-r from-amber-500 to-yellow-400 h-full rounded-full" style="width: {{ min(100, max(5, $project->weamis_fund_percentage)) }}%"></div>
+                </div>
+
+                <p class="text-[9px] font-bold text-amber-600/90 dark:text-amber-400/90 pt-0.5">
+                    {{ $project->status === 'completed' ? '✓ Đã cộng vào Quỹ Chung' : '➔ Cộng vào Quỹ khi Đánh dấu Hoàn Thành' }}
+                </p>
+            </div>
+
+            <!-- 2. Member Payout Cards -->
             @foreach($memberPayouts as $payout)
-                <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-2">
-                    <div class="flex items-center justify-between">
+                <div class="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700/80 space-y-2.5 flex flex-col justify-between">
+                    <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs font-extrabold text-slate-900 dark:text-white">{{ $payout['user']->name }}</p>
-                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold">Tỷ lệ phân bổ: {{ number_format($payout['share_percentage'], 1) }}%</p>
+                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold mt-0.5">Tỷ lệ phân bổ: {{ number_format($payout['share_percentage'], 1) }}%</p>
                         </div>
                         <div class="text-right">
                             <p class="text-[10px] text-slate-400 font-bold uppercase">Số tiền nhận</p>
-                            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($payout['estimated_payout'], 0, ',', '.') }}đ</p>
+                            <p class="text-sm font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($payout['estimated_payout'], 0, ',', '.') }}đ</p>
                         </div>
                     </div>
+
                     <!-- Share progress bar -->
                     <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                         <div class="bg-gradient-to-r from-emerald-500 to-indigo-600 h-full rounded-full" style="width: {{ min(100, max(5, $payout['share_percentage'])) }}%"></div>
