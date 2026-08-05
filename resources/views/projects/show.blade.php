@@ -121,9 +121,6 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Doanh Thu Dự Án</p>
                 <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-xl flex-shrink-0">
-                💰
-            </div>
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
@@ -131,18 +128,12 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thành Viên Tham Gia</p>
                 <p class="text-2xl font-black text-slate-900 dark:text-white">{{ $project->projectMembers->count() }} <span class="text-sm font-bold text-slate-500">Thành viên</span></p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-xl flex-shrink-0">
-                👥
-            </div>
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Giao Dịch Ghi Nhận</p>
                 <p class="text-2xl font-black text-slate-900 dark:text-white">{{ $project->transactions->where('status', 'approved')->count() }} <span class="text-sm font-bold text-slate-500">Giao dịch</span></p>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xl flex-shrink-0">
-                🧾
             </div>
         </div>
     </div>
@@ -162,7 +153,6 @@
                 <div class="flex items-start justify-between">
                     <div>
                         <div class="flex items-center space-x-1.5">
-                            <span class="text-base">🏛️</span>
                             <p class="text-xs font-black text-amber-950 dark:text-amber-300">Quỹ Chung Weamis</p>
                         </div>
                         <p class="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold mt-0.5">Tỷ lệ trích: {{ number_format($project->weamis_fund_percentage, 0) }}%</p>
