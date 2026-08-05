@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6" x-data="{
     showCreateModal: {{ $errors->any() ? 'true' : 'false' }},
-    weamisFundPct: 10,
+    weamisFundPct: 0,
     memberShares: {
         @foreach($members->where('role', '!=', 'admin') as $m)
             'm_{{ $m->id }}': 0,

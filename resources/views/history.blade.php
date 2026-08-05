@@ -283,7 +283,7 @@ class="pb-20 lg:pb-6">
                         <th class="py-3.5 px-4">Loại GD</th>
                         <th class="py-3.5 px-4">Số Tiền</th>
                         <th class="py-3.5 px-4">Nội Dung</th>
-                        <th class="py-3.5 px-4">Trạng Thái</th>
+
                         <th class="py-3.5 px-4 text-right rounded-r-xl">Hành Động</th>
                     </tr>
                 </thead>
@@ -355,17 +355,7 @@ class="pb-20 lg:pb-6">
                                     </template>
                                 </div>
                             </td>
-                            <td class="py-4 px-4 whitespace-nowrap">
-                                <template x-if="tx.status === 'approved'">
-                                    <span class="text-emerald-600 font-bold">✓ Đã duyệt</span>
-                                </template>
-                                <template x-if="tx.status === 'pending'">
-                                    <span class="text-amber-600 font-bold">⏳ Chờ duyệt</span>
-                                </template>
-                                <template x-if="tx.status === 'rejected'">
-                                    <span class="text-slate-400 font-bold line-through">Từ chối</span>
-                                </template>
-                            </td>
+
                             <td class="py-4 px-4 text-right whitespace-nowrap space-x-1.5">
                                 <template x-if="canEditTx(tx)">
                                     <div class="inline-flex items-center space-x-1.5">
@@ -445,15 +435,7 @@ class="pb-20 lg:pb-6">
 
                     <div class="flex items-center justify-between pt-2.5 border-t border-slate-200/60 dark:border-slate-600/40">
                         <div>
-                            <template x-if="tx.status === 'approved'">
-                                <span class="text-xs text-emerald-600 font-bold">✓ Đã duyệt</span>
-                            </template>
-                            <template x-if="tx.status === 'pending'">
-                                <span class="text-xs text-amber-600 font-bold">⏳ Chờ duyệt</span>
-                            </template>
-                            <template x-if="tx.status === 'rejected'">
-                                <span class="text-xs text-slate-400 font-bold line-through">Từ chối</span>
-                            </template>
+                            <!-- Placeholder to keep flex-between layout working properly for actions -->
                         </div>
                         <div class="flex items-center space-x-2">
                             <template x-if="canEditTx(tx)">

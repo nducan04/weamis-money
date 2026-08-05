@@ -37,7 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('password.update');
 
     Route::get('/', [FundController::class, 'index'])->name('dashboard');
-    Route::get('/history', fn() => redirect()->route('dashboard'))->name('history');
+    Route::get('/history', [TransactionController::class, 'history'])->name('history');
     Route::get('/report', fn() => redirect()->route('dashboard'))->name('report');
 
     // Projects Management & Audit
@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+    Route::delete('/projects/{project}/share-period', [ProjectController::class, 'destroySharePeriod'])->name('projects.destroy-share-period');
     Route::post('/projects/{project}/attach-transactions', [ProjectController::class, 'attachTransactions'])->name('projects.attach-transactions');
 
     // Analytics: Net Worth & Collaboration Network Graph (Combined)

@@ -37,15 +37,15 @@ class ProjectMember extends Model
      */
     public static function getActiveShares(int $projectId, ?string $date = null)
     {
-        $date = $date ?? now()->format('Y-m-d');
+        $dateStr = $date ? \Carbon\Carbon::parse($date)->format('Y-m-d 23:59:59') : now()->format('Y-m-d 23:59:59');
 
         return static::where('project_id', $projectId)
-            ->where('effective_from', '<=', $date)
-            ->whereIn('id', function ($query) use ($projectId, $date) {
+            ->where('effective_from', '<=', $dateStr)
+            ->whereIn('id', function ($query) use ($projectId, $dateStr) {
                 $query->selectRaw('MAX(id)')
                     ->from('project_members')
                     ->where('project_id', $projectId)
-                    ->where('effective_from', '<=', $date)
+                    ->where('effective_from', '<=', $dateStr)
                     ->groupBy('user_id');
             })
             ->with('user')
@@ -58,10 +58,11 @@ class ProjectMember extends Model
     public static function getPeriods(int $projectId)
     {
         return static::where('project_id', $projectId)
-            ->select('effective_from')
-            ->distinct()
-            ->orderBy('effective_from')
-            ->pluck('effective_from');
+            ->get()
+            ->map(fn($pm) => $pm->effective_from ? $pm->effective_from->format('Y-m-d') : null)
+            ->filter()
+            ->unique()
+            ->values();
     }
 }
 

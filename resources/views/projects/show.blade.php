@@ -9,7 +9,7 @@
     showDeleteProjectModal: false,
     showDeleteTxModal: false,
     deleteTxForm: { id: null },
-    editTxForm: { id: null, user_id: null, type: 'contribution', amount: '', description: '', billing_cycle: '' },
+    editTxForm: { id: null, user_id: null, type: 'contribution', revenue_type: 'development', amount: '', description: '', billing_cycle: '', created_at: '' },
     openEditTxModal(tx) {
         this.editTxForm = Object.assign({}, tx);
         this.showEditTxModal = true;
@@ -148,7 +148,7 @@
             <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
                 <span>Phân Bổ Tiền Dự Án (Hiện Tại)</span>
             </h3>
-            <span class="text-xs font-bold text-slate-400">Doanh thu khả dụng: +{{ number_format($totalIncome, 0, ',', '.') }}đ</span>
+            <span class="text-xs font-bold text-slate-400">Doanh thu đợt hiện tại: +{{ number_format($currentPeriodIncome, 0, ',', '.') }}đ</span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
@@ -201,7 +201,7 @@
     </div>
 
     <!-- Share Timeline (Temporal Share Periods) -->
-    @if(count($shareTimeline) > 1)
+    @if(count($shareTimeline) >= 1)
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
         <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
             Lịch Sử Cổ Phần Theo Giai Đoạn
@@ -218,19 +218,54 @@
                     <div class="absolute left-1 top-1.5 w-4 h-4 rounded-full border-2 {{ $idx === count($shareTimeline) - 1 ? 'bg-emerald-500 border-emerald-500' : 'bg-white dark:bg-slate-800 border-emerald-400' }} z-10"></div>
 
                     <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700/80">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-extrabold text-slate-900 dark:text-white">
-                                Từ {{ \Carbon\Carbon::parse($period['effective_from'])->format('d/m/Y') }}
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <span class="text-xs font-extrabold text-slate-900 dark:text-white flex items-center space-x-1.5">
+                                <span>
+                                    @if(count($shareTimeline) === 1)
+                                        Từ trước đến nay
+                                    @elseif($idx === 0)
+                                        Từ trước đến {{ \Carbon\Carbon::parse($shareTimeline[1]['effective_from'])->format('d/m/Y') }}
+                                    @elseif($idx < count($shareTimeline) - 1)
+                                        Từ {{ \Carbon\Carbon::parse($period['effective_from'])->format('d/m/Y') }} đến {{ \Carbon\Carbon::parse($shareTimeline[$idx + 1]['effective_from'])->format('d/m/Y') }}
+                                    @else
+                                        Từ {{ \Carbon\Carbon::parse($period['effective_from'])->format('d/m/Y') }}
+                                    @endif
+                                </span>
                                 @if($idx === count($shareTimeline) - 1)
-                                    <span class="ml-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full">HIỆN TẠI</span>
+                                    <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full">HIỆN TẠI</span>
                                 @endif
                             </span>
+
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60">
+                                    Doanh thu đợt: +{{ number_format($period['period_income'], 0, ',', '.') }}đ
+                                </span>
+
+                                @if($project->canManage(auth()->user()))
+                                    <form action="{{ route('projects.destroy-share-period', $project) }}" method="POST" onsubmit="return confirm('Xóa mốc cổ phần ngày {{ \Carbon\Carbon::parse($period['effective_from'])->format('d/m/Y') }}?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="effective_from" value="{{ $period['effective_from'] }}">
+                                        <button type="submit" title="Xóa đợt cổ phần này" class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 text-[11px] font-bold px-2 py-0.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 transition cursor-pointer flex items-center space-x-1">
+                                            <span>🗑️ Xóa mốc này</span>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            @if($project->weamis_fund_percentage > 0)
+                            <span class="inline-flex items-center px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg text-[11px] font-bold text-amber-900 dark:text-amber-300 shadow-sm">
+                                Quỹ Weamis
+                                <span class="ml-1 text-amber-600 dark:text-amber-400 font-black">({{ number_format($project->weamis_fund_percentage, 1) }}%)</span>
+                                <span class="ml-1.5 text-amber-600 dark:text-amber-400 font-black">+{{ number_format($period['fund_cut'], 0, ',', '.') }}đ</span>
+                            </span>
+                            @endif
                             @foreach($period['members'] as $member)
-                            <span class="inline-flex items-center px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                                {{ $member['user']->name }}
-                                <span class="ml-1.5 text-emerald-600 dark:text-emerald-400 font-black">{{ number_format($member['share_percentage'], 1) }}%</span>
+                            <span class="inline-flex items-center px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 shadow-sm">
+                                {{ $member['user'] ? $member['user']->name : 'Thành viên' }}
+                                <span class="ml-1 text-indigo-600 dark:text-indigo-400 font-black">({{ number_format($member['share_percentage'], 1) }}%)</span>
+                                <span class="ml-1.5 text-emerald-600 dark:text-emerald-400 font-black">+{{ number_format($member['estimated_payout'], 0, ',', '.') }}đ</span>
                             </span>
                             @endforeach
                         </div>
@@ -306,9 +341,11 @@
                                         user_id: {{ $tx->user_id }},
                                         user_name: `{{ addslashes($tx->user->name ?? '') }}`,
                                         type: '{{ $tx->type }}',
+                                        revenue_type: '{{ $tx->revenue_type ?? "development" }}',
                                         amount: {{ $tx->amount }},
                                         description: `{{ addslashes($tx->description) }}`,
-                                        billing_cycle: `{{ addslashes($tx->billing_cycle ?? '') }}`
+                                        billing_cycle: `{{ addslashes($tx->billing_cycle ?? '') }}`,
+                                        created_at: `{{ $tx->created_at ? $tx->created_at->format('Y-m-d\TH:i') : '' }}`
                                     })" title="Chỉnh sửa giao dịch" class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition text-xs font-bold cursor-pointer">
                                         ✏️
                                     </button>
@@ -417,9 +454,8 @@
 
                     <!-- Effective From Date (Temporal Share Period) -->
                     <div class="mb-3 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-                        <label class="block text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-1">Ngày Hiệu Lực Cổ Phần (Giai Đoạn)</label>
-                        <input type="date" name="share_effective_from" value="{{ now()->format('Y-m-d') }}" class="w-full px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-700 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-                        <p class="text-[9px] text-blue-500 dark:text-blue-400 font-medium mt-1">Thay đổi ngày để tạo giai đoạn cổ phần mới (ví dụ: 01/09/2026 cho cổ phần tháng 9). Các giai đoạn cũ được giữ nguyên.</p>
+                        <label class="block text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">Ngày Hiệu Lực Cổ Phần</label>
+                        <input type="date" name="share_effective_from" value="{{ now()->format('Y-m-d') }}" class="w-full px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-700 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none dark:[color-scheme:dark]">
                     </div>
 
                     <div class="space-y-2 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-700">
@@ -545,15 +581,24 @@
                     <input type="hidden" name="project_id" value="{{ $project->id }}">
                     <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
-                    <!-- 1. Loại giao dịch -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
-                        <select name="type" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="contribution">Góp quỹ</option>
-                            <option value="expense">Chi tiêu chung</option>
-                            <option value="loan">Vay cá nhân</option>
-                            <option value="repayment">Trả nợ</option>
-                        </select>
+                    <!-- 1. Loại giao dịch & Loại Doanh Thu -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" x-data="{ selectedType: 'contribution' }">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
+                            <select name="type" x-model="selectedType" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="contribution">Góp quỹ / Doanh thu</option>
+                                <option value="expense">Chi tiêu chung</option>
+                                <option value="loan">Vay cá nhân</option>
+                                <option value="repayment">Trả nợ</option>
+                            </select>
+                        </div>
+                        <div x-show="selectedType === 'contribution'">
+                            <label class="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Loại Doanh Thu</label>
+                            <select name="revenue_type" class="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-600 bg-white dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="development" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền phát triển</option>
+                                <option value="subscription" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền thuê bao</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- 2. Số tiền -->
@@ -587,6 +632,12 @@
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chu Kỳ Thu Phí</label>
                             <input type="text" name="billing_cycle" placeholder="VD: Tháng 05/2026, Quý 2/2026..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
+                    </div>
+
+                    <!-- Ngày giao dịch -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ngày Giao Dịch</label>
+                        <input type="datetime-local" name="created_at" value="{{ now()->format('Y-m-d\TH:i') }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     </div>
 
                     <!-- 5. Đính Kèm Bằng Chứng -->
@@ -665,22 +716,31 @@
                     @endif
                 </div>
 
-                <!-- Transaction Type & Amount -->
-                <div class="grid grid-cols-2 gap-3">
+                <!-- Transaction Type & Revenue Type -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
                         <select name="type" x-model="editTxForm.type" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
-                            <option value="contribution">Góp quỹ</option>
+                            <option value="contribution">Góp quỹ / Doanh thu</option>
                             <option value="expense">Chi tiêu chung</option>
                             <option value="loan">Vay cá nhân</option>
                             <option value="repayment">Trả nợ</option>
                             <option value="withdrawal">Rút lương</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Số Tiền (VNĐ)</label>
-                        <input type="number" name="amount" x-model="editTxForm.amount" min="1000" step="1000" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-black text-slate-900 dark:text-white outline-none">
+                    <div x-show="editTxForm.type === 'contribution'">
+                        <label class="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Loại Doanh Thu</label>
+                        <select name="revenue_type" x-model="editTxForm.revenue_type" class="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-600 bg-white dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
+                            <option value="development" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền phát triển</option>
+                            <option value="subscription" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền thuê bao</option>
+                        </select>
                     </div>
+                </div>
+
+                <!-- Amount -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Số Tiền (VNĐ)</label>
+                    <input type="number" name="amount" x-model="editTxForm.amount" min="1000" step="1000" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-black text-slate-900 dark:text-white outline-none">
                 </div>
 
                 <!-- Description -->
@@ -689,10 +749,16 @@
                     <input type="text" name="description" x-model="editTxForm.description" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
                 </div>
 
-                <!-- Billing Cycle -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chu kỳ thu phí</label>
-                    <input type="text" name="billing_cycle" x-model="editTxForm.billing_cycle" placeholder="VD: Tháng 08/2026..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
+                <!-- Billing Cycle & Ngày giao dịch -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chu kỳ thu phí</label>
+                        <input type="text" name="billing_cycle" x-model="editTxForm.billing_cycle" placeholder="VD: Tháng 08/2026..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ngày Giao Dịch</label>
+                        <input type="datetime-local" name="created_at" x-model="editTxForm.created_at" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
+                    </div>
                 </div>
 
                 <!-- Action Buttons -->

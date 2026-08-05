@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\ProjectMember;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
@@ -22,7 +23,7 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:projects,code',
+            'code' => ['required', 'string', 'max:50', Rule::unique('projects', 'code')->withoutTrashed()],
             'description' => 'nullable|string',
             'release_date' => 'nullable|date',
             'weamis_fund_percentage' => 'required|numeric|min:0|max:100',
@@ -44,9 +45,12 @@ class ProjectController extends Controller
             return redirect()->back()->withInput()->with('error', 'Lỗi: Tổng % Trích Về Quỹ (' . $validated['weamis_fund_percentage'] . '%) và cổ phần các thành viên (' . $sumShares . '%) vượt quá 100% (Tổng hiện tại: ' . $totalPct . '%). Vui lòng kiểm tra lại!');
         }
 
+        $code = strtoupper($validated['code']);
+        Project::onlyTrashed()->where('code', $code)->forceDelete();
+
         $project = Project::create([
             'name' => $validated['name'],
-            'code' => strtoupper($validated['code']),
+            'code' => $code,
             'description' => $validated['description'] ?? null,
             'release_date' => $validated['release_date'] ?? null,
             'weamis_fund_percentage' => $validated['weamis_fund_percentage'],
@@ -91,46 +95,66 @@ class ProjectController extends Controller
         $subRevenue = (clone $approvedTxs)->whereIn('type', ['contribution', 'repayment'])->where('revenue_type', 'subscription')->sum('amount');
         $otherRevenue = $totalIncome - $devRevenue - $subRevenue;
 
-        // Audit & Payout Breakdown (current active shares)
-        $fundCut = ($totalIncome * $project->weamis_fund_percentage) / 100;
-        $distributable = max(0, $totalIncome - $fundCut);
-
-        // Temporal Shares: get all periods and current active shares
+        // Temporal Shares: get all periods and calculate income & payouts per period
         $sharePeriods = ProjectMember::getPeriods($project->id);
-        $activeShares = ProjectMember::getActiveShares($project->id);
-        $sumMemberShares = $activeShares->sum('share_percentage');
-
-        $memberPayouts = [];
-        foreach ($activeShares as $pm) {
-            $amount = ($sumMemberShares > 0)
-                ? ($distributable * $pm->share_percentage) / $sumMemberShares
-                : ($distributable * $pm->share_percentage) / 100;
-
-            $memberPayouts[] = [
-                'user' => $pm->user,
-                'share_percentage' => $pm->share_percentage,
-                'estimated_payout' => $amount,
-            ];
-        }
-
-        // Build share timeline for all periods
         $shareTimeline = [];
-        foreach ($sharePeriods as $period) {
+
+        foreach ($sharePeriods as $idx => $period) {
+            $startDate = $idx === 0 ? null : \Carbon\Carbon::parse($period)->startOfDay();
+            $nextPeriod = isset($sharePeriods[$idx + 1]) ? $sharePeriods[$idx + 1] : null;
+            $endDate = $nextPeriod ? \Carbon\Carbon::parse($nextPeriod)->startOfDay() : null;
+
+            $txQuery = $project->transactions()->where('status', 'approved');
+            if ($startDate) {
+                $txQuery->where('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $txQuery->where('created_at', '<', $endDate);
+            }
+
+            $periodTxs = $txQuery->get();
+            $periodIncome = (float)$periodTxs->whereIn('type', ['contribution', 'repayment'])->sum('amount');
+            $periodExpense = (float)$periodTxs->where('type', 'expense')->sum('amount');
+
+            $periodFundCut = ($periodIncome * $project->weamis_fund_percentage) / 100;
+            $periodDistributable = max(0, $periodIncome - $periodFundCut);
+
             $periodShares = ProjectMember::where('project_id', $project->id)
-                ->where('effective_from', $period)
+                ->whereDate('effective_from', $period)
                 ->with('user')
                 ->get();
 
+            $sumShares = $periodShares->sum('share_percentage');
+            $periodPayouts = [];
+
+            foreach ($periodShares as $pm) {
+                $amount = ($sumShares > 0)
+                    ? ($periodDistributable * $pm->share_percentage) / $sumShares
+                    : 0;
+
+                $periodPayouts[] = [
+                    'user' => $pm->user,
+                    'share_percentage' => (float)$pm->share_percentage,
+                    'estimated_payout' => $amount,
+                ];
+            }
+
             $shareTimeline[] = [
                 'effective_from' => $period,
-                'members' => $periodShares->map(function ($pm) {
-                    return [
-                        'user' => $pm->user,
-                        'share_percentage' => $pm->share_percentage,
-                    ];
-                }),
+                'period_income' => $periodIncome,
+                'period_expense' => $periodExpense,
+                'fund_cut' => $periodFundCut,
+                'distributable' => $periodDistributable,
+                'members' => $periodPayouts,
             ];
         }
+
+        // Active / Current Period summary for top card
+        $currentTimeline = !empty($shareTimeline) ? end($shareTimeline) : null;
+        $fundCut = $currentTimeline ? $currentTimeline['fund_cut'] : 0;
+        $distributable = $currentTimeline ? $currentTimeline['distributable'] : 0;
+        $currentPeriodIncome = $currentTimeline ? $currentTimeline['period_income'] : 0;
+        $memberPayouts = $currentTimeline ? $currentTimeline['members'] : [];
 
         $allMembers = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
@@ -142,7 +166,7 @@ class ProjectController extends Controller
         return view('projects.show', compact(
             'project', 'totalIncome', 'totalExpense',
             'devRevenue', 'subRevenue', 'otherRevenue',
-            'fundCut', 'distributable', 'memberPayouts',
+            'fundCut', 'distributable', 'memberPayouts', 'currentPeriodIncome',
             'shareTimeline', 'sharePeriods',
             'allMembers', 'unassignedTransactions'
         ));
@@ -275,8 +299,26 @@ class ProjectController extends Controller
         }
 
         $name = $project->name;
-        $project->delete();
+        Transaction::where('project_id', $project->id)->update(['project_id' => null]);
+        ProjectMember::where('project_id', $project->id)->delete();
+        $project->forceDelete();
 
-        return redirect()->route('projects.index')->with('success', 'Đã xóa dự án ' . $name . '!');
+        return redirect()->route('projects.index')->with('success', 'Đã xóa hoàn toàn dự án ' . $name . '!');
+    }
+
+    public function destroySharePeriod(Request $request, Project $project)
+    {
+        if (!$project->canManage(auth()->user())) {
+            return redirect()->back()->with('error', 'Bạn không có quyền xóa đợt cổ phần này.');
+        }
+
+        $effectiveFrom = $request->input('effective_from');
+        if ($effectiveFrom) {
+            ProjectMember::where('project_id', $project->id)
+                ->whereDate('effective_from', $effectiveFrom)
+                ->delete();
+        }
+
+        return redirect()->route('projects.show', $project)->with('success', 'Đã xóa đợt cổ phần ngày ' . \Carbon\Carbon::parse($effectiveFrom)->format('d/m/Y') . '!');
     }
 }

@@ -114,6 +114,7 @@ class TransactionController extends Controller
             'evidence_link' => 'nullable|string',
             'evidence_text' => 'nullable|string',
             'evidence_file' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'revenue_type' => 'nullable|in:development,subscription',
             'created_at' => 'nullable|date',
         ]);
 
@@ -141,7 +142,7 @@ class TransactionController extends Controller
         }
 
         DB::transaction(function () use ($fund, $user, $validated, $evidenceType, $evidenceValue) {
-            $status = in_array($validated['type'], ['contribution', 'repayment']) ? 'approved' : 'pending';
+            $status = 'approved';
             $adminUser = User::where('role', 'admin')->first() ?? $user;
 
             $txData = [
@@ -154,6 +155,7 @@ class TransactionController extends Controller
                 'amount' => $validated['amount'],
                 'description' => $validated['description'],
                 'billing_cycle' => $validated['billing_cycle'] ?? null,
+                'revenue_type' => $validated['revenue_type'] ?? (!empty($validated['project_id']) ? 'development' : null),
                 'evidence_type' => $evidenceType,
                 'evidence_value' => $evidenceValue,
                 'status' => $status,
@@ -194,6 +196,7 @@ class TransactionController extends Controller
             'evidence_link' => 'nullable|string',
             'evidence_text' => 'nullable|string',
             'evidence_file' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+            'revenue_type' => 'nullable|in:development,subscription',
             'created_at' => 'nullable|date',
         ]);
 
@@ -234,6 +237,9 @@ class TransactionController extends Controller
             $transaction->amount = $validated['amount'];
             $transaction->description = $validated['description'];
             $transaction->billing_cycle = $validated['billing_cycle'] ?? null;
+            if (isset($validated['revenue_type'])) {
+                $transaction->revenue_type = $validated['revenue_type'];
+            }
             $transaction->evidence_type = $evidenceType;
             $transaction->evidence_value = $evidenceValue;
             if (!empty($validated['created_at'])) {

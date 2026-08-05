@@ -45,6 +45,8 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     
     <style>
+        [x-cloak] { display: none !important; }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
@@ -99,15 +101,19 @@
                 <nav class="hidden sm:flex items-center space-x-1 pl-4 border-l border-emerald-400/40">
                     <a href="{{ route('dashboard') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('dashboard') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>💵 Sổ Thu Chi</span>
+                        <span>Sổ Thu Chi</span>
+                    </a>
+                    <a href="{{ route('history') }}" 
+                       class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
+                        <span>Lịch Sử</span>
                     </a>
                     <a href="{{ route('projects.index') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('projects.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>📁 Dự Án</span>
+                        <span>Dự Án</span>
                     </a>
                     <a href="{{ route('analytics.networth') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('analytics.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>💎 Tài Sản & Thành Viên</span>
+                        <span>Tài Sản & Thành Viên</span>
                     </a>
                 </nav>
             </div>
@@ -260,13 +266,20 @@
 
     <!-- Global Mobile Bottom Navigation Bar (Visible across ALL pages on screens < sm) -->
     <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700/90 shadow-2xl safe-bottom px-0.5 py-1.5 transition-colors">
-        <div class="grid grid-cols-3 gap-0.5 text-center">
+        <div class="grid grid-cols-4 gap-0.5 text-center">
             
             <!-- Tab 1: Sổ Thu Chi -->
             <a href="{{ route('dashboard') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Dashboard.svg') center/contain no-repeat; mask: url('/icons/Dashboard.svg') center/contain no-repeat;"></div>
-                <span class="text-[10px] font-extrabold tracking-tight">Sổ Thu Chi</span>
+                <span class="text-[10px] font-extrabold tracking-tight">Thu Chi</span>
+            </a>
+
+            <!-- Tab 2: Lịch Sử -->
+            <a href="{{ route('history') }}" 
+               class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('history') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
+                <div class="w-5 h-5 mb-0.5 bg-current text-lg flex items-center justify-center">📝</div>
+                <span class="text-[10px] font-extrabold tracking-tight">Lịch Sử</span>
             </a>
 
             <!-- Tab 2: Dự Án -->
@@ -286,8 +299,8 @@
         </div>
     </div>
 
-    <!-- Compact Streamlined Footer matching Navbar Gradient -->
-    <footer class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white border-t border-emerald-500/30 transition-colors shadow-inner flex-shrink-0 mt-auto mb-16 sm:mb-0">
+    <!-- Compact Streamlined Footer matching Navbar Gradient (hidden on mobile) -->
+    <footer class="hidden sm:block bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white border-t border-emerald-500/30 transition-colors shadow-inner flex-shrink-0 mt-auto">
         <div class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div class="flex items-center space-x-3">
                 <div class="w-7 h-7 rounded-lg bg-white text-emerald-700 font-black text-sm flex items-center justify-center shadow">
@@ -300,7 +313,6 @@
                 <a href="{{ route('dashboard') }}" class="hover:text-white transition">Dashboard</a>
                 <a href="{{ route('projects.index') }}" class="hover:text-white transition">Dự Án</a>
                 <a href="{{ route('analytics.networth') }}" class="hover:text-white transition">Net Worth</a>
-                <a href="{{ route('report') }}" class="hover:text-white transition">Báo Cáo</a>
                 <a href="{{ route('history') }}" class="hover:text-white transition">Lịch Sử</a>
                 <span class="text-emerald-300/60 font-normal">© {{ date('Y') }} Team Weamis</span>
             </div>

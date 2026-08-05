@@ -130,7 +130,6 @@ class="pb-20 lg:pb-6">
     <div class="lg:hidden flex items-center space-x-1 p-1 bg-slate-200 dark:bg-slate-700/60 rounded-2xl mb-4">
         <button @click="mobileTab = 'entry'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'entry' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">Nhập vào</button>
         <button @click="mobileTab = 'stats'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'stats' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">Thống kê</button>
-        <a href="{{ route('report') }}" class="flex-1 py-2 text-xs font-bold rounded-xl transition text-center text-slate-500 dark:text-slate-400">Báo cáo</a>
     </div>
 
     <!-- Main Container: Desktop Multi-Column Grid -->
