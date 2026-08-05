@@ -29,7 +29,7 @@ class ProjectController extends Controller
             'lead_user_id' => 'nullable|exists:users,id',
             'members' => 'nullable|array',
             'members.*.user_id' => 'required|exists:users,id',
-            'members.*.share_percentage' => 'required|numeric|min:0|max:100',
+            'members.*.share_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $sumShares = 0;
@@ -178,7 +178,7 @@ class ProjectController extends Controller
             'lead_user_id' => 'nullable|exists:users,id',
             'members' => 'nullable|array',
             'members.*.user_id' => 'required|exists:users,id',
-            'members.*.share_percentage' => 'required|numeric|min:0|max:100',
+            'members.*.share_percentage' => 'nullable|numeric|min:0|max:100',
             'share_effective_from' => 'nullable|date',
         ]);
 

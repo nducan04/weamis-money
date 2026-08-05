@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="space-y-6" x-data="{
-    showCreateModal: false,
+    showCreateModal: {{ $errors->any() ? 'true' : 'false' }},
     weamisFundPct: 10,
     memberShares: {
         @foreach($members->where('role', '!=', 'admin') as $m)
@@ -141,6 +141,13 @@
 
             <form action="{{ route('projects.store') }}" method="POST" class="space-y-4">
                 @csrf
+                @if($errors->any())
+                    <div class="p-3 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 space-y-1">
+                        @foreach($errors->all() as $err)
+                            <p>• {{ $err }}</p>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="grid grid-cols-3 gap-3">
                     <div class="col-span-2">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tên dự án</label>
