@@ -76,19 +76,11 @@ class AnalyticsController extends Controller
 
         $fund = \App\Models\Fund::first();
 
-        return view('analytics.networth', compact('netWorthData', 'fund'));
-    }
-
-    public function network()
-    {
-        $members = User::where('role', '!=', 'admin')->get();
+        // 2. Collaboration Network Graph data (Nodes and Edges)
         $projects = Project::with('members')->get();
-
-        // Collaboration Network Graph data (Nodes and Edges)
         $nodes = [];
         $edges = [];
 
-        // Member nodes (Exclude Admin)
         foreach ($members as $m) {
             $avatarUrl = ($m->avatar && (str_starts_with($m->avatar, 'http://') || str_starts_with($m->avatar, 'https://') || str_starts_with($m->avatar, '/uploads/')))
                 ? $m->avatar
@@ -109,7 +101,6 @@ class AnalyticsController extends Controller
             ];
         }
 
-        // Project nodes and edges
         $edgeMap = [];
         foreach ($projects as $p) {
             $nodes[] = [
@@ -141,7 +132,6 @@ class AnalyticsController extends Controller
                 ];
             }
 
-            // Member-to-Member collaboration weight
             $count = count($pMemberIds);
             for ($i = 0; $i < $count; $i++) {
                 for ($j = $i + 1; $j < $count; $j++) {
@@ -153,7 +143,6 @@ class AnalyticsController extends Controller
             }
         }
 
-        // Top collaborating member pairs
         $topPairs = [];
         $memberMap = $members->keyBy('id');
         foreach ($edgeMap as $key => $sharedCount) {
@@ -171,6 +160,11 @@ class AnalyticsController extends Controller
         });
         $topPairs = array_slice($topPairs, 0, 5);
 
-        return view('analytics.network', compact('nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
+        return view('analytics.networth', compact('netWorthData', 'fund', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
+    }
+
+    public function network()
+    {
+        return redirect()->route('analytics.networth');
     }
 }

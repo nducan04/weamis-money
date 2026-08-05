@@ -18,6 +18,39 @@
     distributeAmount: {{ $fund->balance }},
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
 
+    // History Filters & Pagination State
+    txSearchText: '',
+    txFilterType: 'all',
+    txFilterUserId: 'all',
+    txFilterDate: '',
+    txPage: 1,
+    txPerPage: 10,
+
+    get filteredTransactions() {
+        return this.rawTransactions.filter(tx => {
+            if (this.txFilterType !== 'all' && tx.type !== this.txFilterType) return false;
+            if (this.txFilterUserId !== 'all' && String(tx.user_id) !== String(this.txFilterUserId)) return false;
+            if (this.txFilterDate && (!tx.created_at || !tx.created_at.startsWith(this.txFilterDate))) return false;
+            if (this.txSearchText) {
+                let q = this.txSearchText.toLowerCase();
+                let descMatch = tx.description && tx.description.toLowerCase().includes(q);
+                let userMatch = tx.user_name && tx.user_name.toLowerCase().includes(q);
+                let amountMatch = String(tx.amount).includes(q);
+                if (!descMatch && !userMatch && !amountMatch) return false;
+            }
+            return true;
+        });
+    },
+
+    get paginatedTransactions() {
+        let start = (this.txPage - 1) * this.txPerPage;
+        return this.filteredTransactions.slice(start, start + this.txPerPage);
+    },
+
+    get totalTxPages() {
+        return Math.ceil(this.filteredTransactions.length / this.txPerPage) || 1;
+    },
+
     expenseCategories: [
         { key: 'eat', name: 'Ăn uống', fullName: 'Ăn uống', icon: '/icons/EatAndDrink.svg', color: 'bg-amber-500' },
         { key: 'daily', name: 'Chi hàng ngày', fullName: 'Chi tiêu hàng ngày', icon: '/icons/DailyExpenses.svg', color: 'bg-emerald-500' },
@@ -610,63 +643,159 @@ class="pb-20 lg:pb-6">
                 </div>
             </div>
 
-            <!-- 3. Recent 5 Transactions Section -->
-            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            <!-- 3. Full Transaction History Section (Lịch Sử GD Đầy Đủ) -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4"
                  :class="mobileTab === 'history' || mobileTab === 'all' ? 'block' : 'hidden lg:block'">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+                
+                <!-- Section Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
                     <div class="flex items-center space-x-3">
                         <div class="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         </div>
                         <div>
-                            <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Giao Dịch Gần Đây</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">5 giao dịch mới nhất trong hệ thống</p>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Nhật Ký Thu Chi Chi Tiết</h3>
+                            <p class="text-[10px] text-slate-400 font-medium">Toàn bộ lịch sử thu chi toàn hệ thống</p>
                         </div>
                     </div>
 
-                    <a href="{{ route('history') }}" class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
-                        <span>Xem tất cả ➔</span>
-                    </a>
+                    <span class="text-xs font-bold text-slate-400" x-text="'Hiển thị ' + filteredTransactions.length + ' giao dịch'"></span>
                 </div>
 
-                <!-- Recent items list -->
-                <div class="space-y-2.5">
-                    <template x-for="tx in rawTransactions.slice(0, 5)" :key="tx.id">
-                        <div class="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs hover:shadow-sm transition">
-                            <div class="flex items-center space-x-3 min-w-0">
-                                <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    <template x-if="tx.user_avatar && (tx.user_avatar.startsWith('http') || tx.user_avatar.startsWith('/uploads/'))">
-                                        <img :src="tx.user_avatar" :alt="tx.user_name" class="w-full h-full object-cover">
-                                    </template>
-                                    <template x-if="!tx.user_avatar || (!tx.user_avatar.startsWith('http') && !tx.user_avatar.startsWith('/uploads/'))">
-                                        <span x-text="tx.user_avatar || (tx.user_name ? tx.user_name.substr(0, 2) : 'HV')"></span>
-                                    </template>
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="font-bold text-slate-900 dark:text-white truncate" x-text="tx.user_name"></span>
-                                        <span class="text-[10px] text-slate-400" x-text="tx.created_at_formatted"></span>
-                                    </div>
-                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" x-text="tx.description"></p>
-                                </div>
-                            </div>
+                <!-- Live Filters Bar -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <!-- Search Input -->
+                    <div>
+                        <input type="text" x-model="txSearchText" @input="txPage = 1" placeholder="🔍 Tìm ghi chú, số tiền, tên..." 
+                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
 
-                            <div class="text-right flex-shrink-0 ml-3">
-                                <template x-if="tx.type === 'contribution' || tx.type === 'repayment'">
-                                    <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm" x-text="'+' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
-                                </template>
-                                <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment'">
-                                    <span class="font-extrabold text-slate-900 dark:text-slate-100 text-xs sm:text-sm" x-text="'-' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
+                    <!-- Type Filter -->
+                    <div>
+                        <select x-model="txFilterType" @change="txPage = 1" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="all">Tất cả loại GD</option>
+                            <option value="contribution">Góp quỹ</option>
+                            <option value="expense">Chi tiêu chung</option>
+                            <option value="loan">Vay cá nhân</option>
+                            <option value="repayment">Trả nợ</option>
+                            <option value="withdrawal">Rút lương</option>
+                        </select>
+                    </div>
+
+                    <!-- Member Filter -->
+                    <div>
+                        <select x-model="txFilterUserId" @change="txPage = 1" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="all">Tất cả thành viên</option>
+                            @foreach($members as $m)
+                                <option value="{{ $m->id }}">{{ $m->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div>
+                        <input type="date" x-model="txFilterDate" @change="txPage = 1" 
+                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
                 </div>
 
-                <div class="mt-4 text-center">
-                    <a href="{{ route('history') }}" class="inline-block w-full py-2.5 bg-slate-100 dark:bg-slate-700/60 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-xl transition">
-                        Xem Toàn Bộ Lịch Sử Giao Dịch
-                    </a>
+                <!-- Table View -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-400 font-extrabold text-[10px] uppercase tracking-wider">
+                            <tr>
+                                <th class="py-2.5 px-3 rounded-l-xl">ID & Ngày</th>
+                                <th class="py-2.5 px-3">Thành viên</th>
+                                <th class="py-2.5 px-3">Loại GD</th>
+                                <th class="py-2.5 px-3">Nội dung ghi chú</th>
+                                <th class="py-2.5 px-3 text-right">Số tiền (VNĐ)</th>
+                                <th class="py-2.5 px-3 text-center rounded-r-xl">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 font-semibold">
+                            <template x-for="tx in paginatedTransactions" :key="tx.id">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                                    <!-- ID & Date -->
+                                    <td class="py-3 px-3">
+                                        <p class="font-extrabold text-slate-900 dark:text-white font-mono text-[11px]" x-text="'#' + tx.id"></p>
+                                        <p class="text-[10px] text-slate-400 font-medium" x-text="tx.created_at_formatted"></p>
+                                    </td>
+
+                                    <!-- Member -->
+                                    <td class="py-3 px-3">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                <template x-if="tx.user_avatar && (tx.user_avatar.startsWith('http') || tx.user_avatar.startsWith('/uploads/'))">
+                                                    <img :src="tx.user_avatar" :alt="tx.user_name" class="w-full h-full object-cover">
+                                                </template>
+                                                <template x-if="!tx.user_avatar || (!tx.user_avatar.startsWith('http') && !tx.user_avatar.startsWith('/uploads/'))">
+                                                    <span x-text="tx.user_avatar || (tx.user_name ? tx.user_name.substr(0, 2) : 'HV')"></span>
+                                                </template>
+                                            </div>
+                                            <span class="font-bold text-slate-900 dark:text-white" x-text="tx.user_name"></span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Type Badge -->
+                                    <td class="py-3 px-3">
+                                        <span class="px-2 py-0.5 text-[10px] font-black rounded-lg"
+                                              :class="{
+                                                  'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20': tx.type === 'contribution',
+                                                  'bg-rose-500/10 text-rose-600 border border-rose-500/20': tx.type === 'expense',
+                                                  'bg-purple-500/10 text-purple-600 border border-purple-500/20': tx.type === 'loan',
+                                                  'bg-teal-500/10 text-teal-600 border border-teal-500/20': tx.type === 'repayment',
+                                                  'bg-indigo-500/10 text-indigo-600 border border-indigo-500/20': tx.type === 'withdrawal'
+                                              }"
+                                              x-text="tx.type === 'contribution' ? 'Góp quỹ' : (tx.type === 'expense' ? 'Chi tiêu chung' : (tx.type === 'loan' ? 'Vay cá nhân' : (tx.type === 'repayment' ? 'Trả nợ' : 'Rút lương')))">
+                                        </span>
+                                    </td>
+
+                                    <!-- Description -->
+                                    <td class="py-3 px-3">
+                                        <p class="font-medium text-slate-800 dark:text-slate-200 line-clamp-1" x-text="tx.description"></p>
+                                    </td>
+
+                                    <!-- Amount -->
+                                    <td class="py-3 px-3 text-right">
+                                        <template x-if="tx.type === 'contribution' || tx.type === 'repayment'">
+                                            <span class="font-black text-emerald-600 dark:text-emerald-400 text-xs" x-text="'+' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
+                                        </template>
+                                        <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment'">
+                                            <span class="font-black text-rose-600 dark:text-rose-400 text-xs" x-text="'-' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
+                                        </template>
+                                    </td>
+
+                                    <!-- Status -->
+                                    <td class="py-3 px-3 text-center">
+                                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-md text-[10px] font-bold">
+                                            ✓ Đã duyệt
+                                        </span>
+                                    </td>
+                                </tr>
+                            </template>
+
+                            <template x-if="paginatedTransactions.length === 0">
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-slate-400 font-semibold">
+                                        Không tìm thấy giao dịch nào phù hợp với bộ lọc.
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Bar -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/60 text-xs font-bold text-slate-500">
+                    <span x-text="'Trang ' + txPage + ' / ' + totalTxPages"></span>
+                    <div class="flex items-center space-x-1.5">
+                        <button type="button" @click="if (txPage > 1) txPage--" :disabled="txPage <= 1" class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-lg transition disabled:opacity-40 cursor-pointer">
+                            ◀ Trước
+                        </button>
+                        <button type="button" @click="if (txPage < totalTxPages) txPage++" :disabled="txPage >= totalTxPages" class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-lg transition disabled:opacity-40 cursor-pointer">
+                            Sau ▶
+                        </button>
+                    </div>
                 </div>
             </div>
 

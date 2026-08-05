@@ -95,31 +95,19 @@
                     </div>
                 </a>
 
-                <!-- Desktop Navigation Links -->
+                <!-- Desktop Navigation Links (Consolidated 3 Main Pages) -->
                 <nav class="hidden sm:flex items-center space-x-1 pl-4 border-l border-emerald-400/40">
                     <a href="{{ route('dashboard') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('dashboard') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Dashboard</span>
+                        <span>💵 Sổ Thu Chi</span>
                     </a>
                     <a href="{{ route('projects.index') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('projects.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Dự Án</span>
+                        <span>📁 Dự Án</span>
                     </a>
                     <a href="{{ route('analytics.networth') }}" 
-                       class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('analytics.networth') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Tài Sản</span>
-                    </a>
-                    <a href="{{ route('analytics.network') }}" 
-                       class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('analytics.network') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Hợp Tác</span>
-                    </a>
-                    <a href="{{ route('report') }}" 
-                       class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('report') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Báo Cáo</span>
-                    </a>
-                    <a href="{{ route('history') }}" 
-                       class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Lịch Sử GD</span>
+                       class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('analytics.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
+                        <span>💎 Tài Sản & Thành Viên</span>
                     </a>
                 </nav>
             </div>
@@ -272,48 +260,27 @@
 
     <!-- Global Mobile Bottom Navigation Bar (Visible across ALL pages on screens < sm) -->
     <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700/90 shadow-2xl safe-bottom px-0.5 py-1.5 transition-colors">
-        <div class="grid grid-cols-6 gap-0.5 text-center">
+        <div class="grid grid-cols-3 gap-0.5 text-center">
             
-            <!-- Tab 1: Dashboard -->
+            <!-- Tab 1: Sổ Thu Chi -->
             <a href="{{ route('dashboard') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Dashboard.svg') center/contain no-repeat; mask: url('/icons/Dashboard.svg') center/contain no-repeat;"></div>
-                <span class="text-[9px] tracking-tight">Dashboard</span>
+                <span class="text-[10px] font-extrabold tracking-tight">Sổ Thu Chi</span>
             </a>
 
             <!-- Tab 2: Dự Án -->
             <a href="{{ route('projects.index') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('projects.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Project.svg') center/contain no-repeat; mask: url('/icons/Project.svg') center/contain no-repeat;"></div>
-                <span class="text-[9px] tracking-tight">Dự Án</span>
+                <span class="text-[10px] font-extrabold tracking-tight">Dự Án</span>
             </a>
 
-            <!-- Tab 3: Tài Sản -->
+            <!-- Tab 3: Tài Sản & Thành Viên -->
             <a href="{{ route('analytics.networth') }}" 
-               class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('analytics.networth') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
+               class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('analytics.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Money.svg') center/contain no-repeat; mask: url('/icons/Money.svg') center/contain no-repeat;"></div>
-                <span class="text-[9px] tracking-tight">Tài Sản</span>
-            </a>
-
-            <!-- Tab 4: Hợp Tác -->
-            <a href="{{ route('analytics.network') }}" 
-               class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('analytics.network') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
-                <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Cooperate.svg') center/contain no-repeat; mask: url('/icons/Cooperate.svg') center/contain no-repeat;"></div>
-                <span class="text-[9px] tracking-tight">Hợp Tác</span>
-            </a>
-
-            <!-- Tab 5: Báo Cáo -->
-            <a href="{{ route('report') }}" 
-               class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('report') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
-                <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Report.svg') center/contain no-repeat; mask: url('/icons/Report.svg') center/contain no-repeat;"></div>
-                <span class="text-[9px] tracking-tight">Báo Cáo</span>
-            </a>
-
-            <!-- Tab 6: Lịch Sử -->
-            <a href="{{ route('history') }}" 
-               class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('history') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
-                <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/History.svg') center/contain no-repeat; mask: url('/icons/History.svg') center/contain no-repeat;"></div>
-                <span class="text-[9px] tracking-tight">Lịch Sử</span>
+                <span class="text-[10px] font-extrabold tracking-tight">Tài Sản</span>
             </a>
 
         </div>

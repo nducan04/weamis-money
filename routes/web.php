@@ -37,8 +37,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('password.update');
 
     Route::get('/', [FundController::class, 'index'])->name('dashboard');
-    Route::get('/history', [TransactionController::class, 'history'])->name('history');
-    Route::get('/report', [TransactionController::class, 'report'])->name('report');
+    Route::get('/history', fn() => redirect()->route('dashboard'))->name('history');
+    Route::get('/report', fn() => redirect()->route('dashboard'))->name('report');
 
     // Projects Management & Audit
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
@@ -48,9 +48,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::post('/projects/{project}/attach-transactions', [ProjectController::class, 'attachTransactions'])->name('projects.attach-transactions');
 
-    // Analytics: Net Worth & Collaboration Network Graph
+    // Analytics: Net Worth & Collaboration Network Graph (Combined)
     Route::get('/analytics/networth', [AnalyticsController::class, 'networth'])->name('analytics.networth');
-    Route::get('/analytics/network', [AnalyticsController::class, 'network'])->name('analytics.network');
+    Route::get('/analytics/network', fn() => redirect()->route('analytics.networth'))->name('analytics.network');
 
     // Transaction CRUD
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
