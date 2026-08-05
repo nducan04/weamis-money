@@ -17,7 +17,7 @@ class TransactionController extends Controller
         $projects = Project::all();
         $fund = Fund::firstOrCreate(
             ['id' => 1],
-            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00, 'total_profit' => 1200000.00]
+            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00]
         );
 
         $allTransactions = Transaction::with(['user', 'project', 'responsibleUser', 'claimantUser', 'approver'])->latest()->get()->map(function($tx) {
@@ -54,7 +54,7 @@ class TransactionController extends Controller
 
         $fund = Fund::firstOrCreate(
             ['id' => 1],
-            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00, 'total_profit' => 1200000.00]
+            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00]
         );
 
         $allTransactions = Transaction::with(['user', 'project', 'responsibleUser', 'claimantUser', 'approver'])->latest()->get()->map(function($tx) {

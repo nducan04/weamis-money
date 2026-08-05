@@ -115,34 +115,38 @@
     </div>
 
     <!-- High Level Overview Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Doanh Thu Dự Án</p>
-                <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
-            </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Doanh Thu</p>
+            <p class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thành Viên Tham Gia</p>
-                <p class="text-2xl font-black text-slate-900 dark:text-white">{{ $project->projectMembers->count() }} <span class="text-sm font-bold text-slate-500">Thành viên</span></p>
-            </div>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-blue-200/60 dark:border-blue-700/40 shadow-sm">
+            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Tiền Phát Triển</p>
+            <p class="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">+{{ number_format($devRevenue, 0, ',', '.') }}đ</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Giao Dịch Ghi Nhận</p>
-                <p class="text-2xl font-black text-slate-900 dark:text-white">{{ $project->transactions->where('status', 'approved')->count() }} <span class="text-sm font-bold text-slate-500">Giao dịch</span></p>
-            </div>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-purple-200/60 dark:border-purple-700/40 shadow-sm">
+            <p class="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-0.5">Tiền Thuê Bao</p>
+            <p class="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400">+{{ number_format($subRevenue, 0, ',', '.') }}đ</p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thành Viên</p>
+            <p class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ count($memberPayouts) }} <span class="text-sm font-bold text-slate-500">người</span></p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Giao Dịch</p>
+            <p class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ $project->transactions->where('status', 'approved')->count() }} <span class="text-sm font-bold text-slate-500">GD</span></p>
         </div>
     </div>
 
-    <!-- Member & Fund Revenue Distribution Section -->
+    <!-- Member & Fund Revenue Distribution Section (Current Active Shares) -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
             <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                <span>Phân Bổ Tiền Dự Án Cho Quỹ & Các Thành Viên</span>
+                <span>Phân Bổ Tiền Dự Án (Hiện Tại)</span>
             </h3>
             <span class="text-xs font-bold text-slate-400">Doanh thu khả dụng: +{{ number_format($totalIncome, 0, ',', '.') }}đ</span>
         </div>
@@ -195,6 +199,48 @@
             @endforeach
         </div>
     </div>
+
+    <!-- Share Timeline (Temporal Share Periods) -->
+    @if(count($shareTimeline) > 1)
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
+        <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            Lịch Sử Cổ Phần Theo Giai Đoạn
+        </h3>
+
+        <div class="relative">
+            <!-- Timeline Line -->
+            <div class="absolute left-3 top-4 bottom-4 w-0.5 bg-emerald-200 dark:bg-emerald-800"></div>
+
+            <div class="space-y-4">
+                @foreach($shareTimeline as $idx => $period)
+                <div class="relative pl-9">
+                    <!-- Timeline Dot -->
+                    <div class="absolute left-1 top-1.5 w-4 h-4 rounded-full border-2 {{ $idx === count($shareTimeline) - 1 ? 'bg-emerald-500 border-emerald-500' : 'bg-white dark:bg-slate-800 border-emerald-400' }} z-10"></div>
+
+                    <div class="p-3.5 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700/80">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-extrabold text-slate-900 dark:text-white">
+                                Từ {{ \Carbon\Carbon::parse($period['effective_from'])->format('d/m/Y') }}
+                                @if($idx === count($shareTimeline) - 1)
+                                    <span class="ml-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full">HIỆN TẠI</span>
+                                @endif
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($period['members'] as $member)
+                            <span class="inline-flex items-center px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                                {{ $member['user']->name }}
+                                <span class="ml-1.5 text-emerald-600 dark:text-emerald-400 font-black">{{ number_format($member['share_percentage'], 1) }}%</span>
+                            </span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Project Transactions Audit Table -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
@@ -368,6 +414,13 @@
                             <span>Cảnh báo: Tổng % (Trích Quỹ + Phân bổ thành viên) là <strong x-text="totalPct + '%'"></strong>, vượt quá 100%! Vui lòng điều chỉnh lại.</span>
                         </div>
                     </template>
+
+                    <!-- Effective From Date (Temporal Share Period) -->
+                    <div class="mb-3 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                        <label class="block text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-1">Ngày Hiệu Lực Cổ Phần (Giai Đoạn)</label>
+                        <input type="date" name="share_effective_from" value="{{ now()->format('Y-m-d') }}" class="w-full px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-700 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <p class="text-[9px] text-blue-500 dark:text-blue-400 font-medium mt-1">Thay đổi ngày để tạo giai đoạn cổ phần mới (ví dụ: 01/09/2026 cho cổ phần tháng 9). Các giai đoạn cũ được giữ nguyên.</p>
+                    </div>
 
                     <div class="space-y-2 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-700">
                         <!-- Quỹ Weamis (Tương tự 1 thành viên nhận) -->

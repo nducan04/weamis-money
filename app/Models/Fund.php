@@ -12,12 +12,10 @@ class Fund extends Model
     protected $fillable = [
         'name',
         'balance',
-        'total_profit',
     ];
 
     protected $casts = [
         'balance' => 'float',
-        'total_profit' => 'float',
     ];
 
     public function transactions()

@@ -20,6 +20,7 @@ class Transaction extends Model
         'amount',
         'description',
         'billing_cycle',
+        'revenue_type',
         'evidence_type',
         'evidence_value',
         'status',

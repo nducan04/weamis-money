@@ -56,12 +56,14 @@ class ProjectController extends Controller
         ]);
 
         if (!empty($validated['members'])) {
+            $effectiveFrom = $validated['release_date'] ?? now()->format('Y-m-d');
             foreach ($validated['members'] as $m) {
                 if ($m['share_percentage'] > 0) {
                     ProjectMember::create([
                         'project_id' => $project->id,
                         'user_id' => $m['user_id'],
                         'share_percentage' => $m['share_percentage'],
+                        'effective_from' => $effectiveFrom,
                     ]);
                 }
             }
@@ -80,17 +82,26 @@ class ProjectController extends Controller
 
         $project->load(['lead', 'creator', 'members', 'projectMembers.user', 'transactions.user', 'transactions.responsibleUser', 'transactions.claimantUser']);
 
-        $totalIncome = $project->transactions()->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-        $totalExpense = $project->transactions()->where('status', 'approved')->where('type', 'expense')->sum('amount');
+        // Revenue by type
+        $approvedTxs = $project->transactions()->where('status', 'approved');
+        $totalIncome = (clone $approvedTxs)->whereIn('type', ['contribution', 'repayment'])->sum('amount');
+        $totalExpense = (clone $approvedTxs)->where('type', 'expense')->sum('amount');
 
-        // Audit & Payout Breakdown
+        $devRevenue = (clone $approvedTxs)->whereIn('type', ['contribution', 'repayment'])->where('revenue_type', 'development')->sum('amount');
+        $subRevenue = (clone $approvedTxs)->whereIn('type', ['contribution', 'repayment'])->where('revenue_type', 'subscription')->sum('amount');
+        $otherRevenue = $totalIncome - $devRevenue - $subRevenue;
+
+        // Audit & Payout Breakdown (current active shares)
         $fundCut = ($totalIncome * $project->weamis_fund_percentage) / 100;
         $distributable = max(0, $totalIncome - $fundCut);
 
-        $sumMemberShares = $project->projectMembers->sum('share_percentage');
+        // Temporal Shares: get all periods and current active shares
+        $sharePeriods = ProjectMember::getPeriods($project->id);
+        $activeShares = ProjectMember::getActiveShares($project->id);
+        $sumMemberShares = $activeShares->sum('share_percentage');
 
         $memberPayouts = [];
-        foreach ($project->projectMembers as $pm) {
+        foreach ($activeShares as $pm) {
             $amount = ($sumMemberShares > 0)
                 ? ($distributable * $pm->share_percentage) / $sumMemberShares
                 : ($distributable * $pm->share_percentage) / 100;
@@ -102,6 +113,25 @@ class ProjectController extends Controller
             ];
         }
 
+        // Build share timeline for all periods
+        $shareTimeline = [];
+        foreach ($sharePeriods as $period) {
+            $periodShares = ProjectMember::where('project_id', $project->id)
+                ->where('effective_from', $period)
+                ->with('user')
+                ->get();
+
+            $shareTimeline[] = [
+                'effective_from' => $period,
+                'members' => $periodShares->map(function ($pm) {
+                    return [
+                        'user' => $pm->user,
+                        'share_percentage' => $pm->share_percentage,
+                    ];
+                }),
+            ];
+        }
+
         $allMembers = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
         $unassignedTransactions = Transaction::with(['user'])
@@ -109,7 +139,13 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        return view('projects.show', compact('project', 'totalIncome', 'totalExpense', 'fundCut', 'distributable', 'memberPayouts', 'allMembers', 'unassignedTransactions'));
+        return view('projects.show', compact(
+            'project', 'totalIncome', 'totalExpense',
+            'devRevenue', 'subRevenue', 'otherRevenue',
+            'fundCut', 'distributable', 'memberPayouts',
+            'shareTimeline', 'sharePeriods',
+            'allMembers', 'unassignedTransactions'
+        ));
     }
 
     public function attachTransactions(Request $request, Project $project)
@@ -143,6 +179,7 @@ class ProjectController extends Controller
             'members' => 'nullable|array',
             'members.*.user_id' => 'required|exists:users,id',
             'members.*.share_percentage' => 'required|numeric|min:0|max:100',
+            'share_effective_from' => 'nullable|date',
         ]);
 
         $sumShares = 0;
@@ -177,10 +214,9 @@ class ProjectController extends Controller
             if ($fundCut > 0) {
                 $fund = \App\Models\Fund::firstOrCreate(
                     ['id' => 1],
-                    ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00, 'total_profit' => 1200000.00]
+                    ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00]
                 );
                 $fund->increment('balance', $fundCut);
-                $fund->increment('total_profit', $fundCut);
 
                 Transaction::create([
                     'fund_id' => 1,
@@ -200,13 +236,18 @@ class ProjectController extends Controller
             $fund = \App\Models\Fund::first();
             if ($fund) {
                 $fund->decrement('balance', $project->fund_credited_amount);
-                $fund->decrement('total_profit', $project->fund_credited_amount);
             }
             $project->update(['fund_credited_amount' => 0]);
         }
 
-        // Sync Project Members
-        ProjectMember::where('project_id', $project->id)->delete();
+        // Sync Project Members with Temporal Share Periods
+        $effectiveFrom = $validated['share_effective_from'] ?? now()->format('Y-m-d');
+
+        // Delete existing shares for THIS specific effective_from date only
+        ProjectMember::where('project_id', $project->id)
+            ->where('effective_from', $effectiveFrom)
+            ->delete();
+
         if (!empty($validated['members'])) {
             foreach ($validated['members'] as $m) {
                 if ($m['share_percentage'] > 0) {
@@ -214,6 +255,7 @@ class ProjectController extends Controller
                         'project_id' => $project->id,
                         'user_id' => $m['user_id'],
                         'share_percentage' => $m['share_percentage'],
+                        'effective_from' => $effectiveFrom,
                     ]);
                 }
             }
