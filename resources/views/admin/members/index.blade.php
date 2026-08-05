@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6" x-data="{ showCreateModal: false, editMember: null, showResetModal: null }">
+<div class="space-y-6" x-data="{ showCreateModal: false, editMember: null, showResetModal: null, showDeleteMemberModal: null }">
 
     <!-- Header Section -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -121,13 +121,9 @@
 
                                     <!-- Delete Button -->
                                     @if($m->id !== auth()->id())
-                                        <form action="{{ route('members.destroy', $m) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản {{ $m->name }}?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition cursor-pointer">
-                                                🗑️
-                                            </button>
-                                        </form>
+                                        <button type="button" @click="showDeleteMemberModal = { id: {{ $m->id }}, name: `{{ addslashes($m->name) }}` }" class="px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition cursor-pointer" title="Xóa tài khoản">
+                                            🗑️
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -252,6 +248,34 @@
                         <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md">Xác Nhận Reset Mật Khẩu</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    <!-- Delete Member Confirmation Modal -->
+    <template x-if="showDeleteMemberModal">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div @click.away="showDeleteMemberModal = null" class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-5">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-black text-2xl flex items-center justify-center flex-shrink-0">
+                        🗑️
+                    </div>
+                    <div>
+                        <h4 class="text-base font-black text-slate-900 dark:text-white">Xác Nhận Xóa Tài Khoản</h4>
+                        <p class="text-xs font-bold text-slate-400" x-text="showDeleteMemberModal.name"></p>
+                    </div>
+                </div>
+
+                <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Bạn có chắc chắn muốn xóa tài khoản thành viên này? Hành động này sẽ cập nhật và lưu trữ trong CSDL.
+                </p>
+
+                <div class="flex items-center justify-end space-x-3 pt-2">
+                    <button type="button" @click="showDeleteMemberModal = null" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-xl transition cursor-pointer">Hủy bỏ</button>
+                    <form :action="'/members/' + showDeleteMemberModal.id" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer">🗑️ Xác Nhận Xóa</button>
+                    </form>
+                </div>
             </div>
         </div>
     </template>

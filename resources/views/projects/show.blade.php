@@ -5,6 +5,10 @@
     showEditModal: false, 
     showAddTxModal: false, 
     showEditTxModal: false,
+    showCompleteModal: false,
+    showDeleteProjectModal: false,
+    showDeleteTxModal: false,
+    deleteTxForm: { id: null },
     editTxForm: { id: null, user_id: null, type: 'contribution', amount: '', description: '', billing_cycle: '' },
     openEditTxModal(tx) {
         this.editTxForm = Object.assign({}, tx);
@@ -86,38 +90,22 @@
         @if($project->canManage(auth()->user()))
         <div class="flex flex-wrap items-center gap-2">
             @if($project->status === 'active')
-                <form action="{{ route('projects.update', $project) }}" method="POST" onsubmit="return confirm('Xác nhận HOÀN THÀNH dự án này? Số tiền {{ number_format($fundCut, 0, ',', '.') }}đ ({{ number_format($project->weamis_fund_percentage, 0) }}% Trích Về Quỹ) sẽ được CỘNG THẲNG VÀO QUỸ CHUNG!')">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="name" value="{{ $project->name }}">
-                    <input type="hidden" name="description" value="{{ $project->description }}">
-                    <input type="hidden" name="weamis_fund_percentage" value="{{ $project->weamis_fund_percentage }}">
-                    <input type="hidden" name="lead_user_id" value="{{ $project->lead_user_id }}">
-                    <input type="hidden" name="status" value="completed">
-                    @foreach($project->projectMembers as $index => $pm)
-                        <input type="hidden" name="members[{{ $index }}][user_id]" value="{{ $pm->user_id }}">
-                        <input type="hidden" name="members[{{ $index }}][share_percentage]" value="{{ $pm->share_percentage }}">
-                    @endforeach
-                    <button type="submit" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
-                        <span>Đánh Dấu Hoàn Thành</span>
-                    </button>
-                </form>
+                <button type="button" @click="showCompleteModal = true" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+                    <span>✓ Đánh Dấu Hoàn Thành</span>
+                </button>
             @elseif($project->status === 'completed')
                 <span class="px-3.5 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-extrabold text-xs rounded-xl flex items-center space-x-1">
-                    <span>Dự Án Đã Hoàn Thành (+{{ number_format($project->fund_credited_amount, 0, ',', '.') }}đ Vào Quỹ)</span>
+                    <span>✓ Dự Án Đã Hoàn Thành (+{{ number_format($project->fund_credited_amount, 0, ',', '.') }}đ Vào Quỹ)</span>
                 </span>
             @endif
 
             <button @click="showEditModal = true" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
                 <span>Chỉnh Sửa Dự Án</span>
             </button>
-            <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa dự án này?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="px-3 py-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-extrabold text-xs rounded-xl transition cursor-pointer">
-                    Xóa
-                </button>
-            </form>
+
+            <button type="button" @click="showDeleteProjectModal = true" class="px-3 py-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-extrabold text-xs rounded-xl transition cursor-pointer">
+                Xóa
+            </button>
         </div>
         @else
         <div class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-semibold rounded-xl">
@@ -288,13 +276,9 @@
                                     })" title="Chỉnh sửa giao dịch" class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-indigo-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition text-xs font-bold cursor-pointer">
                                         ✏️
                                     </button>
-                                    <form action="{{ route('transactions.destroy', $tx) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa giao dịch #{{ $tx->id }} này?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" title="Xóa giao dịch (Soft Delete)" class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition text-xs font-bold cursor-pointer">
-                                            🗑️
-                                        </button>
-                                    </form>
+                                    <button type="button" @click="deleteTxForm.id = {{ $tx->id }}; showDeleteTxModal = true" title="Xóa giao dịch" class="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-600 dark:text-slate-300 rounded-lg transition text-xs font-bold cursor-pointer">
+                                        🗑️
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -674,6 +658,117 @@
                     <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">Lưu Thay Đổi</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Complete Project Confirmation Modal -->
+    <div x-show="showCompleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div @click.away="showCompleteModal = false" class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-5">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-2xl flex items-center justify-center flex-shrink-0">
+                    🏆
+                </div>
+                <div>
+                    <h4 class="text-base font-black text-slate-900 dark:text-white">Xác Nhận Hoàn Thành Dự Án</h4>
+                    <p class="text-xs font-bold text-slate-400 font-mono">{{ $project->code }} - {{ $project->name }}</p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-800/40 space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
+                    <span>Số tiền trích về Quỹ Chung ({{ number_format($project->weamis_fund_percentage, 0) }}%):</span>
+                    <span class="text-sm font-black text-amber-600 dark:text-amber-400">+{{ number_format($fundCut, 0, ',', '.') }}đ</span>
+                </div>
+                <p class="text-[11px] font-semibold text-amber-700 dark:text-amber-300 leading-relaxed">
+                    Số tiền <strong>+{{ number_format($fundCut, 0, ',', '.') }}đ</strong> sẽ được trích trực tiếp và <strong>CỘNG THẲNG VÀO SỐ DƯ QUỸ CHUNG WEAMIS</strong>.
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-2">
+                <button type="button" @click="showCompleteModal = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition cursor-pointer">
+                    Hủy bỏ
+                </button>
+                <form action="{{ route('projects.update', $project) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="name" value="{{ $project->name }}">
+                    <input type="hidden" name="description" value="{{ $project->description }}">
+                    <input type="hidden" name="weamis_fund_percentage" value="{{ $project->weamis_fund_percentage }}">
+                    <input type="hidden" name="lead_user_id" value="{{ $project->lead_user_id }}">
+                    <input type="hidden" name="status" value="completed">
+                    @foreach($project->projectMembers as $index => $pm)
+                        <input type="hidden" name="members[{{ $index }}][user_id]" value="{{ $pm->user_id }}">
+                        <input type="hidden" name="members[{{ $index }}][share_percentage]" value="{{ $pm->share_percentage }}">
+                    @endforeach
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer">
+                        ✓ Đồng Ý Hoàn Thành
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Project Confirmation Modal -->
+    <div x-show="showDeleteProjectModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div @click.away="showDeleteProjectModal = false" class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-5">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-black text-2xl flex items-center justify-center flex-shrink-0">
+                    🗑️
+                </div>
+                <div>
+                    <h4 class="text-base font-black text-slate-900 dark:text-white">Xác Nhận Xóa Dự Án</h4>
+                    <p class="text-xs font-bold text-slate-400 font-mono">{{ $project->code }} - {{ $project->name }}</p>
+                </div>
+            </div>
+
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                Bạn có chắc chắn muốn xóa dự án này? Dự án sẽ được chuyển vào lịch sử đã xóa và lưu trữ an toàn trong CSDL.
+            </p>
+
+            <div class="flex items-center justify-end space-x-3 pt-2">
+                <button type="button" @click="showDeleteProjectModal = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-xl transition cursor-pointer">
+                    Hủy bỏ
+                </button>
+                <form action="{{ route('projects.destroy', $project) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer">
+                        🗑️ Xác Nhận Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Transaction Confirmation Modal -->
+    <div x-show="showDeleteTxModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div @click.away="showDeleteTxModal = false" class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-5">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-black text-2xl flex items-center justify-center flex-shrink-0">
+                    🗑️
+                </div>
+                <div>
+                    <h4 class="text-base font-black text-slate-900 dark:text-white">Xác Nhận Xóa Giao Dịch</h4>
+                    <p class="text-xs font-bold text-slate-400 font-mono" x-text="'Giao dịch #' + deleteTxForm.id"></p>
+                </div>
+            </div>
+
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                Bạn có chắc chắn muốn xóa giao dịch này khỏi dự án? Giao dịch sẽ được lưu trữ an toàn trong CSDL.
+            </p>
+
+            <div class="flex items-center justify-end space-x-3 pt-2">
+                <button type="button" @click="showDeleteTxModal = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-xl transition cursor-pointer">
+                    Hủy bỏ
+                </button>
+                <form :action="'/transactions/' + deleteTxForm.id" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer">
+                        🗑️ Xác Nhận Xóa
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
