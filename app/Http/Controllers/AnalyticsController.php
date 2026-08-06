@@ -15,12 +15,14 @@ class AnalyticsController extends Controller
     {
         $members = User::where('role', '!=', 'admin')->get();
 
-        // Net Worth calculation per member matching Google Sheet formula
+        // Net Worth = Tổng Góp - Tổng Rút/Vay (matching Google Sheet formula)
+        // Tổng Góp = contribution + repayment + profit
+        // Tổng Rút/Vay = loan + withdrawal + expense + distribution
         $rawNetWorth = [];
         foreach ($members as $m) {
             $userTxs = Transaction::where('user_id', $m->id)->where('status', 'approved')->get();
             $contributions = $userTxs->whereIn('type', ['contribution', 'repayment', 'profit'])->sum('amount');
-            $withdrawals = $userTxs->whereIn('type', ['loan', 'withdrawal'])->sum('amount');
+            $withdrawals = $userTxs->whereIn('type', ['loan', 'withdrawal', 'expense', 'distribution'])->sum('amount');
             $netWorth = $contributions - $withdrawals;
 
             $rawNetWorth[] = [

@@ -321,4 +321,22 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project)->with('success', 'Đã xóa đợt cổ phần ngày ' . \Carbon\Carbon::parse($effectiveFrom)->format('d/m/Y') . '!');
     }
+
+    public function updateSharePeriodDate(Request $request, Project $project)
+    {
+        if (!$project->canManage(auth()->user())) {
+            return redirect()->back()->with('error', 'Bạn không có quyền chỉnh sửa đợt cổ phần này.');
+        }
+
+        $validated = $request->validate([
+            'old_effective_from' => 'required|date',
+            'new_effective_from' => 'required|date',
+        ]);
+
+        ProjectMember::where('project_id', $project->id)
+            ->whereDate('effective_from', $validated['old_effective_from'])
+            ->update(['effective_from' => $validated['new_effective_from']]);
+
+        return redirect()->route('projects.show', $project)->with('success', 'Đã cập nhật ngày mốc cổ phần thành ' . \Carbon\Carbon::parse($validated['new_effective_from'])->format('d/m/Y') . '!');
+    }
 }

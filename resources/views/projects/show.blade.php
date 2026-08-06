@@ -244,6 +244,22 @@
                                 </span>
 
                                 @if($project->canManage(auth()->user()))
+                                    <div x-data="{ editingDate: false, newDate: '{{ \Carbon\Carbon::parse($period['effective_from'])->format('Y-m-d') }}' }" class="relative">
+                                        <button type="button" @click="editingDate = !editingDate" title="Sửa ngày mốc cổ phần" class="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 text-[11px] font-bold px-2 py-0.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition cursor-pointer flex items-center space-x-1">
+                                            <span>✏️ Sửa ngày</span>
+                                        </button>
+
+                                        <div x-show="editingDate" x-cloak @click.away="editingDate = false" class="absolute z-30 mt-1 right-0 p-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 flex items-center space-x-2 min-w-[220px]">
+                                            <form action="{{ route('projects.update-share-period', $project) }}" method="POST" class="flex items-center space-x-1.5 w-full">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="hidden" name="old_effective_from" value="{{ $period['effective_from'] }}">
+                                                <input type="date" name="new_effective_from" x-model="newDate" required class="w-full px-2 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 text-slate-900 dark:text-white dark:[color-scheme:dark]">
+                                                <button type="submit" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-lg shadow-xs transition cursor-pointer">Lưu</button>
+                                            </form>
+                                        </div>
+                                    </div>
+
                                     <form action="{{ route('projects.destroy-share-period', $project) }}" method="POST" onsubmit="return confirm('Xóa mốc cổ phần ngày {{ \Carbon\Carbon::parse($period['effective_from'])->format('d/m/Y') }}?');">
                                         @csrf
                                         @method('DELETE')

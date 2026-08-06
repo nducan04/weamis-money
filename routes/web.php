@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::delete('/projects/{project}/share-period', [ProjectController::class, 'destroySharePeriod'])->name('projects.destroy-share-period');
+    Route::put('/projects/{project}/share-period', [ProjectController::class, 'updateSharePeriodDate'])->name('projects.update-share-period');
     Route::post('/projects/{project}/attach-transactions', [ProjectController::class, 'attachTransactions'])->name('projects.attach-transactions');
 
     // Analytics: Net Worth & Collaboration Network Graph (Combined)
