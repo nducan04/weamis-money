@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JournalEntry extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = ['transaction_id', 'from_account_id', 'to_account_id', 'amount', 'memo'];
 
     public function transaction()

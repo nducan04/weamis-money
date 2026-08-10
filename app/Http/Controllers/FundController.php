@@ -12,6 +12,7 @@ class FundController extends Controller
 {
     public function index(Request $request)
     {
+        Fund::syncBalance();
         $fund = Fund::first();
 
         $members = User::where('role', '!=', 'admin')->orderBy('id')->get();

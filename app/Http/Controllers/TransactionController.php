@@ -403,25 +403,9 @@ class TransactionController extends Controller
         return redirect()->back()->with('success', 'Đã tách giao dịch #' . $transaction->id . ' thành công!');
     }
 
-    /**
-     * THE SINGLE SOURCE OF TRUTH for Fund balance.
-     * Recalculates from all active approved transactions.
-     * Must be called as the LAST step in every DB::transaction.
-     */
     private function syncFundBalance(): void
     {
-        $contrib = Transaction::where('status', 'approved')->where('type', 'contribution')->sum('amount');
-        $repay = Transaction::where('status', 'approved')->where('type', 'repayment')->sum('amount');
-        $adjust = Transaction::where('status', 'approved')->where('type', 'adjustment')->sum('amount');
-        $profit = Transaction::where('status', 'approved')->where('type', 'profit')->sum('amount');
-        $expense = Transaction::where('status', 'approved')->where('type', 'expense')->sum('amount');
-        $loan = Transaction::where('status', 'approved')->where('type', 'loan')->sum('amount');
-        $withdraw = Transaction::where('status', 'approved')->where('type', 'withdrawal')->sum('amount');
-        $distrib = Transaction::where('status', 'approved')->where('type', 'distribution')->sum('amount');
-
-        $total = ($contrib + $repay + $adjust + $profit) - ($expense + $loan + $withdraw + $distrib);
-        Fund::query()->update(['balance' => $total]);
-        Account::where('type', 'fund')->update(['balance' => $total]);
+        Fund::syncBalance();
     }
 
     /**
