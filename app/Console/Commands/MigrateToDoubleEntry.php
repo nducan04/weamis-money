@@ -81,45 +81,33 @@ class MigrateToDoubleEntry extends Command
             $fromAccId = null;
             $toAccId = null;
 
+            $targetAcc = $projectAcc ?? $fundAcc;
+
             // Logic based on type:
             switch ($tx->type) {
                 case 'contribution':
                 case 'repayment':
-                    // User -> Fund
-                    $fromAccId = $userAcc->id;
-                    $toAccId = $fundAcc->id;
+                case 'profit':
+                    // User -> Target (Project or Fund)
+                    $fromAccId = $userAcc ? $userAcc->id : $externalAcc->id;
+                    $toAccId = $targetAcc->id;
                     break;
                 case 'loan':
                 case 'withdrawal':
                 case 'distribution':
                     // Fund -> User
                     $fromAccId = $fundAcc->id;
-                    $toAccId = $userAcc->id;
-                    break;
-                case 'profit':
-                    // External/Project -> User or Fund
-                    // Previously treated as user contribution. Let's make it External -> Fund
-                    $fromAccId = $externalAcc->id;
-                    $toAccId = $fundAcc->id; // Actually, profit increases networth. In AnalyticsController, it's summed into contributions of User.
-                    // If it's summed into User's contributions, it means it's treated exactly like a contribution!
-                    $fromAccId = $userAcc->id;
-                    $toAccId = $fundAcc->id;
+                    $toAccId = $userAcc ? $userAcc->id : $externalAcc->id;
                     break;
                 case 'expense':
-                    // Fund -> User (User withdraws to pay expense, reducing their equity)
-                    $fromAccId = $fundAcc->id;
-                    $toAccId = $userAcc->id;
+                    // Target (Project or Fund) -> User
+                    $fromAccId = $targetAcc->id;
+                    $toAccId = $userAcc ? $userAcc->id : $externalAcc->id;
                     break;
                 default:
-                    // Unknown, default External -> Fund
                     $fromAccId = $externalAcc->id;
-                    $toAccId = $fundAcc->id;
+                    $toAccId = $targetAcc->id;
             }
-
-            // If there's a project involved, maybe route it through project?
-            // Since the old system didn't transfer money to Project wallets explicitly,
-            // we will stick to the basic User <-> Fund mapping to preserve balances,
-            // but log it to JournalEntry.
 
             $je = new \App\Models\JournalEntry();
             $je->transaction_id = $tx->id;
