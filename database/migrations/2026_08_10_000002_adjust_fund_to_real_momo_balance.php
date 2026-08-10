@@ -19,40 +19,64 @@ return new class extends Migration
 
         if (!$admin || !$fund) return;
 
-        // 1. Ensure any old test adjustment is removed
-        Transaction::where('description', 'like', '%Điều chỉnh chênh lệch thực tế Momo%')->delete();
+        // 1. Remove old hardcoded adjustment transactions
+        $oldTxs = Transaction::where('description', 'like', '%Momo%')->get();
+        foreach ($oldTxs as $tx) {
+            JournalEntry::where('transaction_id', $tx->id)->forceDelete();
+            $tx->forceDelete();
+        }
 
-        // 2. Check if the adjustment transaction already exists
-        $existing = Transaction::where('description', 'Điều chỉnh số dư khớp thực tế ví Momo')->first();
-        
-        if (!$existing) {
+        // 2. Calculate dynamic adjustment needed for 7,135,340đ
+        $activeTxs = Transaction::where('status', 'approved')
+            ->where('description', 'not like', '%Momo%')
+            ->get();
+
+        $contrib = $activeTxs->where('type', 'contribution')->sum('amount');
+        $repay = $activeTxs->where('type', 'repayment')->sum('amount');
+        $profit = $activeTxs->where('type', 'profit')->sum('amount');
+        $adjust = $activeTxs->where('type', 'adjustment')->sum('amount');
+        $expense = $activeTxs->where('type', 'expense')->sum('amount');
+        $loan = $activeTxs->where('type', 'loan')->sum('amount');
+        $withdraw = $activeTxs->where('type', 'withdrawal')->sum('amount');
+        $distrib = $activeTxs->where('type', 'distribution')->sum('amount');
+
+        $baseSum = ($contrib + $repay + $adjust + $profit) - ($expense + $loan + $withdraw + $distrib);
+        $targetMomo = 7135340;
+        $diffNeeded = $targetMomo - $baseSum;
+
+        if (abs($diffNeeded) > 0.01) {
+            $txType = $diffNeeded > 0 ? 'adjustment' : 'expense';
+            $amount = abs($diffNeeded);
+
             $tx = Transaction::create([
                 'fund_id' => $fund->id,
                 'user_id' => $admin->id,
-                'type' => 'expense',
-                'amount' => 2866606,
+                'type' => $txType,
+                'amount' => $amount,
                 'description' => 'Điều chỉnh số dư khớp thực tế ví Momo',
                 'status' => 'approved',
                 'approved_by' => $admin->id,
                 'created_at' => '2026-01-01 00:00:00',
             ]);
 
-            // Create Journal Entry for Double Entry Bookkeeping
             $fundAcc = Account::where('type', 'fund')->first();
             $externalAcc = Account::where('type', 'external')->first();
 
             if ($fundAcc && $externalAcc) {
+                $fromId = $txType === 'adjustment' ? $externalAcc->id : $fundAcc->id;
+                $toId = $txType === 'adjustment' ? $fundAcc->id : $externalAcc->id;
+
                 JournalEntry::create([
                     'transaction_id' => $tx->id,
-                    'from_account_id' => $fundAcc->id,
-                    'to_account_id' => $externalAcc->id,
-                    'amount' => 2866606,
-                    'memo' => 'expense: Điều chỉnh số dư khớp thực tế ví Momo',
+                    'from_account_id' => $fromId,
+                    'to_account_id' => $toId,
+                    'amount' => $amount,
+                    'memo' => $txType . ': Điều chỉnh số dư khớp thực tế ví Momo',
                 ]);
             }
         }
 
-        // 3. Sync Fund Balance to real Momo
+        // 3. Sync Fund Balance to real Momo (7,135,340đ)
         Fund::syncBalance();
     }
 
@@ -61,7 +85,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Transaction::where('description', 'Điều chỉnh số dư khớp thực tế ví Momo')->forceDelete();
+        $oldTxs = Transaction::where('description', 'like', '%Momo%')->get();
+        foreach ($oldTxs as $tx) {
+            JournalEntry::where('transaction_id', $tx->id)->forceDelete();
+            $tx->forceDelete();
+        }
         Fund::syncBalance();
     }
 };
