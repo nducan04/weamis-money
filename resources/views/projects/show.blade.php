@@ -299,7 +299,7 @@
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
             <h3 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                <span>Nhật Ký Giao Dịch Dự Án ({{ $project->transactions->count() }})</span>
+                <span>Nhật Ký Giao Dịch Dự Án ({{ $projectEntries->count() }})</span>
             </h3>
             <button @click="showAddTxModal = true" class="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto">
                 <span>Thêm Giao Dịch</span>
@@ -321,13 +321,53 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
-                    @forelse($project->transactions as $tx)
+                    @forelse($projectEntries as $entry)
+                        @php 
+                            $tx = $entry->transaction; 
+                            $siblingEntries = $tx ? $tx->journalEntries : collect();
+                            $isSplit = $siblingEntries->count() > 1;
+                            $cleanDesc = $tx ? preg_replace('/^(contribution|expense|loan|repayment|withdrawal|profit|adjustment|Migrated):\s*/i', '', $tx->description) : 'N/A';
+                            $customMemo = ($entry->memo && $entry->memo !== $tx->description && !str_starts_with($entry->memo, 'Migrated:') && !str_starts_with($entry->memo, ($tx->type ?? '') . ':')) ? $entry->memo : null;
+                        @endphp
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                             <td class="py-3 px-3 font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs">#{{ $tx->id }}</td>
                             <td class="py-3 px-3 font-semibold text-slate-500">{{ $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                             <td class="py-3 px-3 font-bold text-slate-900 dark:text-white">{{ $tx->user->name ?? 'N/A' }}</td>
-                            <td class="py-3 px-3 font-medium text-slate-800 dark:text-slate-200">
-                                {{ $tx->description }}
+                            <td class="py-3 px-3">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 text-xs">{{ $cleanDesc }}</span>
+                                        @if($isSplit)
+                                            <span class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-extrabold rounded text-[10px]">
+                                                Tách từ GD #{{ $tx->id }} (Gốc {{ number_format($tx->amount, 0, ',', '.') }}đ)
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if($customMemo)
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 italic">
+                                            Ghi chú: {{ $customMemo }}
+                                        </p>
+                                    @endif
+
+                                    @if($isSplit)
+                                        <div class="flex flex-col gap-0.5 mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-[10px]">
+                                            <span class="text-slate-400 font-semibold">Phân bổ các phần:</span>
+                                            @foreach($siblingEntries as $sibling)
+                                                @php $sAccName = str_replace(['Dự án ', 'Ví '], '', $sibling->toAccount->name ?? 'N/A'); @endphp
+                                                <div class="flex items-center gap-1 font-mono {{ $sibling->id === $entry->id ? 'font-black text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400' }}">
+                                                    <span>{{ $sibling->id === $entry->id ? '👉' : '↳' }}</span>
+                                                    <span>{{ number_format($sibling->amount, 0, ',', '.') }}đ</span>
+                                                    <span>→</span>
+                                                    <span>{{ $sAccName }}</span>
+                                                    @if($sibling->id === $entry->id)
+                                                        <span class="text-[9px] px-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded font-bold">(Phần dự án này)</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-3 px-3 font-semibold text-xs">
                                 @if($tx->billing_cycle)
@@ -349,8 +389,8 @@
                                     <span class="text-slate-400 text-[10px]">Không có</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-3 text-right font-extrabold {{ in_array($tx->type, ['contribution', 'repayment']) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
-                                {{ in_array($tx->type, ['contribution', 'repayment']) ? '+' : '-' }}{{ number_format($tx->amount, 0, ',', '.') }}đ
+                            <td class="py-3 px-3 text-right font-extrabold {{ in_array($tx->type, ['contribution', 'repayment', 'profit']) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                                {{ in_array($tx->type, ['contribution', 'repayment', 'profit']) ? '+' : '-' }}{{ number_format($entry->amount, 0, ',', '.') }}đ
                             </td>
                             <td class="py-3 px-3 text-center">
                                 <div class="flex items-center justify-center space-x-1.5">
@@ -730,7 +770,7 @@
                         </select>
                     @else
                         <input type="hidden" name="user_id" :value="editTxForm.user_id">
-                        <input type="text" :value="editTxForm.user_name || '{{ auth()->user()->name }}'" readonly class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700/50 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none">
+                        <input type="text" :value="editTxForm.user_name || '{{ auth()->user()?->name }}'" readonly class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700/50 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none">
                     @endif
                 </div>
 

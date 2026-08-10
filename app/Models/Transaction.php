@@ -61,4 +61,9 @@ class Transaction extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function journalEntries()
+    {
+        return $this->hasMany(JournalEntry::class);
+    }
 }

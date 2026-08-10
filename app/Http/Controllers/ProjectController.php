@@ -6,6 +6,8 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\ProjectMember;
 use App\Models\Transaction;
+use App\Models\Account;
+use App\Models\JournalEntry;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -59,6 +61,12 @@ class ProjectController extends Controller
             'status' => 'active',
         ]);
 
+        // Create Double-Entry Account for the project
+        Account::firstOrCreate(
+            ['type' => 'project', 'owner_type' => Project::class, 'owner_id' => $project->id],
+            ['name' => 'Dự án ' . $project->name, 'balance' => 0]
+        );
+
         if (!empty($validated['members'])) {
             $effectiveFrom = '2020-01-01'; // Default to a very early date so it always becomes the first period
             foreach ($validated['members'] as $m) {
@@ -86,13 +94,20 @@ class ProjectController extends Controller
 
         $project->load(['lead', 'creator', 'members', 'projectMembers.user', 'transactions.user', 'transactions.responsibleUser', 'transactions.claimantUser']);
 
-        // Revenue by type
-        $approvedTxs = $project->transactions()->where('status', 'approved');
-        $totalIncome = (clone $approvedTxs)->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-        $totalExpense = (clone $approvedTxs)->where('type', 'expense')->sum('amount');
+        $projectAcc = Account::firstOrCreate(
+            ['type' => 'project', 'owner_type' => Project::class, 'owner_id' => $project->id],
+            ['name' => 'Dự án ' . $project->name, 'balance' => 0]
+        );
 
-        $devRevenue = (clone $approvedTxs)->whereIn('type', ['contribution', 'repayment'])->where('revenue_type', 'development')->sum('amount');
-        $subRevenue = (clone $approvedTxs)->whereIn('type', ['contribution', 'repayment'])->where('revenue_type', 'subscription')->sum('amount');
+        $baseInQuery = JournalEntry::where('to_account_id', $projectAcc->id)
+            ->whereHas('transaction', function($q) { $q->where('status', 'approved'); });
+        
+        $totalIncome = (clone $baseInQuery)->sum('amount');
+        $devRevenue = (clone $baseInQuery)->whereHas('transaction', function($q) { $q->where('revenue_type', 'development'); })->sum('amount');
+        $subRevenue = (clone $baseInQuery)->whereHas('transaction', function($q) { $q->where('revenue_type', 'subscription'); })->sum('amount');
+        $totalExpense = JournalEntry::where('from_account_id', $projectAcc->id)
+            ->whereHas('transaction', function($q) { $q->where('status', 'approved'); })
+            ->sum('amount');
         $otherRevenue = $totalIncome - $devRevenue - $subRevenue;
 
         // Temporal Shares: get all periods and calculate income & payouts per period
@@ -104,17 +119,23 @@ class ProjectController extends Controller
             $nextPeriod = isset($sharePeriods[$idx + 1]) ? $sharePeriods[$idx + 1] : null;
             $endDate = $nextPeriod ? \Carbon\Carbon::parse($nextPeriod)->startOfDay() : null;
 
-            $txQuery = $project->transactions()->where('status', 'approved');
-            if ($startDate) {
-                $txQuery->where('created_at', '>=', $startDate);
-            }
-            if ($endDate) {
-                $txQuery->where('created_at', '<', $endDate);
-            }
+            $basePeriodInQuery = JournalEntry::where('to_account_id', $projectAcc->id)
+                ->whereHas('transaction', function($q) use ($startDate, $endDate) {
+                    $q->where('status', 'approved');
+                    if ($startDate) $q->where('created_at', '>=', $startDate);
+                    if ($endDate) $q->where('created_at', '<', $endDate);
+                });
 
-            $periodTxs = $txQuery->get();
-            $periodIncome = (float)$periodTxs->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-            $periodExpense = (float)$periodTxs->where('type', 'expense')->sum('amount');
+            $periodIncome = (float)$basePeriodInQuery->sum('amount');
+
+            $basePeriodOutQuery = JournalEntry::where('from_account_id', $projectAcc->id)
+                ->whereHas('transaction', function($q) use ($startDate, $endDate) {
+                    $q->where('status', 'approved');
+                    if ($startDate) $q->where('created_at', '>=', $startDate);
+                    if ($endDate) $q->where('created_at', '<', $endDate);
+                });
+
+            $periodExpense = (float)$basePeriodOutQuery->sum('amount');
 
             $periodFundCut = ($periodIncome * $project->weamis_fund_percentage) / 100;
             $periodDistributable = max(0, $periodIncome - $periodFundCut);
@@ -158,6 +179,15 @@ class ProjectController extends Controller
 
         $allMembers = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
+        $projectEntries = JournalEntry::where(function($q) use ($projectAcc) {
+            $q->where('to_account_id', $projectAcc->id)->orWhere('from_account_id', $projectAcc->id);
+        })->with([
+            'transaction.user', 
+            'transaction.responsibleUser', 
+            'transaction.claimantUser',
+            'transaction.journalEntries.toAccount'
+        ])->latest()->get();
+
         $unassignedTransactions = Transaction::with(['user'])
             ->whereNull('project_id')
             ->latest()
@@ -168,7 +198,7 @@ class ProjectController extends Controller
             'devRevenue', 'subRevenue', 'otherRevenue',
             'fundCut', 'distributable', 'memberPayouts', 'currentPeriodIncome',
             'shareTimeline', 'sharePeriods',
-            'allMembers', 'unassignedTransactions'
+            'allMembers', 'projectEntries', 'unassignedTransactions'
         ));
     }
 
@@ -181,6 +211,28 @@ class ProjectController extends Controller
 
         Transaction::whereIn('id', $validated['transaction_ids'])
             ->update(['project_id' => $project->id]);
+
+        $projectAcc = Account::firstOrCreate(
+            ['type' => 'project', 'owner_type' => Project::class, 'owner_id' => $project->id],
+            ['name' => 'Dự án ' . $project->name, 'balance' => 0]
+        );
+
+        $txs = Transaction::whereIn('id', $validated['transaction_ids'])->get();
+        foreach ($txs as $tx) {
+            $userAcc = Account::where('type', 'user')->where('owner_id', $tx->user_id)->first();
+            if ($userAcc && $projectAcc) {
+                $fromId = ($tx->type === 'expense') ? $projectAcc->id : $userAcc->id;
+                $toId = ($tx->type === 'expense') ? $userAcc->id : $projectAcc->id;
+
+                $je = JournalEntry::where('transaction_id', $tx->id)->first();
+                if ($je) {
+                    $je->update([
+                        'from_account_id' => $fromId,
+                        'to_account_id' => $toId,
+                    ]);
+                }
+            }
+        }
 
         $count = count($validated['transaction_ids']);
 
@@ -238,7 +290,7 @@ class ProjectController extends Controller
             if ($fundCut > 0) {
                 $fund = \App\Models\Fund::firstOrCreate(
                     ['id' => 1],
-                    ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00]
+                    ['name' => 'Trả nợ thuê Ltd', 'balance' => 7135340.00]
                 );
                 $fund->increment('balance', $fundCut);
 

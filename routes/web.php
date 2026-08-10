@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    Route::post('/transactions/{transaction}/split', [TransactionController::class, 'split'])->name('transactions.split');
 
     // Transaction Approval
     Route::post('/transactions/{transaction}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');

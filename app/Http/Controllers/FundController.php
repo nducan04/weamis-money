@@ -17,19 +17,31 @@ class FundController extends Controller
         $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
         $projects = Project::all();
 
-        // 1. Stat Totals
-        $approvedTxs = Transaction::where('status', 'approved')->get();
-        $totalIncome = $approvedTxs->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-        $totalExpense = $approvedTxs->whereIn('type', ['expense', 'withdrawal'])->sum('amount');
-        $totalLoans = $approvedTxs->where('type', 'loan')->sum('amount') - $approvedTxs->where('type', 'repayment')->sum('amount');
+        // 1. Stat Totals (Refactored for Double Entry)
+        $fundAcc = \App\Models\Account::where('type', 'fund')->first();
+        $totalIncome = 0;
+        $totalExpense = 0;
+        if ($fundAcc) {
+            $totalIncome = \App\Models\JournalEntry::where('to_account_id', $fundAcc->id)->whereHas('transaction', function($q) { $q->where('status', 'approved'); })->sum('amount');
+            $totalExpense = \App\Models\JournalEntry::where('from_account_id', $fundAcc->id)->whereHas('transaction', function($q) { $q->where('status', 'approved'); })->sum('amount');
+        }
+        $totalLoans = Transaction::where('status', 'approved')->where('type', 'loan')->sum('amount') - Transaction::where('status', 'approved')->where('type', 'repayment')->sum('amount');
 
         // 2. Member Statistics Breakdown
-        $memberStats = $members->map(function ($m) use ($approvedTxs, $fund) {
-            $userTxs = $approvedTxs->where('user_id', $m->id);
-            $contributed = $userTxs->where('type', 'contribution')->sum('amount');
-            $loans = $userTxs->where('type', 'loan')->sum('amount');
-            $repaid = $userTxs->where('type', 'repayment')->sum('amount');
-            $withdrawn = $userTxs->where('type', 'withdrawal')->sum('amount');
+        $memberStats = $members->map(function ($m) use ($fund) {
+            $userAcc = \App\Models\Account::where('type', 'user')->where('owner_id', $m->id)->first();
+            $contributed = 0;
+            $withdrawn = 0;
+            if ($userAcc) {
+                // contributed = Out from User
+                $contributed = \App\Models\JournalEntry::where('from_account_id', $userAcc->id)->whereHas('transaction', function($q) { $q->where('status', 'approved'); })->sum('amount');
+                // withdrawn = In to User
+                $withdrawn = \App\Models\JournalEntry::where('to_account_id', $userAcc->id)->whereHas('transaction', function($q) { $q->where('status', 'approved'); })->sum('amount');
+            }
+            
+            $userTxs = Transaction::where('status', 'approved')->where('user_id', $m->id);
+            $loans = (clone $userTxs)->where('type', 'loan')->sum('amount');
+            $repaid = (clone $userTxs)->where('type', 'repayment')->sum('amount');
             $remainingDebt = max(0, $loans - $repaid);
             $estimatedPayout = round(($fund->balance * $m->share_percentage) / 100, 0);
 

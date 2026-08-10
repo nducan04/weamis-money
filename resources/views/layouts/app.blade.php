@@ -105,7 +105,7 @@
                     </a>
                     <a href="{{ route('history') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Lịch Sử</span>
+                        <span>Lịch Sử GD</span>
                     </a>
                     <a href="{{ route('projects.index') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('projects.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
@@ -275,11 +275,11 @@
                 <span class="text-[10px] font-extrabold tracking-tight">Thu Chi</span>
             </a>
 
-            <!-- Tab 2: Lịch Sử -->
+            <!-- Tab 2: Lịch Sử GD -->
             <a href="{{ route('history') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('history') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current text-lg flex items-center justify-center">📝</div>
-                <span class="text-[10px] font-extrabold tracking-tight">Lịch Sử</span>
+                <span class="text-[10px] font-extrabold tracking-tight">Lịch Sử GD</span>
             </a>
 
             <!-- Tab 2: Dự Án -->
@@ -313,7 +313,7 @@
                 <a href="{{ route('dashboard') }}" class="hover:text-white transition">Dashboard</a>
                 <a href="{{ route('projects.index') }}" class="hover:text-white transition">Dự Án</a>
                 <a href="{{ route('analytics.networth') }}" class="hover:text-white transition">Net Worth</a>
-                <a href="{{ route('history') }}" class="hover:text-white transition">Lịch Sử</a>
+                <a href="{{ route('history') }}" class="hover:text-white transition">Lịch Sử GD</a>
                 <span class="text-emerald-300/60 font-normal">© {{ date('Y') }} Team Weamis</span>
             </div>
         </div>

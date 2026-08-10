@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Fund;
+use App\Models\JournalEntry;
 use App\Models\User;
 use App\Models\Project;
 use App\Models\Transaction;
@@ -17,10 +19,23 @@ class TransactionController extends Controller
         $projects = Project::all();
         $fund = Fund::firstOrCreate(
             ['id' => 1],
-            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00]
+            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7135340.00]
         );
 
         $allTransactions = Transaction::with(['user', 'project', 'responsibleUser', 'claimantUser', 'approver'])->latest()->get()->map(function($tx) {
+            // Get journal entry flow info and split breakdown
+            $jes = JournalEntry::where('transaction_id', $tx->id)->with(['fromAccount', 'toAccount'])->get();
+            $firstJe = $jes->first();
+            $isSplit = $jes->count() > 1;
+
+            $splits = $isSplit ? $jes->map(function($e) {
+                return [
+                    'amount' => (float)$e->amount,
+                    'to_account_name' => $e->toAccount ? $e->toAccount->name : 'N/A',
+                    'memo' => $e->memo,
+                ];
+            })->toArray() : [];
+
             return [
                 'id' => $tx->id,
                 'user_id' => $tx->user_id,
@@ -39,10 +54,16 @@ class TransactionController extends Controller
                 'status' => $tx->status,
                 'created_at' => $tx->created_at ? $tx->created_at->format('Y-m-d\TH:i') : '',
                 'created_at_formatted' => $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : '',
+                'from_account_name' => $firstJe && $firstJe->fromAccount ? $firstJe->fromAccount->name : null,
+                'to_account_name' => $firstJe && $firstJe->toAccount ? $firstJe->toAccount->name : null,
+                'is_split' => $isSplit,
+                'splits' => $splits,
             ];
         });
 
-        return view('history', compact('members', 'projects', 'fund', 'allTransactions'));
+        $accounts = Account::orderBy('type')->orderBy('name')->get();
+
+        return view('history', compact('members', 'projects', 'fund', 'allTransactions', 'accounts'));
     }
 
     public function report(Request $request)
@@ -54,7 +75,7 @@ class TransactionController extends Controller
 
         $fund = Fund::firstOrCreate(
             ['id' => 1],
-            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7133503.00]
+            ['name' => 'Trả nợ thuê Ltd', 'balance' => 7135340.00]
         );
 
         $allTransactions = Transaction::with(['user', 'project', 'responsibleUser', 'claimantUser', 'approver'])->latest()->get()->map(function($tx) {
@@ -106,7 +127,7 @@ class TransactionController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'responsible_user_id' => 'nullable|exists:users,id',
             'claimant_user_id' => 'nullable|exists:users,id',
-            'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal',
+            'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal,adjustment',
             'amount' => 'required|numeric|min:1000',
             'description' => 'required|string|max:255',
             'billing_cycle' => 'nullable|string|max:100',
@@ -166,11 +187,15 @@ class TransactionController extends Controller
                 $txData['created_at'] = $validated['created_at'];
             }
 
-            Transaction::create($txData);
+            $tx = Transaction::create($txData);
 
             if ($status === 'approved') {
-                $this->applyTransactionImpact($fund, $user, $validated['type'], $validated['amount'], $validated['project_id'] ?? null);
+                $this->applyUserDebtImpact($user, $validated['type'], $validated['amount']);
+                $this->createJournalEntry($tx);
             }
+
+            // ALWAYS sync fund balance as the very last step
+            $this->syncFundBalance();
         });
 
         return redirect()->back()->with('success', 'Giao dịch đã được thêm thành công!');
@@ -188,7 +213,7 @@ class TransactionController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'responsible_user_id' => 'nullable|exists:users,id',
             'claimant_user_id' => 'nullable|exists:users,id',
-            'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal',
+            'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal,adjustment',
             'amount' => 'required|numeric|min:1000',
             'description' => 'required|string|max:255',
             'billing_cycle' => 'nullable|string|max:100',
@@ -226,8 +251,9 @@ class TransactionController extends Controller
             $newUser = User::findOrFail($validated['user_id']);
 
             if ($transaction->status === 'approved') {
-                $this->revertTransactionImpact($fund, $oldUser, $transaction->type, $transaction->amount, $transaction->project_id);
-                $this->applyTransactionImpact($fund, $newUser, $validated['type'], $validated['amount'], $validated['project_id'] ?? null);
+                $this->revertUserDebtImpact($oldUser, $transaction->type, $transaction->amount);
+                $this->deleteJournalEntries($transaction);
+                $this->applyUserDebtImpact($newUser, $validated['type'], $validated['amount']);
             }
             $transaction->user_id = $newUser->id;
             $transaction->project_id = $validated['project_id'] ?? null;
@@ -246,6 +272,13 @@ class TransactionController extends Controller
                 $transaction->created_at = $validated['created_at'];
             }
             $transaction->save();
+
+            if ($transaction->status === 'approved') {
+                $this->createJournalEntry($transaction);
+            }
+
+            // ALWAYS sync fund balance as the very last step
+            $this->syncFundBalance();
         });
 
         return redirect()->back()->with('success', 'Đã cập nhật giao dịch thành công!');
@@ -257,15 +290,19 @@ class TransactionController extends Controller
             return redirect()->back()->with('error', 'Bạn không có quyền xóa giao dịch của thành viên khác. Chỉ Admin hoặc người tạo mới có quyền.');
         }
 
-        $fund = Fund::firstOrFail();
         $user = User::findOrFail($transaction->user_id);
 
-        DB::transaction(function () use ($transaction, $fund, $user) {
+        DB::transaction(function () use ($transaction, $user) {
             if ($transaction->status === 'approved') {
-                $this->revertTransactionImpact($fund, $user, $transaction->type, $transaction->amount, $transaction->project_id);
+                $this->revertUserDebtImpact($user, $transaction->type, $transaction->amount);
+                $this->deleteJournalEntries($transaction);
             }
 
+            // Soft-delete the transaction FIRST
             $transaction->delete();
+
+            // THEN sync fund balance (now the deleted tx is excluded from the sum)
+            $this->syncFundBalance();
         });
 
         return redirect()->back()->with('success', 'Đã xóa giao dịch và cập nhật lại số dư!');
@@ -282,16 +319,20 @@ class TransactionController extends Controller
         }
 
         DB::transaction(function () use ($transaction) {
-            $fund = $transaction->fund;
             $user = $transaction->user;
             $adminUser = auth()->user();
 
-            $this->applyTransactionImpact($fund, $user, $transaction->type, $transaction->amount, $transaction->project_id);
-
+            // Update status FIRST so syncFundBalance sees it as approved
             $transaction->update([
                 'status' => 'approved',
                 'approved_by' => $adminUser->id,
             ]);
+
+            $this->applyUserDebtImpact($user, $transaction->type, $transaction->amount);
+            $this->createJournalEntry($transaction);
+
+            // ALWAYS sync fund balance as the very last step
+            $this->syncFundBalance();
         });
 
         return redirect()->back()->with('success', 'Đã phê duyệt giao dịch!');
@@ -312,16 +353,83 @@ class TransactionController extends Controller
         return redirect()->back()->with('success', 'Đã từ chối giao dịch.');
     }
 
-    private function applyTransactionImpact(Fund $fund, User $user, string $type, float $amount, ?int $projectId = null): void
+    public function split(Request $request, Transaction $transaction)
     {
-        if (!$projectId) {
-            if ($type === 'contribution' || $type === 'repayment') {
-                $fund->increment('balance', $amount);
-            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution' || $type === 'withdrawal') {
-                $fund->decrement('balance', $amount);
-            }
+        $authUser = auth()->user();
+        if (!$authUser?->isAdmin() && $transaction->user_id !== $authUser?->id) {
+            return redirect()->back()->with('error', 'Bạn chỉ có quyền tách giao dịch của chính mình!');
         }
 
+        $validated = $request->validate([
+            'splits' => 'required|array|min:2',
+            'splits.*.to_account_id' => 'required|exists:accounts,id',
+            'splits.*.amount' => 'required|numeric|min:1',
+            'splits.*.memo' => 'nullable|string|max:255',
+        ]);
+
+        $totalSplit = array_sum(array_column($validated['splits'], 'amount'));
+        if (abs($totalSplit - $transaction->amount) > 0.01) {
+            return redirect()->back()->with('error', 'Tổng số tiền tách (' . number_format($totalSplit) . 'đ) phải đúng bằng số tiền giao dịch gốc (' . number_format($transaction->amount) . 'đ)!');
+        }
+
+        DB::transaction(function () use ($transaction, $validated) {
+            $this->deleteJournalEntries($transaction);
+
+            $userAcc = Account::where('type', 'user')->where('owner_type', User::class)->where('owner_id', $transaction->user_id)->first();
+            $fundAcc = Account::where('type', 'fund')->first();
+
+            $fromAccId = $userAcc ? $userAcc->id : $fundAcc->id;
+
+            $affectedIds = [$fromAccId];
+            foreach ($validated['splits'] as $item) {
+                JournalEntry::create([
+                    'transaction_id' => $transaction->id,
+                    'from_account_id' => $fromAccId,
+                    'to_account_id' => $item['to_account_id'],
+                    'amount' => $item['amount'],
+                    'memo' => $item['memo'] ?? ($transaction->type . ': ' . $transaction->description),
+                ]);
+                $affectedIds[] = $item['to_account_id'];
+            }
+
+            foreach (array_unique($affectedIds) as $accId) {
+                $this->recalcAccountBalance($accId);
+            }
+
+            // ALWAYS sync fund balance as the very last step
+            $this->syncFundBalance();
+        });
+
+        return redirect()->back()->with('success', 'Đã tách giao dịch #' . $transaction->id . ' thành công!');
+    }
+
+    /**
+     * THE SINGLE SOURCE OF TRUTH for Fund balance.
+     * Recalculates from all active approved transactions.
+     * Must be called as the LAST step in every DB::transaction.
+     */
+    private function syncFundBalance(): void
+    {
+        $contrib = Transaction::where('status', 'approved')->where('type', 'contribution')->sum('amount');
+        $repay = Transaction::where('status', 'approved')->where('type', 'repayment')->sum('amount');
+        $adjust = Transaction::where('status', 'approved')->where('type', 'adjustment')->sum('amount');
+        $profit = Transaction::where('status', 'approved')->where('type', 'profit')->sum('amount');
+        $expense = Transaction::where('status', 'approved')->where('type', 'expense')->sum('amount');
+        $loan = Transaction::where('status', 'approved')->where('type', 'loan')->sum('amount');
+        $withdraw = Transaction::where('status', 'approved')->where('type', 'withdrawal')->sum('amount');
+        $distrib = Transaction::where('status', 'approved')->where('type', 'distribution')->sum('amount');
+
+        $total = ($contrib + $repay + $adjust + $profit) - ($expense + $loan + $withdraw + $distrib);
+        Fund::query()->update(['balance' => $total]);
+        Account::where('type', 'fund')->update(['balance' => $total]);
+    }
+
+    /**
+     * Only handles user debt tracking (loan/repayment).
+     * Fund balance is NOT touched here - syncFundBalance handles that.
+     */
+    private function applyUserDebtImpact(User $user, string $type, float $amount): void
+    {
         if ($type === 'repayment') {
             $user->decrement('current_debt', min($amount, $user->current_debt));
         } elseif ($type === 'loan') {
@@ -329,21 +437,117 @@ class TransactionController extends Controller
         }
     }
 
-    private function revertTransactionImpact(Fund $fund, User $user, string $type, float $amount, ?int $projectId = null): void
+    /**
+     * Only reverts user debt tracking (loan/repayment).
+     * Fund balance is NOT touched here - syncFundBalance handles that.
+     */
+    private function revertUserDebtImpact(User $user, string $type, float $amount): void
     {
-        if (!$projectId) {
-            if ($type === 'contribution' || $type === 'repayment') {
-                $fund->decrement('balance', $amount);
-            } elseif ($type === 'expense' || $type === 'loan' || $type === 'distribution' || $type === 'withdrawal') {
-                $fund->increment('balance', $amount);
-            }
-        }
-
         if ($type === 'repayment') {
             $user->increment('current_debt', $amount);
         } elseif ($type === 'loan') {
             $user->decrement('current_debt', min($amount, $user->current_debt));
         }
+    }
+
+    /**
+     * Create JournalEntry for a transaction (Double-Entry Bookkeeping).
+     */
+    private function createJournalEntry(Transaction $tx): void
+    {
+        $userAcc = Account::where('type', 'user')->where('owner_type', User::class)->where('owner_id', $tx->user_id)->first();
+        $fundAcc = Account::where('type', 'fund')->first();
+        $externalAcc = Account::where('type', 'external')->first();
+
+        if (!$userAcc || !$fundAcc || !$externalAcc) return;
+
+        $projectAcc = $tx->project_id ? Account::firstOrCreate(
+            ['type' => 'project', 'owner_type' => Project::class, 'owner_id' => $tx->project_id],
+            ['name' => 'Dự án #' . $tx->project_id, 'balance' => 0]
+        ) : null;
+
+        $targetAcc = $projectAcc ?? $fundAcc;
+
+        $fromAccId = null;
+        $toAccId = null;
+
+        switch ($tx->type) {
+            case 'contribution':
+            case 'repayment':
+            case 'profit':
+                $fromAccId = $userAcc->id;
+                $toAccId = $targetAcc->id;
+                break;
+            case 'adjustment':
+                $fromAccId = $externalAcc->id;
+                $toAccId = $fundAcc->id;
+                break;
+            case 'loan':
+            case 'withdrawal':
+            case 'distribution':
+                $fromAccId = $fundAcc->id;
+                $toAccId = $userAcc->id;
+                break;
+            case 'expense':
+                $fromAccId = $targetAcc->id;
+                $toAccId = $userAcc->id;
+                break;
+            default:
+                $fromAccId = $externalAcc->id;
+                $toAccId = $targetAcc->id;
+        }
+
+        JournalEntry::create([
+            'transaction_id' => $tx->id,
+            'from_account_id' => $fromAccId,
+            'to_account_id' => $toAccId,
+            'amount' => $tx->amount,
+            'memo' => $tx->type . ': ' . $tx->description,
+        ]);
+
+        // Update cached balances
+        $this->recalcAccountBalance($fromAccId);
+        $this->recalcAccountBalance($toAccId);
+    }
+
+    /**
+     * Delete JournalEntries for a transaction and recalculate balances.
+     */
+    private function deleteJournalEntries(Transaction $tx): void
+    {
+        $entries = JournalEntry::where('transaction_id', $tx->id)->get();
+        $affectedIds = [];
+        foreach ($entries as $je) {
+            $affectedIds[] = $je->from_account_id;
+            $affectedIds[] = $je->to_account_id;
+            $je->forceDelete();
+        }
+        foreach (array_unique($affectedIds) as $accId) {
+            $this->recalcAccountBalance($accId);
+        }
+    }
+
+    /**
+     * Recalculate cached balance for a non-fund Account.
+     * Fund balance is handled exclusively by syncFundBalance().
+     */
+    private function recalcAccountBalance(int $accountId): void
+    {
+        $acc = Account::find($accountId);
+        if (!$acc) return;
+
+        // Fund balance is managed solely by syncFundBalance() - skip here
+        if ($acc->type === 'fund') return;
+
+        $totalIn = JournalEntry::where('to_account_id', $acc->id)->sum('amount');
+        $totalOut = JournalEntry::where('from_account_id', $acc->id)->sum('amount');
+
+        if ($acc->type === 'user') {
+            $acc->balance = $totalOut - $totalIn;
+        } else {
+            $acc->balance = $totalIn - $totalOut;
+        }
+        $acc->save();
     }
 
     private function uploadToCatbox($file): string

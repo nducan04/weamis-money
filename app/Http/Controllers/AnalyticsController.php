@@ -15,15 +15,27 @@ class AnalyticsController extends Controller
     {
         $members = User::where('role', '!=', 'admin')->get();
 
-        // Net Worth = Tổng Góp - Tổng Rút/Vay (matching Google Sheet formula)
-        // Tổng Góp = contribution + repayment + profit
-        // Tổng Rút/Vay = loan + withdrawal + expense + distribution
+        // Net Worth is now calculated using the Double-Entry system's Account balances
         $rawNetWorth = [];
         foreach ($members as $m) {
-            $userTxs = Transaction::where('user_id', $m->id)->where('status', 'approved')->get();
-            $contributions = $userTxs->whereIn('type', ['contribution', 'repayment', 'profit'])->sum('amount');
-            $withdrawals = $userTxs->whereIn('type', ['loan', 'withdrawal', 'expense', 'distribution'])->sum('amount');
-            $netWorth = $contributions - $withdrawals;
+            $userAcc = \App\Models\Account::where('type', 'user')->where('owner_type', \App\Models\User::class)->where('owner_id', $m->id)->first();
+            
+            $netWorth = $userAcc ? (float) $userAcc->balance : 0;
+            
+            // To maintain compatibility with the UI, we can pull total_in and total_out
+            $contributions = 0;
+            $withdrawals = 0;
+            if ($userAcc) {
+                // contributions = Out from User (User -> Fund/Others)
+                $contributions = \App\Models\JournalEntry::where('from_account_id', $userAcc->id)->whereHas('transaction', function($q) {
+                    $q->where('status', 'approved');
+                })->sum('amount');
+                
+                // withdrawals = In to User (Fund/Others -> User)
+                $withdrawals = \App\Models\JournalEntry::where('to_account_id', $userAcc->id)->whereHas('transaction', function($q) {
+                    $q->where('status', 'approved');
+                })->sum('amount');
+            }
 
             $rawNetWorth[] = [
                 'id' => $m->id,

@@ -12,10 +12,8 @@
     showAddModal: false,
     showEditModal: false,
     showDeleteModal: false,
-    showDistributionModal: false,
     showMemberModal: false,
     selectedTx: null,
-    distributeAmount: {{ $fund->balance }},
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
 
     // History Filters & Pagination State
@@ -114,14 +112,6 @@
         if (cat.fullName) {
             this.quickNote = cat.fullName;
         }
-    },
-    get calculatedPayouts() {
-        let amount = parseFloat(this.distributeAmount) || 0;
-        return [
-            @foreach($members as $m)
-            { id: {{ $m->id }}, name: '{{ $m->name }}', avatar: '{{ $m->avatar }}', share: {{ $m->share_percentage }}, amount: Math.round(amount * {{ $m->share_percentage }} / 100) },
-            @endforeach
-        ];
     }
 }"
 class="pb-20 lg:pb-6">
@@ -216,6 +206,7 @@ class="pb-20 lg:pb-6">
                             <option value="loan">Vay cá nhân</option>
                             <option value="repayment">Trả nợ</option>
                             <option value="withdrawal">Rút lương</option>
+                            <option value="adjustment">Điều chỉnh số dư (Khớp Momo)</option>
                         </select>
                     </div>
 
@@ -471,56 +462,7 @@ class="pb-20 lg:pb-6">
                 </div>
             </div>
 
-            <!-- Admin Pending Requests Alert Bar (Admin Only) -->
-            @if(auth()->user()?->isAdmin() && $pendingTransactions->count() > 0)
-                <div class="bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-3 sm:p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center space-x-2">
-                            <span class="flex h-3 w-3 relative">
-                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-                            </span>
-                            <h3 class="font-extrabold text-amber-800 dark:text-amber-300 text-xs sm:text-sm">
-                                Yêu Cầu Chờ Duyệt ({{ $pendingTransactions->count() }})
-                            </h3>
-                        </div>
-                    </div>
 
-                    <div class="space-y-2">
-                        @foreach($pendingTransactions as $pending)
-                            <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-amber-200 dark:border-amber-800/40 flex items-center justify-between text-xs">
-                                <div class="flex items-center space-x-2.5 min-w-0">
-                                    <div class="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                        @if($pending->user->avatar && \Illuminate\Support\Str::startsWith($pending->user->avatar, ['http://', 'https://', '/uploads/']))
-                                            <img src="{{ $pending->user->avatar }}" alt="{{ $pending->user->name }}" class="w-full h-full object-cover">
-                                        @else
-                                            {{ $pending->user->avatar ?? substr($pending->user->name, 0, 2) }}
-                                        @endif
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                                            {{ $pending->user->name }}
-                                            <span class="text-[10px] text-slate-400 font-normal">({{ $pending->type === 'expense' ? 'Chi' : 'Vay' }})</span>
-                                        </p>
-                                        <p class="text-[11px] text-slate-500 truncate">"{{ $pending->description }}"</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2 flex-shrink-0 ml-2">
-                                    <span class="font-extrabold text-sm text-rose-600 ml-1">-{{ number_format($pending->amount, 0, ',', '.') }}đ</span>
-                                    <form action="{{ route('transactions.approve', $pending) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] shadow transition cursor-pointer">Duyệt</button>
-                                    </form>
-                                    <form action="{{ route('transactions.reject', $pending) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="px-2.5 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-700 dark:text-slate-300 font-bold rounded-lg text-[10px] transition cursor-pointer">Từ chối</button>
-                                    </form>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
 
             <!-- 2. Member Breakdown Table & Cards -->
             <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm"
@@ -667,6 +609,7 @@ class="pb-20 lg:pb-6">
                             <option value="loan">Vay cá nhân</option>
                             <option value="repayment">Trả nợ</option>
                             <option value="withdrawal">Rút lương</option>
+                            <option value="adjustment">Điều chỉnh số dư</option>
                         </select>
                     </div>
 
@@ -692,25 +635,24 @@ class="pb-20 lg:pb-6">
                     <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
                         <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-400 font-extrabold text-[10px] uppercase tracking-wider">
                             <tr>
-                                <th class="py-2.5 px-3 rounded-l-xl">ID & Ngày</th>
-                                <th class="py-2.5 px-3">Thành viên</th>
-                                <th class="py-2.5 px-3">Loại GD</th>
+                                <th class="py-2.5 px-3 rounded-l-xl whitespace-nowrap">ID & Ngày</th>
+                                <th class="py-2.5 px-3 whitespace-nowrap">Thành viên</th>
+                                <th class="py-2.5 px-3 whitespace-nowrap">Loại GD</th>
                                 <th class="py-2.5 px-3">Nội dung ghi chú</th>
-                                <th class="py-2.5 px-3 text-right">Số tiền (VNĐ)</th>
-                                <th class="py-2.5 px-3 text-center rounded-r-xl">Trạng thái</th>
+                                <th class="py-2.5 px-3 text-right rounded-r-xl whitespace-nowrap">Số tiền (VNĐ)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50 font-semibold">
                             <template x-for="tx in paginatedTransactions" :key="tx.id">
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
                                     <!-- ID & Date -->
-                                    <td class="py-3 px-3">
+                                    <td class="py-3 px-3 whitespace-nowrap">
                                         <p class="font-extrabold text-slate-900 dark:text-white font-mono text-[11px]" x-text="'#' + tx.id"></p>
                                         <p class="text-[10px] text-slate-400 font-medium" x-text="tx.created_at_formatted"></p>
                                     </td>
 
                                     <!-- Member -->
-                                    <td class="py-3 px-3">
+                                    <td class="py-3 px-3 whitespace-nowrap">
                                         <div class="flex items-center space-x-2">
                                             <div class="w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
                                                 <template x-if="tx.user_avatar && (tx.user_avatar.startsWith('http') || tx.user_avatar.startsWith('/uploads/'))">
@@ -725,46 +667,40 @@ class="pb-20 lg:pb-6">
                                     </td>
 
                                     <!-- Type Badge -->
-                                    <td class="py-3 px-3">
-                                        <span class="px-2 py-0.5 text-[10px] font-black rounded-lg"
+                                    <td class="py-3 px-3 whitespace-nowrap">
+                                        <span class="px-2 py-0.5 text-[10px] font-black rounded-lg inline-block whitespace-nowrap"
                                               :class="{
                                                   'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20': tx.type === 'contribution',
                                                   'bg-rose-500/10 text-rose-600 border border-rose-500/20': tx.type === 'expense',
                                                   'bg-purple-500/10 text-purple-600 border border-purple-500/20': tx.type === 'loan',
                                                   'bg-teal-500/10 text-teal-600 border border-teal-500/20': tx.type === 'repayment',
-                                                  'bg-indigo-500/10 text-indigo-600 border border-indigo-500/20': tx.type === 'withdrawal'
+                                                  'bg-indigo-500/10 text-indigo-600 border border-indigo-500/20': tx.type === 'withdrawal',
+                                                  'bg-sky-500/10 text-sky-600 border border-sky-500/20': tx.type === 'adjustment'
                                               }"
-                                              x-text="tx.type === 'contribution' ? 'Góp quỹ' : (tx.type === 'expense' ? 'Chi tiêu chung' : (tx.type === 'loan' ? 'Vay cá nhân' : (tx.type === 'repayment' ? 'Trả nợ' : 'Rút lương')))">
+                                              x-text="tx.type === 'contribution' ? 'Góp quỹ' : (tx.type === 'expense' ? 'Chi tiêu chung' : (tx.type === 'loan' ? 'Vay cá nhân' : (tx.type === 'repayment' ? 'Trả nợ' : (tx.type === 'adjustment' ? 'Điều chỉnh' : 'Rút lương'))))">
                                         </span>
                                     </td>
 
                                     <!-- Description -->
-                                    <td class="py-3 px-3">
+                                    <td class="py-3 px-3 min-w-[200px]">
                                         <p class="font-medium text-slate-800 dark:text-slate-200 line-clamp-1" x-text="tx.description"></p>
                                     </td>
 
                                     <!-- Amount -->
-                                    <td class="py-3 px-3 text-right">
-                                        <template x-if="tx.type === 'contribution' || tx.type === 'repayment'">
+                                    <td class="py-3 px-3 text-right whitespace-nowrap">
+                                        <template x-if="tx.type === 'contribution' || tx.type === 'repayment' || tx.type === 'adjustment'">
                                             <span class="font-black text-emerald-600 dark:text-emerald-400 text-xs" x-text="'+' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
                                         </template>
-                                        <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment'">
+                                        <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment' && tx.type !== 'adjustment'">
                                             <span class="font-black text-rose-600 dark:text-rose-400 text-xs" x-text="'-' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
                                         </template>
-                                    </td>
-
-                                    <!-- Status -->
-                                    <td class="py-3 px-3 text-center">
-                                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-md text-[10px] font-bold">
-                                            ✓ Đã duyệt
-                                        </span>
                                     </td>
                                 </tr>
                             </template>
 
                             <template x-if="paginatedTransactions.length === 0">
                                 <tr>
-                                    <td colspan="6" class="py-8 text-center text-slate-400 font-semibold">
+                                    <td colspan="5" class="py-8 text-center text-slate-400 font-semibold">
                                         Không tìm thấy giao dịch nào phù hợp với bộ lọc.
                                     </td>
                                 </tr>
@@ -791,87 +727,28 @@ class="pb-20 lg:pb-6">
 
     </div>
 
-    <!-- MODAL: PHÂN CHIA LỢI NHUẬN % -->
-    <div x-show="showDistributionModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
-        <div @click.away="showDistributionModal = false" class="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 w-full sm:max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-2">📊 Chia Quỹ Theo % Cổ Phần</h3>
-            <p class="text-[11px] sm:text-xs text-slate-500 mb-4">Nhập tổng tiền cần chia, hệ thống phân bổ theo tỷ lệ %.</p>
-
-            <form action="{{ route('distributions.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền đem chia (VNĐ)</label>
-                    <input type="number" name="total_amount" x-model="distributeAmount" required step="1000" min="1000" max="{{ $fund->balance }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-base font-extrabold text-emerald-600 focus:ring-2 focus:ring-emerald-500">
-                    <p class="text-[10px] text-slate-400 mt-1">Tối đa: {{ number_format($fund->balance, 0, ',', '.') }}đ</p>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Ghi chú</label>
-                    <input type="text" name="note" placeholder="VD: Chia lợi nhuận quý 3..." class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <!-- Live Preview -->
-                <div class="bg-slate-50 dark:bg-slate-700/40 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-600/60 space-y-2">
-                    <h4 class="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Bảng phân bổ:</h4>
-                    <template x-for="payout in calculatedPayouts" :key="payout.id">
-                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/40 dark:border-slate-600/40 last:border-0">
-                            <div class="flex items-center space-x-2 min-w-0">
-                                <div class="w-6 h-6 rounded-full bg-slate-800 text-white font-bold text-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    <template x-if="payout.avatar && (payout.avatar.startsWith('http') || payout.avatar.startsWith('/uploads/'))">
-                                        <img :src="payout.avatar" class="w-full h-full object-cover">
-                                    </template>
-                                    <template x-if="!payout.avatar || (!payout.avatar.startsWith('http') && !payout.avatar.startsWith('/uploads/'))">
-                                        <span x-text="payout.avatar || payout.name.substr(0, 2)"></span>
-                                    </template>
-                                </div>
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs truncate" x-text="payout.name"></span>
-                                <span class="text-[10px] text-slate-400 flex-shrink-0">(<span x-text="payout.share"></span>%)</span>
-                            </div>
-                            <span class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs flex-shrink-0 ml-2" x-text="new Intl.NumberFormat('vi-VN').format(payout.amount) + 'đ'"></span>
-                        </div>
-                    </template>
-                </div>
-
-                <div class="flex items-center justify-end space-x-3 pt-2">
-                    <button type="button" @click="showDistributionModal = false" class="px-4 py-2.5 text-xs font-bold text-slate-500">Hủy</button>
-                    <button type="submit" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-extrabold shadow-md active:scale-95 transition">Chia Tiền</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- MODAL: QUẢN LÝ THÀNH VIÊN -->
     <div x-show="showMemberModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
         <div @click.away="showMemberModal = false" class="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 w-full sm:max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[85vh] overflow-y-auto">
-            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-3">👥 Thành Viên & % Cổ Phần</h3>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-3">👥 Quản Lý Thành Viên</h3>
 
             <div class="space-y-2.5 mb-5">
                 @foreach($members as $m)
-                    <form action="{{ route('members.updateShare', $m) }}" method="POST" class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                        @csrf
-                        @method('PUT')
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2.5 min-w-0">
-                                <div class="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    @if($m->avatar && \Illuminate\Support\Str::startsWith($m->avatar, ['http://', 'https://', '/uploads/']))
-                                        <img src="{{ $m->avatar }}" alt="{{ $m->name }}" class="w-full h-full object-cover">
-                                    @else
-                                        {{ $m->avatar ?? substr($m->name, 0, 2) }}
-                                    @endif
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $m->name }}</p>
-                                    <p class="text-[10px] text-slate-400 truncate">{{ $m->email }}</p>
-                                </div>
+                    <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                @if($m->avatar && \Illuminate\Support\Str::startsWith($m->avatar, ['http://', 'https://', '/uploads/']))
+                                    <img src="{{ $m->avatar }}" alt="{{ $m->name }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ $m->avatar ?? substr($m->name, 0, 2) }}
+                                @endif
                             </div>
-
-                            <div class="flex items-center space-x-1.5 flex-shrink-0 ml-2">
-                                <input type="number" name="share_percentage" value="{{ $m->share_percentage }}" step="0.1" min="0" max="100" class="w-16 px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-xs font-bold text-center">
-                                <span class="text-xs font-bold text-slate-500">%</span>
-                                <button type="submit" class="px-2 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700">Lưu</button>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $m->name }}</p>
+                                <p class="text-[10px] text-slate-400 truncate">{{ $m->email }}</p>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 @endforeach
             </div>
 
@@ -886,19 +763,22 @@ class="pb-20 lg:pb-6">
                     </div>
 
                     <div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Tên đăng nhập (Username)</label>
+                        <input type="text" name="username" required placeholder="vd: nhv, nda..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
                         <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Địa Chỉ Email</label>
                         <input type="email" name="email" required placeholder="example@weamis.com" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">% Cổ Phần Ban Đầu</label>
-                        <div class="flex items-center space-x-2">
-                            <div class="relative flex-1">
-                                <input type="number" name="share_percentage" required placeholder="Ví dụ: 12.5" step="0.1" min="0" max="100" class="w-full px-3.5 py-2 pr-7 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
-                                <span class="absolute right-3 top-2 text-xs font-bold text-slate-400">%</span>
-                            </div>
-                            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold flex-shrink-0 shadow-md transition cursor-pointer">Thêm</button>
-                        </div>
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Mật khẩu ban đầu</label>
+                        <input type="password" name="password" required placeholder="••••••••" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-md transition cursor-pointer">Thêm Thành Viên</button>
                     </div>
                 </form>
             </div>

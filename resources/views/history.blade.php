@@ -5,9 +5,32 @@
     showCalendar: false,
     showEditModal: false,
     showDeleteModal: false,
+    showSplitModal: false,
     showFilters: false,
     activeEvidence: null,
     selectedTx: null,
+    splitRows: [],
+    openSplitModal(tx) {
+        this.selectedTx = tx;
+        let half1 = Math.floor(tx.amount / 2);
+        let half2 = Math.ceil(tx.amount / 2);
+        this.splitRows = [
+            { to_account_id: '', amount: half1, displayAmount: half1 > 0 ? half1.toLocaleString('vi-VN') : '', memo: '' },
+            { to_account_id: '', amount: half2, displayAmount: half2 > 0 ? half2.toLocaleString('vi-VN') : '', memo: '' }
+        ];
+        this.showSplitModal = true;
+    },
+    addSplitRow() {
+        this.splitRows.push({ to_account_id: '', amount: 0, displayAmount: '', memo: '' });
+    },
+    removeSplitRow(idx) {
+        if (this.splitRows.length > 2) {
+            this.splitRows.splice(idx, 1);
+        }
+    },
+    get splitTotal() {
+        return this.splitRows.reduce((sum, r) => sum + (parseInt(r.amount, 10) || 0), 0);
+    },
     filterSearch: '',
     filterMemberId: '',
     filterType: '',
@@ -248,6 +271,7 @@ class="pb-20 lg:pb-6">
                     <option value="loan">Vay cá nhân</option>
                     <option value="repayment">Trả nợ</option>
                     <option value="withdrawal">Rút lương</option>
+                    <option value="adjustment">Điều chỉnh số dư</option>
                 </select>
 
                 <!-- Lọc Theo Ngày Tháng Năm -->
@@ -283,7 +307,7 @@ class="pb-20 lg:pb-6">
                         <th class="py-3.5 px-4">Loại GD</th>
                         <th class="py-3.5 px-4">Số Tiền</th>
                         <th class="py-3.5 px-4">Nội Dung</th>
-
+                        <th class="py-3.5 px-4">Luồng Tiền</th>
                         <th class="py-3.5 px-4 text-right rounded-r-xl">Hành Động</th>
                     </tr>
                 </thead>
@@ -326,12 +350,15 @@ class="pb-20 lg:pb-6">
                                 <template x-if="tx.type === 'withdrawal' || tx.type === 'distribution'">
                                     <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-extrabold rounded-lg text-xs">Rút lương</span>
                                 </template>
+                                <template x-if="tx.type === 'adjustment'">
+                                    <span class="px-2.5 py-1 bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 font-extrabold rounded-lg text-xs">Điều chỉnh</span>
+                                </template>
                             </td>
                             <td class="py-4 px-4 font-black text-sm whitespace-nowrap">
-                                <template x-if="tx.type === 'contribution' || tx.type === 'repayment'">
+                                <template x-if="tx.type === 'contribution' || tx.type === 'repayment' || tx.type === 'adjustment'">
                                     <span class="text-emerald-600 dark:text-emerald-400" x-text="'+' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
                                 </template>
-                                <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment'">
+                                <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment' && tx.type !== 'adjustment'">
                                     <span class="text-slate-900 dark:text-slate-100" x-text="'-' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></span>
                                 </template>
                             </td>
@@ -356,9 +383,38 @@ class="pb-20 lg:pb-6">
                                 </div>
                             </td>
 
+                            <!-- Luồng Tiền (Double-Entry Flow) -->
+                            <td class="py-4 px-4 whitespace-nowrap">
+                                <template x-if="tx.is_split">
+                                    <div class="flex flex-col items-start gap-1">
+                                        <span class="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-extrabold rounded-md text-[10px]">Đã tách</span>
+                                        <div class="flex flex-col gap-0.5 mt-0.5">
+                                            <template x-for="(s, sIdx) in tx.splits" :key="sIdx">
+                                                <div class="flex items-center gap-1 text-[10px] text-slate-600 dark:text-slate-300 font-medium">
+                                                    <span class="font-bold text-emerald-600 dark:text-emerald-400" x-text="new Intl.NumberFormat('vi-VN').format(s.amount) + 'đ'"></span>
+                                                    <span class="text-indigo-500 font-bold">→</span>
+                                                    <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[130px]" x-text="s.to_account_name.replace('Dự án ', '').replace('Ví ', '')"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="!tx.is_split && tx.from_account_name && tx.to_account_name">
+                                    <div class="flex flex-col items-start gap-0.5">
+                                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate max-w-[120px]" x-text="tx.from_account_name.replace('Ví ', '')"></span>
+                                        <span class="text-[10px] font-black text-indigo-500">↓</span>
+                                        <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[120px]" x-text="tx.to_account_name.replace('Ví ', '')"></span>
+                                    </div>
+                                </template>
+                                <template x-if="!tx.is_split && (!tx.from_account_name || !tx.to_account_name)">
+                                    <span class="text-[10px] text-slate-400">—</span>
+                                </template>
+                            </td>
+
                             <td class="py-4 px-4 text-right whitespace-nowrap space-x-1.5">
-                                <template x-if="canEditTx(tx)">
+                                 <template x-if="canEditTx(tx)">
                                     <div class="inline-flex items-center space-x-1.5">
+                                        <button @click.prevent="openSplitModal(tx)" class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-500 hover:text-white text-amber-600 dark:text-amber-400 rounded-lg font-extrabold text-xs transition cursor-pointer" title="Tách giao dịch này thành nhiều dự án/ví">Tách</button>
                                         <button @click="selectedTx = tx; showEditModal = true" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg font-bold transition cursor-pointer">✏️ Sửa</button>
                                         <button @click="selectedTx = tx; showDeleteModal = true" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-600 hover:text-white text-rose-600 font-bold rounded-lg transition cursor-pointer">🗑️ Xóa</button>
                                     </div>
@@ -399,10 +455,10 @@ class="pb-20 lg:pb-6">
                             </div>
                         </div>
                         <div class="text-right flex-shrink-0 ml-2">
-                            <template x-if="tx.type === 'contribution' || tx.type === 'repayment'">
+                            <template x-if="tx.type === 'contribution' || tx.type === 'repayment' || tx.type === 'adjustment'">
                                 <p class="text-base font-black text-emerald-600 dark:text-emerald-400" x-text="'+' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></p>
                             </template>
-                            <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment'">
+                            <template x-if="tx.type !== 'contribution' && tx.type !== 'repayment' && tx.type !== 'adjustment'">
                                 <p class="text-base font-black text-slate-900 dark:text-slate-100" x-text="'-' + new Intl.NumberFormat('vi-VN').format(tx.amount) + 'đ'"></p>
                             </template>
                         </div>
@@ -424,6 +480,9 @@ class="pb-20 lg:pb-6">
                         <template x-if="tx.type === 'withdrawal' || tx.type === 'distribution'">
                             <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-bold rounded text-[10px] flex-shrink-0">Rút lương</span>
                         </template>
+                        <template x-if="tx.type === 'adjustment'">
+                            <span class="px-2 py-0.5 bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 font-bold rounded text-[10px] flex-shrink-0">Điều chỉnh</span>
+                        </template>
                         <template x-if="tx.project_name">
                             <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded text-[10px] flex-shrink-0" x-text="'📂 ' + tx.project_name"></span>
                         </template>
@@ -435,11 +494,26 @@ class="pb-20 lg:pb-6">
 
                     <div class="flex items-center justify-between pt-2.5 border-t border-slate-200/60 dark:border-slate-600/40">
                         <div>
-                            <!-- Placeholder to keep flex-between layout working properly for actions -->
+                            <template x-if="tx.is_split">
+                                <div class="flex flex-col items-start gap-0.5">
+                                    <span class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-extrabold rounded text-[9px]">Đã tách</span>
+                                    <template x-for="(s, sIdx) in tx.splits" :key="sIdx">
+                                        <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400" x-text="new Intl.NumberFormat('vi-VN').format(s.amount) + 'đ → ' + s.to_account_name.replace('Dự án ', '').replace('Ví ', '')"></span>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="!tx.is_split && tx.from_account_name && tx.to_account_name">
+                                <div class="flex items-center gap-1 text-[10px]">
+                                    <span class="font-bold text-slate-500 dark:text-slate-400 truncate max-w-[80px]" x-text="tx.from_account_name.replace('Ví ', '')"></span>
+                                    <span class="font-black text-indigo-500">→</span>
+                                    <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[80px]" x-text="tx.to_account_name.replace('Ví ', '')"></span>
+                                </div>
+                            </template>
                         </div>
                         <div class="flex items-center space-x-2">
                             <template x-if="canEditTx(tx)">
                                 <div class="flex items-center space-x-2">
+                                    <button @click.prevent="openSplitModal(tx)" class="px-2.5 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-extrabold active:scale-95 transition cursor-pointer">Tách</button>
                                     <button @click="selectedTx = tx; showEditModal = true" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold active:scale-95 transition cursor-pointer">✏️ Sửa</button>
                                     <button @click="selectedTx = tx; showDeleteModal = true" class="px-3 py-1.5 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-lg text-xs font-bold active:scale-95 transition cursor-pointer">🗑️ Xóa</button>
                                 </div>
@@ -651,6 +725,9 @@ class="pb-20 lg:pb-6">
             <div class="pt-4 mt-2 border-t border-slate-100 dark:border-slate-700 flex-shrink-0 text-center">
                 <button @click="showCalModal = false" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white rounded-xl text-xs font-bold transition w-full">Đóng</button>
             </div>
+        </div>
+    </div>
+
     <!-- EVIDENCE MODAL PREVIEW -->
     <div x-show="activeEvidence" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4" x-cloak x-transition>
         <div @click.away="activeEvidence = null" class="bg-white dark:bg-slate-800 rounded-3xl p-5 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700">
@@ -668,6 +745,84 @@ class="pb-20 lg:pb-6">
                     <p x-text="activeEvidence.value"></p>
                 </div>
             </template>
+        </div>
+    </div>
+
+    <!-- SPLIT TRANSACTION MODAL -->
+    <div x-show="showSplitModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4" x-cloak x-transition>
+        <div @click.away="showSplitModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-2xl shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+                <div>
+                    <h3 class="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>Tách Giao Dịch #<span x-text="selectedTx?.id"></span></span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" x-text="'Giao dịch gốc: ' + (selectedTx ? new Intl.NumberFormat('vi-VN').format(selectedTx.amount) + 'đ (' + selectedTx.description + ')' : '')"></p>
+                </div>
+                <button @click="showSplitModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">✕</button>
+            </div>
+
+            <form x-bind:action="'/transactions/' + (selectedTx ? selectedTx.id : '') + '/split'" method="POST" class="mt-4 flex-1 flex flex-col min-h-0 space-y-4">
+                @csrf
+                <div class="overflow-y-auto space-y-3 pr-1 flex-1">
+                    <template x-for="(row, idx) in splitRows" :key="idx">
+                        <div class="p-3.5 bg-slate-50 dark:bg-slate-700/40 rounded-2xl border border-slate-200/80 dark:border-slate-600/60 flex items-center gap-3">
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1" x-text="'Dòng ' + (idx + 1) + ': Dự án nhận'"></label>
+                                <select :name="'splits[' + idx + '][to_account_id]'" x-model="row.to_account_id" required class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">-- Chọn Dự án --</option>
+                                    @foreach($accounts->where('type', 'project') as $acc)
+                                        <option value="{{ $acc->id }}">{{ str_replace('Dự án ', '', $acc->name) }}</option>
+                                    @endforeach
+                                    @foreach($accounts->where('type', 'fund') as $acc)
+                                        <option value="{{ $acc->id }}">{{ $acc->name }} (Quỹ chung)</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="w-44">
+                                <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Số tiền (VNĐ)</label>
+                                <div class="relative">
+                                    <input type="text"
+                                           :value="row.displayAmount"
+                                           @input="let clean = $event.target.value.replace(/\D/g, ''); let num = parseInt(clean, 10) || 0; row.amount = num; row.displayAmount = num > 0 ? num.toLocaleString('vi-VN') : '';"
+                                           placeholder="0"
+                                           required
+                                           class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 pr-7 text-xs font-black text-emerald-600 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-500">
+                                    <input type="hidden" :name="'splits[' + idx + '][amount]'" :value="row.amount">
+                                    <span class="absolute right-2.5 top-2 text-xs font-bold text-slate-400 pointer-events-none">đ</span>
+                                </div>
+                            </div>
+
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1">Diễn giải / Ghi chú</label>
+                                <input type="text" :name="'splits[' + idx + '][memo]'" x-model="row.memo" placeholder="Vd: Phân bổ cho EVB" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white">
+                            </div>
+
+                            <template x-if="splitRows.length > 2">
+                                <button type="button" @click="removeSplitRow(idx)" class="mt-4 p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition text-xs font-bold cursor-pointer" title="Xóa dòng này">✕</button>
+                            </template>
+                        </div>
+                    </template>
+
+                    <button type="button" @click="addSplitRow()" class="w-full py-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-700/50 hover:bg-indigo-100 rounded-2xl text-xs font-extrabold transition cursor-pointer">
+                        + Thêm dòng phân bổ mới
+                    </button>
+                </div>
+
+                <!-- Validation Footer -->
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-slate-500">Tổng tiền đã tách: </span>
+                        <span class="text-sm font-black" :class="selectedTx && Math.abs(splitTotal - selectedTx.amount) < 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'" x-text="new Intl.NumberFormat('vi-VN').format(splitTotal) + 'đ'"></span>
+                        <span class="text-xs text-slate-400" x-text="' / ' + (selectedTx ? new Intl.NumberFormat('vi-VN').format(selectedTx.amount) + 'đ' : '')"></span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button type="button" @click="showSplitModal = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold cursor-pointer">Hủy</button>
+                        <button type="submit" :disabled="selectedTx && Math.abs(splitTotal - selectedTx.amount) >= 1" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-bold disabled:opacity-50 transition cursor-pointer">Xác Nhận Tách</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
