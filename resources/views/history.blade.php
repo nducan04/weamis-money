@@ -264,38 +264,6 @@ class="pb-20 lg:pb-6">
                     @endforeach
                 </select>
 
-                <select x-model="filterType" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
-                    <option value="">Tất cả loại GD</option>
-                    <option value="contribution">Góp quỹ</option>
-                    <option value="expense">Chi tiêu chung</option>
-                    <option value="loan">Vay cá nhân</option>
-                    <option value="repayment">Trả nợ</option>
-                    <option value="withdrawal">Rút lương</option>
-                    <option value="adjustment">Điều chỉnh số dư</option>
-                </select>
-
-                <!-- Lọc Theo Ngày Tháng Năm -->
-                <div class="flex items-center space-x-1.5 w-full sm:w-auto bg-slate-50 dark:bg-slate-700/50 p-1 rounded-xl border border-slate-200 dark:border-slate-600">
-                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 pl-1.5">📅</span>
-                    <input type="date" x-model="filterDateFrom" title="Từ ngày" class="px-2 py-1 rounded-lg border-0 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
-                    <span class="text-slate-400 text-xs font-bold">➔</span>
-                    <input type="date" x-model="filterDateTo" title="Đến ngày" class="px-2 py-1 rounded-lg border-0 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
-                </div>
-
-                <!-- Sắp Xếp Ngày Giao Dịch -->
-                <select x-model="sortOrder" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
-                    <option value="desc">Mới nhất ➔ Cũ nhất</option>
-                    <option value="asc">Cũ nhất ➔ Mới nhất</option>
-                </select>
-
-                <template x-if="filterSearch || filterMemberId || filterType || filterDateFrom || filterDateTo || sortOrder !== 'desc'">
-                    <button @click="resetFilters()" class="px-3 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center space-x-1 cursor-pointer">
-                        <span>✕ Xóa lọc</span>
-                    </button>
-                </template>
-            </div>
-        </div>
-
         <!-- Desktop Table -->
         <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
@@ -304,7 +272,6 @@ class="pb-20 lg:pb-6">
                         <th class="py-3.5 px-4 rounded-l-xl">Mã ID</th>
                         <th class="py-3.5 px-4">Thời Gian</th>
                         <th class="py-3.5 px-4">Thành Viên</th>
-                        <th class="py-3.5 px-4">Loại GD</th>
                         <th class="py-3.5 px-4">Số Tiền</th>
                         <th class="py-3.5 px-4">Nội Dung</th>
                         <th class="py-3.5 px-4">Luồng Tiền</th>
@@ -333,26 +300,6 @@ class="pb-20 lg:pb-6">
                                         </template>
                                     </div>
                                 </div>
-                            </td>
-                            <td class="py-4 px-4 whitespace-nowrap">
-                                <template x-if="tx.type === 'contribution'">
-                                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-extrabold rounded-lg text-xs">Góp quỹ</span>
-                                </template>
-                                <template x-if="tx.type === 'expense'">
-                                    <span class="px-2.5 py-1 bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 font-extrabold rounded-lg text-xs">Chi tiêu chung</span>
-                                </template>
-                                <template x-if="tx.type === 'loan'">
-                                    <span class="px-2.5 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-extrabold rounded-lg text-xs">Vay cá nhân</span>
-                                </template>
-                                <template x-if="tx.type === 'repayment'">
-                                    <span class="px-2.5 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-extrabold rounded-lg text-xs">Trả nợ</span>
-                                </template>
-                                <template x-if="tx.type === 'withdrawal' || tx.type === 'distribution'">
-                                    <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 font-extrabold rounded-lg text-xs">Rút lương</span>
-                                </template>
-                                <template x-if="tx.type === 'adjustment'">
-                                    <span class="px-2.5 py-1 bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 font-extrabold rounded-lg text-xs">Điều chỉnh</span>
-                                </template>
                             </td>
                             <td class="py-4 px-4 font-black text-sm whitespace-nowrap">
                                 <template x-if="tx.type === 'contribution' || tx.type === 'repayment' || tx.type === 'adjustment'">
@@ -591,13 +538,9 @@ class="pb-20 lg:pb-6">
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
-                        <select name="type" x-model="selectedTx.type" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
-                            <option value="contribution">Góp quỹ</option>
-                            <option value="expense">Chi tiêu chung</option>
-                            <option value="loan">Vay cá nhân</option>
-                            <option value="repayment">Trả nợ vay</option>
-                            <option value="withdrawal">Rút lương</option>
-                            <option value="distribution">Chia tiền</option>
+                        <select name="type" x-model="selectedTx.type" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold">
+                            <option value="expense">Chi tiêu (-)</option>
+                            <option value="contribution">Thu nhập (+)</option>
                         </select>
                     </div>
 

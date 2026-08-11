@@ -197,18 +197,8 @@ class="pb-20 lg:pb-6">
                         @endif
                     </div>
 
-                    <!-- Transaction Type Selector -->
-                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Loại GD</span>
-                        <select name="type" x-model="quickType" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="expense">Chi tiêu chung</option>
-                            <option value="contribution">Góp quỹ</option>
-                            <option value="loan">Vay cá nhân</option>
-                            <option value="repayment">Trả nợ</option>
-                            <option value="withdrawal">Rút lương</option>
-                            <option value="adjustment">Điều chỉnh số dư (Khớp Momo)</option>
-                        </select>
-                    </div>
+                    <!-- Hidden input for type (expense vs contribution) -->
+                    <input type="hidden" name="type" :value="quickType">
 
 
 
@@ -291,25 +281,7 @@ class="pb-20 lg:pb-6">
                         </div>
                     </div>
 
-                    <!-- Category Title -->
-                    <div class="pt-2">
-                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">Danh mục</p>
-                        
-                        <!-- Category Grid -->
-                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            <template x-for="cat in activeCategories" :key="cat.key">
-                                <button type="button" @click="selectCategory(cat)"
-                                        class="flex flex-col items-center justify-center p-2 rounded-2xl border transition-all duration-150 cursor-pointer min-h-[72px]"
-                                        :class="selectedCategory === cat.key ? 'border-2 border-emerald-500 dark:border-emerald-400 bg-emerald-500/10 shadow-sm scale-95' : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 hover:border-slate-300 dark:hover:border-slate-600'">
-                                    <div class="w-6 h-6 mb-1.5 rounded-md transition-colors"
-                                         :class="cat.color"
-                                         :style="`-webkit-mask: url('${cat.icon}') center/contain no-repeat; mask: url('${cat.icon}') center/contain no-repeat;`">
-                                    </div>
-                                    <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200 text-center leading-tight line-clamp-2 px-0.5" x-text="cat.name"></span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
+
 
                     <!-- Submit Button -->
                     <div class="pt-2">
