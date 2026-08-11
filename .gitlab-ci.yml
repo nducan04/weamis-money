@@ -14,14 +14,11 @@ deploy_production:
   before_script:
     - apk add --no-cache git docker-compose
   script:
-    - cd /home/vietnh/apps/weamis-money
-    - git fetch https://git.vietnh.io.vn/general-projects/weamis-money.git main
-    - git checkout -B main FETCH_HEAD
-    - docker rm -f weamis-money-app || true
     - docker-compose up -d --build
     - docker exec weamis-money-app php artisan migrate --force
     - docker exec weamis-money-app chmod -R 777 storage bootstrap/cache database
     - docker exec weamis-money-app php artisan config:clear
     - docker exec weamis-money-app php artisan cache:clear
     - docker exec weamis-money-app php artisan view:clear
+
 
