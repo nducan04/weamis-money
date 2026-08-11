@@ -3,10 +3,31 @@
 @section('content')
 <div x-data="{ 
     showCalendar: false,
+    showAddModal: false,
     showEditModal: false,
     showDeleteModal: false,
     showSplitModal: false,
     showFilters: false,
+    quickType: 'expense',
+    quickAmount: '',
+    quickNote: '',
+    quickDate: new Date().toISOString().substring(0, 10),
+    get formattedQuickDate() {
+        if (!this.quickDate) return '';
+        let d = new Date(this.quickDate);
+        let days = ['CN', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7'];
+        return d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getFullYear() + ' (' + days[d.getDay()] + ')';
+    },
+    prevQuickDay() {
+        let d = new Date(this.quickDate);
+        d.setDate(d.getDate() - 1);
+        this.quickDate = d.toISOString().substring(0, 10);
+    },
+    nextQuickDay() {
+        let d = new Date(this.quickDate);
+        d.setDate(d.getDate() + 1);
+        this.quickDate = d.toISOString().substring(0, 10);
+    },
     activeEvidence: null,
     selectedTx: null,
     splitRows: [],
@@ -123,7 +144,6 @@
         firstDay = firstDay === 0 ? 6 : firstDay - 1; // convert to 0=Mon, 6=Sun
 
         let days = [];
-        // Previous month days
         let prevMonthDays = new Date(year, month, 0).getDate();
         for(let i = firstDay - 1; i >= 0; i--) {
             days.push({ day: prevMonthDays - i, isCurrentMonth: false });
@@ -131,7 +151,6 @@
         
         for(let i = 1; i <= daysInMonth; i++) {
             let dStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(i).padStart(2, '0');
-            // Filter approved transactions for this day
             let dailyTxs = this.rawTransactions.filter(tx => tx.created_at && tx.created_at.startsWith(dStr) && tx.status === 'approved');
             
             let income = 0;
@@ -164,7 +183,6 @@
             });
         }
 
-        // Next month days to complete grid
         let nextMonthDay = 1;
         while(days.length % 7 !== 0) {
             days.push({ day: nextMonthDay++, isCurrentMonth: false });
@@ -174,95 +192,48 @@
     }
 }"
 x-init="$watch('filterSearch', () => currentPage = 1); $watch('filterMemberId', () => currentPage = 1); $watch('filterType', () => currentPage = 1); $watch('filterDateFrom', () => currentPage = 1); $watch('filterDateTo', () => currentPage = 1); $watch('sortOrder', () => currentPage = 1)"
-class="pb-20 lg:pb-6">
-
-    <!-- Page Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div class="flex items-center space-x-2">
-            <button @click="showCalendar = !showCalendar" class="px-3.5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-xs rounded-xl shadow-sm transition flex items-center space-x-2 cursor-pointer">
-                <span>📅 Lịch Thu Chi Nhật Ký</span>
-                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-black" x-text="showCalendar ? '▲ Thu gọn' : '▼ Mở rộng'"></span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Collapsible Calendar Section -->
-    <div x-show="showCalendar" x-cloak x-transition class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-md mb-6">
-        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-700">
-            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                <span>🗓️ Lịch Thu Chi Nhóm Thống Kê Theo Ngày</span>
-            </h3>
-            <div class="flex items-center gap-2">
-                <input type="month" x-model="calMonthYear" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
-            </div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
-            <div>H</div>
-            <div>B</div>
-            <div>T</div>
-            <div>N</div>
-            <div>S</div>
-            <div>B</div>
-            <div>C</div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-1 sm:gap-2">
-            <template x-for="(dayObj, i) in calendarDays" :key="i">
-                <div class="min-h-[55px] sm:min-h-[65px] border border-slate-100 dark:border-slate-700 rounded-xl p-1 sm:p-1.5 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col justify-between transition"
-                    :class="{ 'opacity-50 grayscale': !dayObj.isCurrentMonth, 'hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 cursor-pointer bg-white dark:bg-slate-700': dayObj.isCurrentMonth, 'ring-2 ring-emerald-500 shadow-md': dayObj.isCurrentMonth && new Date().toISOString().startsWith(dayObj.dateStr) }"
-                    @click="if(dayObj.isCurrentMonth && dayObj.txCount > 0) { selectedCalDay = dayObj; showCalModal = true; }">
-                    
-                    <div>
-                        <p class="text-right font-black text-xs" 
-                           :class="{ 'text-emerald-600': dayObj.isCurrentMonth && new Date().toISOString().startsWith(dayObj.dateStr), 'text-slate-700 dark:text-slate-200': dayObj.isCurrentMonth && !new Date().toISOString().startsWith(dayObj.dateStr), 'text-slate-400 dark:text-slate-500': !dayObj.isCurrentMonth }"
-                           x-text="dayObj.day"></p>
-                    </div>
-
-                    <div x-show="dayObj.isCurrentMonth && dayObj.txCount > 0" class="flex flex-col gap-0.5 mt-0.5 text-right">
-                        <!-- Thu nhập màu xanh -->
-                        <template x-if="dayObj.income > 0">
-                            <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 truncate" x-text="'+' + (dayObj.income >= 1000000 ? (dayObj.income/1000000).toFixed(1) + 'tr' : (dayObj.income/1000).toFixed(0) + 'k')"></span>
-                        </template>
-                        <!-- Chi tiêu màu đỏ -->
-                        <template x-if="dayObj.expense > 0">
-                            <span class="text-[9px] font-black text-rose-600 dark:text-rose-400 truncate" x-text="'-' + (dayObj.expense >= 1000000 ? (dayObj.expense/1000000).toFixed(1) + 'tr' : (dayObj.expense/1000).toFixed(0) + 'k')"></span>
-                        </template>
-                    </div>
-                </div>
-            </template>
-        </div>
-    </div>
+class="pb-12 sm:pb-8">
 
     <!-- Main Container Card -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md">
         
-        <!-- Reactive Filter Bar: Zero Reload, Instant Filter -->
-        <div class="flex flex-col gap-3 mb-5 pb-5 border-b border-slate-100 dark:border-slate-700">
-            <div class="flex items-center justify-between">
-                <p class="text-xs text-slate-500 font-bold">
-                    Tổng số: <span class="text-emerald-600 dark:text-emerald-400 font-extrabold" x-text="filteredTransactions.length"></span> giao dịch
-                    <template x-if="filterSearch || filterMemberId || filterType || filterDateFrom || filterDateTo || sortOrder !== 'desc'">
-                        <span class="text-indigo-500 font-bold"> (đang lọc)</span>
-                    </template>
-                </p>
-
-                <!-- Mobile filter toggle -->
-                <button @click="showFilters = !showFilters" class="md:hidden px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center space-x-1 cursor-pointer">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                    <span>Bộ Lọc</span>
-                </button>
-            </div>
-
-            <div class="gap-2 grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap md:items-center" :class="showFilters ? 'grid' : 'hidden md:flex'">
-                <input type="text" x-model="filterSearch" placeholder="Tìm kiếm nội dung..." class="w-full md:w-56 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
+        <!-- Single Horizontal Action & Filter Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 pb-5 border-b border-slate-100 dark:border-slate-700">
+            <!-- Left Side: Filters & Total Count -->
+            <div class="flex flex-col sm:flex-row sm:flex-wrap items-center gap-2.5 w-full md:w-auto">
+                <input type="text" x-model="filterSearch" placeholder="Tìm kiếm nội dung..." class="w-full sm:w-48 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
                 
-                <select x-model="filterMemberId" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+                <select x-model="filterMemberId" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
                     <option value="">Tất cả thành viên</option>
                     @foreach($members->where('role', '!=', 'admin') as $m)
                         <option value="{{ $m->id }}">{{ $m->name }}</option>
                     @endforeach
                 </select>
+
+                <select x-model="sortOrder" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+                    <option value="desc">Mới nhất ➔ Cũ nhất</option>
+                    <option value="asc">Cũ nhất ➔ Mới nhất</option>
+                </select>
+
+                <p class="text-xs text-slate-500 font-bold whitespace-nowrap self-start sm:self-center">
+                    Tổng số: <span class="text-emerald-600 dark:text-emerald-400 font-extrabold" x-text="filteredTransactions.length"></span> giao dịch
+                    <template x-if="filterSearch || filterMemberId || sortOrder !== 'desc'">
+                        <span class="text-indigo-500 font-bold"> (đang lọc)</span>
+                    </template>
+                </p>
+
+                <template x-if="filterSearch || filterMemberId || sortOrder !== 'desc'">
+                    <button @click="resetFilters()" class="px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer">
+                        <span>✕ Xóa lọc</span>
+                    </button>
+                </template>
+            </div>
+
+            <!-- Right Side: Thêm Giao Dịch Button -->
+            <button @click="showAddModal = true" class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer flex-shrink-0">
+                <span>Thêm Giao Dịch</span>
+            </button>
+        </div>
 
         <!-- Desktop Table -->
         <div class="hidden lg:block overflow-x-auto">
@@ -508,6 +479,148 @@ class="pb-20 lg:pb-6">
                 </div>
             </div>
         </template>
+    </div>
+
+    <!-- MODAL: THÊM GIAO DỊCH MỚI -->
+    <div x-show="showAddModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
+        <div @click.away="showAddModal = false" class="bg-white dark:bg-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 w-full sm:max-w-md shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+                <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Thêm Giao Dịch Mới</span>
+                </h3>
+                <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">✕</button>
+            </div>
+
+            <!-- Type Switcher Tabs (Chi tiêu vs Thu nhập) -->
+            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl mb-4">
+                <button type="button" @click="quickType = 'expense'" 
+                        class="py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
+                        :class="quickType === 'expense' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border-b-2 border-slate-900 dark:border-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
+                    Chi tiêu
+                </button>
+                <button type="button" @click="quickType = 'contribution'" 
+                        class="py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
+                        :class="quickType !== 'expense' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border-b-2 border-slate-900 dark:border-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
+                    Thu nhập
+                </button>
+            </div>
+
+            <form action="{{ route('transactions.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4" x-data="{ 
+                evidenceMode: 'none', 
+                selectedFileName: '', 
+                selectedFilePreview: '',
+                triggerFilePick() {
+                    this.evidenceMode = 'file';
+                    this.$refs.evidenceFileInputModal.click();
+                },
+                onFileSelected(e) {
+                    let file = e.target.files[0];
+                    if (file) {
+                        this.selectedFileName = file.name;
+                        if (file.type.startsWith('image/')) {
+                            let reader = new FileReader();
+                            reader.onload = (evt) => { this.selectedFilePreview = evt.target.result; };
+                            reader.readAsDataURL(file);
+                        } else {
+                            this.selectedFilePreview = '';
+                        }
+                    }
+                },
+                clearFile() {
+                    this.$refs.evidenceFileInputModal.value = '';
+                    this.selectedFileName = '';
+                    this.selectedFilePreview = '';
+                    this.evidenceMode = 'none';
+                }
+            }">
+                @csrf
+                <!-- Automatically set user_id to logged-in user -->
+                <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+                <input type="hidden" name="type" :value="quickType">
+
+                <!-- Date Picker Row -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Ngày giao dịch</label>
+                    <div class="flex items-center space-x-1.5 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5">
+                        <button type="button" @click="prevQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="flex-1 text-center font-bold text-xs sm:text-sm text-slate-900 dark:text-white relative cursor-pointer" @click="$refs.nativeDatePickerModal.showPicker()">
+                            <span x-text="formattedQuickDate"></span>
+                            <input type="date" x-ref="nativeDatePickerModal" name="created_at" x-model="quickDate" class="absolute inset-0 opacity-0 cursor-pointer">
+                        </div>
+                        <button type="button" @click="nextQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Evidence Attachment Row -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Bằng chứng</label>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button type="button" @click="triggerFilePick()" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'">
+                            <span>🖼️ Bill</span>
+                        </button>
+                        <button type="button" @click="evidenceMode = evidenceMode === 'link' ? 'none' : 'link'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'link' ? 'bg-blue-600 text-white ring-2 ring-blue-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-blue-900/30'">
+                            <span>🔗 Link</span>
+                        </button>
+                        <button type="button" @click="evidenceMode = evidenceMode === 'text' ? 'none' : 'text'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'text' ? 'bg-amber-600 text-white ring-2 ring-amber-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'">
+                            <span>📝 Momo</span>
+                        </button>
+                    </div>
+
+                    <input type="file" x-ref="evidenceFileInputModal" name="evidence_file" accept="image/*,.pdf" class="hidden" @change="onFileSelected($event)">
+                    <input type="hidden" name="evidence_type" :value="evidenceMode">
+
+                    <div x-show="evidenceMode === 'file' && selectedFileName" class="p-2.5 bg-emerald-50/60 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200/80 dark:border-emerald-700/50 flex items-center justify-between transition mt-2" x-cloak>
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <template x-if="selectedFilePreview">
+                                <img :src="selectedFilePreview" class="w-9 h-9 object-cover rounded-lg border border-emerald-300 dark:border-emerald-600 shadow-sm flex-shrink-0">
+                            </template>
+                            <template x-if="!selectedFilePreview">
+                                <span class="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-200 font-bold text-xs flex items-center justify-center flex-shrink-0">📄</span>
+                            </template>
+                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate" x-text="selectedFileName"></span>
+                        </div>
+                        <button type="button" @click="clearFile()" title="Xóa ảnh đã chọn" class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition font-black text-sm cursor-pointer ml-2 flex-shrink-0">✕</button>
+                    </div>
+
+                    <div x-show="evidenceMode === 'link'" x-cloak class="mt-1.5">
+                        <input type="url" name="evidence_link" placeholder="https://momo.vn/transaction/..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white">
+                    </div>
+                    <div x-show="evidenceMode === 'text'" x-cloak class="mt-1.5">
+                        <textarea name="evidence_text" rows="2" placeholder="Dán thông tin sao kê trích xuất từ Momo..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white"></textarea>
+                    </div>
+                </div>
+
+                <!-- Note Input Row -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Ghi chú nội dung</label>
+                    <input type="text" name="description" x-model="quickNote" placeholder="Thêm ghi chú" required
+                           class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <!-- Amount Input Row -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" x-text="quickType === 'expense' ? 'Số tiền chi' : 'Số tiền thu'"></label>
+                    <div class="relative">
+                        <input type="number" name="amount" x-model="quickAmount" placeholder="0" required min="1000" step="1000"
+                               class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-8 py-2 text-base font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <span class="absolute right-3 top-2.5 text-xs font-bold text-slate-400">đ</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" 
+                            class="w-full py-3 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition-all duration-200 active:scale-98 cursor-pointer flex items-center justify-center space-x-2"
+                            :class="quickType === 'expense' ? 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-rose-500/25' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/25'">
+                        <span>Thêm giao dịch</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- MODAL: CHỈNH SỬA GIAO DỊCH -->

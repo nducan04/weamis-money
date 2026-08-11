@@ -101,11 +101,11 @@
                 <nav class="hidden sm:flex items-center space-x-1 pl-4 border-l border-emerald-400/40">
                     <a href="{{ route('dashboard') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('dashboard') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Sổ Thu Chi</span>
+                        <span>Tổng Quan</span>
                     </a>
                     <a href="{{ route('history') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('history') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
-                        <span>Lịch Sử GD</span>
+                        <span>Giao Dịch</span>
                     </a>
                     <a href="{{ route('projects.index') }}" 
                        class="px-3.5 py-2 rounded-xl text-sm font-extrabold transition flex items-center space-x-1.5 {{ request()->routeIs('projects.*') ? 'bg-white/20 text-white shadow-inner' : 'text-emerald-100 hover:bg-white/10 hover:text-white' }}">
@@ -213,83 +213,71 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-6 py-5 sm:py-8 flex-grow w-full min-h-[75vh] pb-6 sm:pb-8">
+    <main class="max-w-7xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-6 py-5 sm:py-8 flex-grow w-full pb-6 sm:pb-8">
         <!-- Auto-Dismissing Floating Toast Notifications (4 seconds) -->
         @if(session('success'))
             <div x-data="{ show: true }" 
                  x-init="setTimeout(() => show = false, 4000)" 
                  x-show="show" 
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 -translate-y-3 scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave-end="opacity-0 -translate-y-3 scale-95"
-                 x-cloak
-                 class="fixed top-5 right-5 z-50 max-w-md p-4 rounded-2xl bg-emerald-600 text-white shadow-2xl flex items-center space-x-3 border border-emerald-400/40 backdrop-blur-md">
-                <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                    ✓
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="font-extrabold text-[10px] uppercase tracking-wider text-emerald-100">Thông báo</p>
-                    <p class="font-bold text-xs sm:text-sm leading-snug">{{ session('success') }}</p>
-                </div>
-                <button @click="show = false" class="text-white/80 hover:text-white text-base font-bold px-1.5 cursor-pointer">✕</button>
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-2"
+                 class="fixed top-20 right-4 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl border border-emerald-400/30 flex items-center space-x-3 text-xs sm:text-sm font-extrabold max-w-sm">
+                <span class="text-base">✅</span>
+                <span>{{ session('success') }}</span>
+                <button @click="show = false" class="ml-auto text-emerald-200 hover:text-white font-bold text-sm">✕</button>
             </div>
         @endif
 
         @if(session('error'))
             <div x-data="{ show: true }" 
-                 x-init="setTimeout(() => show = false, 4000)" 
+                 x-init="setTimeout(() => show = false, 5000)" 
                  x-show="show" 
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 -translate-y-3 scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave-end="opacity-0 -translate-y-3 scale-95"
-                 x-cloak
-                 class="fixed top-5 right-5 z-50 max-w-md p-4 rounded-2xl bg-rose-600 text-white shadow-2xl flex items-center space-x-3 border border-rose-400/40 backdrop-blur-md">
-                <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                    ✕
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="font-extrabold text-[10px] uppercase tracking-wider text-rose-100">Lỗi</p>
-                    <p class="font-bold text-xs sm:text-sm leading-snug">{{ session('error') }}</p>
-                </div>
-                <button @click="show = false" class="text-white/80 hover:text-white text-base font-bold px-1.5 cursor-pointer">✕</button>
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-2"
+                 class="fixed top-20 right-4 z-50 bg-rose-600 text-white px-5 py-3 rounded-2xl shadow-xl border border-rose-400/30 flex items-center space-x-3 text-xs sm:text-sm font-extrabold max-w-sm">
+                <span class="text-base">⚠️</span>
+                <span>{{ session('error') }}</span>
+                <button @click="show = false" class="ml-auto text-rose-200 hover:text-white font-bold text-sm">✕</button>
             </div>
         @endif
 
         @yield('content')
     </main>
 
-    <!-- Global Mobile Bottom Navigation Bar (Visible across ALL pages on screens < sm) -->
-    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-slate-200/90 dark:border-slate-700/90 shadow-2xl safe-bottom px-0.5 py-1.5 transition-colors">
-        <div class="grid grid-cols-4 gap-0.5 text-center">
+    <!-- Bottom Mobile Navigation Bar (Fixed at bottom for easy thumb access) -->
+    <div class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 px-2 py-1.5 shadow-2xl safe-bottom">
+        <div class="grid grid-cols-4 gap-1 max-w-md mx-auto">
             
-            <!-- Tab 1: Sổ Thu Chi -->
+            <!-- Tab 1: Tổng Quan -->
             <a href="{{ route('dashboard') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('dashboard') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Dashboard.svg') center/contain no-repeat; mask: url('/icons/Dashboard.svg') center/contain no-repeat;"></div>
-                <span class="text-[10px] font-extrabold tracking-tight">Thu Chi</span>
+                <span class="text-[10px] font-extrabold tracking-tight">Tổng Quan</span>
             </a>
 
-            <!-- Tab 2: Lịch Sử GD -->
+            <!-- Tab 2: Giao Dịch -->
             <a href="{{ route('history') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('history') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current text-lg flex items-center justify-center">📝</div>
-                <span class="text-[10px] font-extrabold tracking-tight">Lịch Sử GD</span>
+                <span class="text-[10px] font-extrabold tracking-tight">Giao Dịch</span>
             </a>
 
-            <!-- Tab 2: Dự Án -->
+            <!-- Tab 3: Dự Án -->
             <a href="{{ route('projects.index') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('projects.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Project.svg') center/contain no-repeat; mask: url('/icons/Project.svg') center/contain no-repeat;"></div>
                 <span class="text-[10px] font-extrabold tracking-tight">Dự Án</span>
             </a>
 
-            <!-- Tab 3: Tài Sản & Thành Viên -->
+            <!-- Tab 4: Tài Sản & Thành Viên -->
             <a href="{{ route('analytics.networth') }}" 
                class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer {{ request()->routeIs('analytics.*') ? 'text-emerald-600 dark:text-emerald-400 font-black scale-105 bg-emerald-50/50 dark:bg-emerald-950/30' : 'text-slate-400 dark:text-slate-400 font-semibold hover:text-slate-700 dark:hover:text-slate-200' }}">
                 <div class="w-5 h-5 mb-0.5 bg-current" style="-webkit-mask: url('/icons/Money.svg') center/contain no-repeat; mask: url('/icons/Money.svg') center/contain no-repeat;"></div>
@@ -313,7 +301,7 @@
                 <a href="{{ route('dashboard') }}" class="hover:text-white transition">Dashboard</a>
                 <a href="{{ route('projects.index') }}" class="hover:text-white transition">Dự Án</a>
                 <a href="{{ route('analytics.networth') }}" class="hover:text-white transition">Net Worth</a>
-                <a href="{{ route('history') }}" class="hover:text-white transition">Lịch Sử GD</a>
+                <a href="{{ route('history') }}" class="hover:text-white transition">Giao Dịch</a>
                 <span class="text-emerald-300/60 font-normal">© {{ date('Y') }} Team Weamis</span>
             </div>
         </div>

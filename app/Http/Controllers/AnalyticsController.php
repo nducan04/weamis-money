@@ -119,17 +119,17 @@ class AnalyticsController extends Controller
         foreach ($projects as $p) {
             $nodes[] = [
                 'id' => 'p_' . $p->id,
-                'label' => '📁 ' . $p->name . ' (' . $p->code . ')',
+                'label' => '📁 ' . $p->name,
                 'group' => 'project',
                 'shape' => 'box',
-                'borderRadius' => 8,
-                'margin' => 10,
+                'borderRadius' => 10,
+                'margin' => 12,
                 'color' => [
                     'background' => '#f59e0b',
                     'border' => '#d97706',
                     'highlight' => ['background' => '#fbbf24', 'border' => '#b45309']
                 ],
-                'font' => ['color' => '#0f172a', 'face' => 'Plus Jakarta Sans', 'size' => 12, 'vadjust' => 0]
+                'font' => ['color' => '#0f172a', 'face' => 'Plus Jakarta Sans', 'size' => 14, 'bold' => 'true', 'vadjust' => 0]
             ];
 
             $pMembers = $p->members->where('role', '!=', 'admin');
@@ -141,8 +141,8 @@ class AnalyticsController extends Controller
                     'to' => 'p_' . $p->id,
                     'label' => $pm->pivot->share_percentage . '%',
                     'color' => ['color' => '#10b981', 'highlight' => '#34d399'],
-                    'width' => 2,
-                    'font' => ['color' => '#10b981', 'size' => 11, 'face' => 'Plus Jakarta Sans', 'strokeWidth' => 3, 'strokeColor' => '#0f172a']
+                    'width' => 3,
+                    'font' => ['color' => '#10b981', 'size' => 14, 'face' => 'Plus Jakarta Sans', 'bold' => 'true', 'strokeWidth' => 4, 'strokeColor' => '#0f172a']
                 ];
             }
 

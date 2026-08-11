@@ -117,189 +117,14 @@
 class="pb-20 lg:pb-6">
 
     <!-- Mobile View Switcher Tabs (hidden on desktop) -->
-    <div class="lg:hidden flex items-center space-x-1 p-1 bg-slate-200 dark:bg-slate-700/60 rounded-2xl mb-4">
-        <button @click="mobileTab = 'entry'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'entry' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">Nhập vào</button>
-        <button @click="mobileTab = 'stats'" class="flex-1 py-2 text-xs font-bold rounded-xl transition" :class="mobileTab === 'stats' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'">Thống kê</button>
-    </div>
-
     <!-- Main Container: Desktop Multi-Column Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid grid-cols-1 gap-6">
 
-        <!-- CỘT TRÁI (LEFT PANEL): FORM SỔ THU CHI -->
-        <div class="lg:col-span-5 xl:col-span-4" :class="mobileTab === 'entry' ? 'block' : 'hidden lg:block'">
-            <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-md sticky top-20">
-                <!-- Header -->
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                    <div class="flex items-center space-x-2">
-                        <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Sổ thu chi</h2>
-                    </div>
-                    <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-2.5 py-1 rounded-full">Quỹ: {{ number_format($fund->balance, 0, ',', '.') }}đ</span>
-                </div>
-
-                <!-- Type Tabs: Chi tiêu vs Thu nhập -->
-                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl mb-4">
-                    <button type="button" @click="switchQuickType('expense')" 
-                            class="py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
-                            :class="quickType === 'expense' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border-b-2 border-slate-900 dark:border-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
-                        Chi tiêu
-                    </button>
-                    <button type="button" @click="switchQuickType('contribution')" 
-                            class="py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
-                            :class="quickType !== 'expense' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border-b-2 border-slate-900 dark:border-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'">
-                        Thu nhập
-                    </button>
-                </div>
-
-                <!-- Form Submit -->
-                <form action="{{ route('transactions.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3.5" x-data="{ 
-                    evidenceMode: 'none', 
-                    selectedFileName: '', 
-                    selectedFilePreview: '',
-                    triggerFilePick() {
-                        this.evidenceMode = 'file';
-                        this.$refs.evidenceFileInput.click();
-                    },
-                    onFileSelected(e) {
-                        let file = e.target.files[0];
-                        if (file) {
-                            this.selectedFileName = file.name;
-                            if (file.type.startsWith('image/')) {
-                                let reader = new FileReader();
-                                reader.onload = (evt) => { this.selectedFilePreview = evt.target.result; };
-                                reader.readAsDataURL(file);
-                            } else {
-                                this.selectedFilePreview = '';
-                            }
-                        }
-                    },
-                    clearFile() {
-                        this.$refs.evidenceFileInput.value = '';
-                        this.selectedFileName = '';
-                        this.selectedFilePreview = '';
-                        this.evidenceMode = 'none';
-                    }
-                }">
-                    @csrf
-                    <!-- Member Selector -->
-                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Thành viên</span>
-                        @if(auth()->user()?->isAdmin())
-                            <select name="user_id" x-model="quickUserId" class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                @foreach($members->where('role', '!=', 'admin') as $m)
-                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
-                                @endforeach
-                            </select>
-                        @else
-                            <div class="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                                <span>{{ auth()->user()->name }}</span>
-                                <input type="hidden" name="user_id" value="{{ auth()->id() }}">
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Hidden input for type (expense vs contribution) -->
-                    <input type="hidden" name="type" :value="quickType">
-
-
-
-                    <!-- Date Picker Row with < and > controls -->
-                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Ngày</span>
-                        <div class="flex-1 flex items-center space-x-1.5 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5">
-                            <button type="button" @click="prevQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-                            </button>
-                            <div class="flex-1 text-center font-bold text-xs sm:text-sm text-slate-900 dark:text-white relative cursor-pointer" @click="$refs.nativeDatePicker.showPicker()">
-                                <span x-text="formattedQuickDate"></span>
-                                <input type="date" x-ref="nativeDatePicker" name="created_at" x-model="quickDate" class="absolute inset-0 opacity-0 cursor-pointer">
-                            </div>
-                            <button type="button" @click="nextQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-
-
-
-                    <!-- Evidence Attachment Row -->
-                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Bằng chứng</span>
-                        <div class="flex-1 grid grid-cols-3 gap-1.5">
-                            <button type="button" @click="triggerFilePick()" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'file' && selectedFileName ? 'bg-emerald-600 text-white ring-2 ring-emerald-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'">
-                                <span>🖼️ Bill</span>
-                            </button>
-                            <button type="button" @click="evidenceMode = evidenceMode === 'link' ? 'none' : 'link'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'link' ? 'bg-blue-600 text-white ring-2 ring-blue-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-600 hover:bg-blue-50 dark:hover:bg-blue-900/30'">
-                                <span>🔗 Link</span>
-                            </button>
-                            <button type="button" @click="evidenceMode = evidenceMode === 'text' ? 'none' : 'text'" class="w-full py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center space-x-1 cursor-pointer active:scale-95 shadow-xs text-center" :class="evidenceMode === 'text' ? 'bg-amber-600 text-white ring-2 ring-amber-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-700/60 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-amber-900/30'">
-                                <span>📝 Momo</span>
-                            </button>
-                        </div>
-                    </div>
-
-                        <!-- Hidden File Input triggered directly by 'Ảnh bill' button -->
-                        <input type="file" x-ref="evidenceFileInput" name="evidence_file" accept="image/*,.pdf" class="hidden" @change="onFileSelected($event)">
-                        <input type="hidden" name="evidence_type" :value="evidenceMode">
-
-                        <!-- Selected File Preview Container with ✕ Delete Button -->
-                        <div x-show="evidenceMode === 'file' && selectedFileName" class="p-2.5 bg-emerald-50/60 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200/80 dark:border-emerald-700/50 flex items-center justify-between transition" x-cloak>
-                            <div class="flex items-center space-x-2.5 min-w-0">
-                                <template x-if="selectedFilePreview">
-                                    <img :src="selectedFilePreview" class="w-9 h-9 object-cover rounded-lg border border-emerald-300 dark:border-emerald-600 shadow-sm flex-shrink-0">
-                                </template>
-                                <template x-if="!selectedFilePreview">
-                                    <span class="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-200 font-bold text-xs flex items-center justify-center flex-shrink-0">📄</span>
-                                </template>
-                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate" x-text="selectedFileName"></span>
-                            </div>
-                            <button type="button" @click="clearFile()" title="Xóa ảnh đã chọn" class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition font-black text-sm cursor-pointer ml-2 flex-shrink-0">
-                                ✕
-                            </button>
-                        </div>
-
-                        <div x-show="evidenceMode === 'link'" x-cloak class="mt-1.5">
-                            <input type="url" name="evidence_link" placeholder="https://momo.vn/transaction/..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white">
-                        </div>
-                        <div x-show="evidenceMode === 'text'" x-cloak class="mt-1.5">
-                            <textarea name="evidence_text" rows="2" placeholder="Dán thông tin sao kê trích xuất từ Momo..." class="w-full text-xs px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700/60 text-slate-900 dark:text-white"></textarea>
-                        </div>
-
-                    <!-- Note Input Row -->
-                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0">Ghi chú</span>
-                        <input type="text" name="description" x-model="quickNote" placeholder="Thêm ghi chú" required
-                               class="flex-1 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 outline-none">
-                    </div>
-
-                    <!-- Amount Input Row -->
-                    <div class="flex items-center justify-between text-xs sm:text-sm font-semibold">
-                        <span class="text-slate-500 dark:text-slate-400 w-20 flex-shrink-0" x-text="quickType === 'expense' ? 'Tiền chi' : 'Tiền thu'"></span>
-                        <div class="flex-1 relative">
-                            <input type="number" name="amount" x-model="quickAmount" placeholder="0" required min="1000" step="1000"
-                                   class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-8 py-2 text-base font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <span class="absolute right-3 top-2.5 text-xs font-bold text-slate-400">đ</span>
-                        </div>
-                    </div>
-
-
-
-                    <!-- Submit Button -->
-                    <div class="pt-2">
-                        <button type="submit" 
-                                class="w-full py-3 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition-all duration-200 active:scale-98 cursor-pointer flex items-center justify-center space-x-2"
-                                :class="quickType === 'expense' ? 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-rose-500/25' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/25'">
-                            <span x-text="quickType === 'expense' ? 'Thêm' : 'Thêm'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- CỘT PHẢI (RIGHT PANEL): DASHBOARD OVERVIEW, CHARTS & MEMBER STATS -->
-        <div class="lg:col-span-7 xl:col-span-8 space-y-6" :class="mobileTab !== 'entry' ? 'block' : 'hidden lg:block'">
+        <!-- DASHBOARD OVERVIEW, CHARTS & MEMBER STATS -->
+        <div class="space-y-6">
 
             <!-- 1. Top Stat Cards Row -->
-            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" :class="mobileTab === 'stats' || mobileTab === 'all' ? 'block' : 'hidden lg:grid'">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <!-- Card 1: Số Dư Quỹ -->
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                     <div class="flex items-center justify-between">
@@ -342,9 +167,7 @@ class="pb-20 lg:pb-6">
             </div>
 
             <!-- ApexCharts Section -->
-            <div class="grid grid-cols-1 gap-4 sm:gap-5"
-                 :class="mobileTab === 'stats' || mobileTab === 'all' ? 'block' : 'hidden lg:block'"
-            >
+            <div class="grid grid-cols-1 gap-4 sm:gap-5">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
                     <div class="flex items-center space-x-3 mb-3 pb-2.5 border-b border-slate-100 dark:border-slate-700">
                         <div class="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
@@ -436,61 +259,9 @@ class="pb-20 lg:pb-6">
 
 
             <!-- 2. Full Transaction History Section (Lịch Sử GD Đầy Đủ) -->
-            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4"
-                 :class="mobileTab === 'history' || mobileTab === 'all' ? 'block' : 'hidden lg:block'">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
                 
-                <!-- Section Header -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700">
-                    <div class="flex items-center space-x-3">
-                        <div class="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                        </div>
-                        <div>
-                            <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Nhật Ký Thu Chi Chi Tiết</h3>
-                            <p class="text-[10px] text-slate-400 font-medium">Toàn bộ lịch sử thu chi toàn hệ thống</p>
-                        </div>
-                    </div>
 
-                    <span class="text-xs font-bold text-slate-400" x-text="'Hiển thị ' + filteredTransactions.length + ' giao dịch'"></span>
-                </div>
-
-                <!-- Live Filters Bar -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                    <!-- Search Input -->
-                    <div>
-                        <input type="text" x-model="txSearchText" @input="txPage = 1" placeholder="🔍 Tìm ghi chú, số tiền, tên..." 
-                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-
-                    <!-- Type Filter -->
-                    <div>
-                        <select x-model="txFilterType" @change="txPage = 1" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="all">Tất cả loại GD</option>
-                            <option value="contribution">Góp quỹ</option>
-                            <option value="expense">Chi tiêu chung</option>
-                            <option value="loan">Vay cá nhân</option>
-                            <option value="repayment">Trả nợ</option>
-                            <option value="withdrawal">Rút lương</option>
-                            <option value="adjustment">Điều chỉnh số dư</option>
-                        </select>
-                    </div>
-
-                    <!-- Member Filter -->
-                    <div>
-                        <select x-model="txFilterUserId" @change="txPage = 1" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="all">Tất cả thành viên</option>
-                            @foreach($members as $m)
-                                <option value="{{ $m->id }}">{{ $m->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Date Filter -->
-                    <div>
-                        <input type="date" x-model="txFilterDate" @change="txPage = 1" 
-                               class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                </div>
 
                 <!-- Table View -->
                 <div class="overflow-x-auto">
@@ -499,7 +270,6 @@ class="pb-20 lg:pb-6">
                             <tr>
                                 <th class="py-2.5 px-3 rounded-l-xl whitespace-nowrap">ID & Ngày</th>
                                 <th class="py-2.5 px-3 whitespace-nowrap">Thành viên</th>
-                                <th class="py-2.5 px-3 whitespace-nowrap">Loại GD</th>
                                 <th class="py-2.5 px-3">Nội dung ghi chú</th>
                                 <th class="py-2.5 px-3 text-right rounded-r-xl whitespace-nowrap">Số tiền (VNĐ)</th>
                             </tr>
@@ -528,21 +298,6 @@ class="pb-20 lg:pb-6">
                                         </div>
                                     </td>
 
-                                    <!-- Type Badge -->
-                                    <td class="py-3 px-3 whitespace-nowrap">
-                                        <span class="px-2 py-0.5 text-[10px] font-black rounded-lg inline-block whitespace-nowrap"
-                                              :class="{
-                                                  'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20': tx.type === 'contribution',
-                                                  'bg-rose-500/10 text-rose-600 border border-rose-500/20': tx.type === 'expense',
-                                                  'bg-purple-500/10 text-purple-600 border border-purple-500/20': tx.type === 'loan',
-                                                  'bg-teal-500/10 text-teal-600 border border-teal-500/20': tx.type === 'repayment',
-                                                  'bg-indigo-500/10 text-indigo-600 border border-indigo-500/20': tx.type === 'withdrawal',
-                                                  'bg-sky-500/10 text-sky-600 border border-sky-500/20': tx.type === 'adjustment'
-                                              }"
-                                              x-text="tx.type === 'contribution' ? 'Góp quỹ' : (tx.type === 'expense' ? 'Chi tiêu chung' : (tx.type === 'loan' ? 'Vay cá nhân' : (tx.type === 'repayment' ? 'Trả nợ' : (tx.type === 'adjustment' ? 'Điều chỉnh' : 'Rút lương'))))">
-                                        </span>
-                                    </td>
-
                                     <!-- Description -->
                                     <td class="py-3 px-3 min-w-[200px]">
                                         <p class="font-medium text-slate-800 dark:text-slate-200 line-clamp-1" x-text="tx.description"></p>
@@ -562,7 +317,7 @@ class="pb-20 lg:pb-6">
 
                             <template x-if="paginatedTransactions.length === 0">
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-slate-400 font-semibold">
+                                    <td colspan="4" class="py-8 text-center text-slate-400 font-semibold">
                                         Không tìm thấy giao dịch nào phù hợp với bộ lọc.
                                     </td>
                                 </tr>
