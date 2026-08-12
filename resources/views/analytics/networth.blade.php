@@ -1,35 +1,82 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6"
+     x-data="{
+        viewMode: 'net',
+        grossData: {{ \Illuminate\Support\Js::from($grossData) }},
+        netData: {{ \Illuminate\Support\Js::from($netData) }},
+        treasuryCash: {{ $treasuryCash }},
+        get activeData() { return this.viewMode === 'gross' ? this.grossData : this.netData; },
+        formatMoney(v) {
+            let abs = Math.abs(v);
+            let formatted = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return (v >= 0 ? '+' : '-') + formatted;
+        },
+        rankLabel(idx) {
+            if (idx === 0) return '👑 TOP 1';
+            if (idx === 1) return '🥈 TOP 2';
+            if (idx === 2) return '🥉 TOP 3';
+            return '#' + (idx + 1);
+        },
+        rankClass(idx) {
+            if (idx === 0) return 'bg-amber-400 text-amber-950';
+            if (idx === 1) return 'bg-slate-200 text-slate-800';
+            if (idx === 2) return 'bg-amber-700/20 text-amber-600';
+            return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+        }
+     }">
 
-    <!-- 1. Ranked Net Worth Member Cards -->
-    <div class="space-y-3">
-        <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-            <span>Tài Sản Ròng Các Thành Viên</span>
-        </h3>
+    <!-- 1. Toggle & Member Cards Section -->
+    <div class="space-y-4">
+        <!-- Section Header with Toggle -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                <span x-text="viewMode === 'net' ? 'Tài Sản Ròng Các Thành Viên' : 'Vốn Cống Hiến Các Thành Viên'"></span>
+            </h3>
 
+            <!-- Pill Toggle -->
+            <div class="flex items-center bg-slate-100 dark:bg-slate-700/60 rounded-xl p-1 border border-slate-200 dark:border-slate-600">
+                <button @click="viewMode = 'net'"
+                        :class="viewMode === 'net' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+                        class="px-4 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 cursor-pointer">
+                    Net
+                </button>
+                <button @click="viewMode = 'gross'"
+                        :class="viewMode === 'gross' ? 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'"
+                        class="px-4 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 cursor-pointer">
+                    Gross
+                </button>
+            </div>
+        </div>
+
+        <!-- Member Cards Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            @foreach($netWorthData as $rank => $nw)
+            <template x-for="(member, idx) in activeData" :key="member.username + viewMode">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm relative overflow-hidden hover:shadow-lg transition-all duration-200">
                     
-                    <!-- Rank Badge + Username -->
+                    <!-- Rank Badge -->
                     <div class="flex items-center justify-between mb-2.5">
-                        <span class="px-2 py-0.5 text-[10px] font-black rounded-lg {{ $rank === 0 ? 'bg-amber-400 text-amber-950' : ($rank === 1 ? 'bg-slate-200 text-slate-800' : ($rank === 2 ? 'bg-amber-700/20 text-amber-600' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300')) }}">
-                            {{ $rank === 0 ? '👑 TOP 1' : ($rank === 1 ? '🥈 TOP 2' : ($rank === 2 ? '🥉 TOP 3' : '#' . ($rank + 1))) }}
-                        </span>
-                        <span class="text-[10px] font-bold text-slate-400">@ {{ $nw['username'] }}</span>
+                        <span :class="rankClass(idx)" class="px-2 py-0.5 text-[10px] font-black rounded-lg" x-text="rankLabel(idx)"></span>
                     </div>
 
                     <!-- Name -->
-                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-white leading-snug mb-2.5">{{ $nw['name'] }}</h4>
+                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-white leading-snug mb-2.5" x-text="member.name"></h4>
 
-                    <!-- Net Worth Value (simplified: just the number with color) -->
-                    <p class="text-xl sm:text-2xl font-black tracking-tight {{ $nw['net_worth'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
-                        {{ $nw['net_worth'] >= 0 ? '+' : '' }}{{ number_format($nw['net_worth'], 0, ',', '.') }}<span class="text-sm font-extrabold">đ</span>
+                    <!-- Value -->
+                    <p class="text-xl sm:text-2xl font-black tracking-tight"
+                       :class="member.value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                        <span x-text="formatMoney(member.value)"></span><span class="text-sm font-extrabold">đ</span>
                     </p>
+
+                    <!-- Equity % (only in Gross mode, only for positive members) -->
+                    <template x-if="viewMode === 'gross' && member.equity && member.equity !== '--'">
+                        <p class="mt-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                            Cổ phần: <span x-text="member.equity"></span>
+                        </p>
+                    </template>
                 </div>
-            @endforeach
+            </template>
         </div>
     </div>
 

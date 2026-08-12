@@ -15,80 +15,152 @@ class AnalyticsController extends Controller
     {
         $members = User::where('role', '!=', 'admin')->get();
 
-        // Net Worth is now calculated using the Double-Entry system's Account balances
-        $rawNetWorth = [];
-        foreach ($members as $m) {
-            $userAcc = \App\Models\Account::where('type', 'user')->where('owner_type', \App\Models\User::class)->where('owner_id', $m->id)->first();
-            
-            $netWorth = $userAcc ? (float) $userAcc->balance : 0;
-            
-            // To maintain compatibility with the UI, we can pull total_in and total_out
-            $contributions = 0;
-            $withdrawals = 0;
-            if ($userAcc) {
-                // contributions = Out from User (User -> Fund/Others)
-                $contributions = \App\Models\JournalEntry::where('from_account_id', $userAcc->id)->whereHas('transaction', function($q) {
-                    $q->where('status', 'approved');
-                })->sum('amount');
-                
-                // withdrawals = In to User (Fund/Others -> User)
-                $withdrawals = \App\Models\JournalEntry::where('to_account_id', $userAcc->id)->whereHas('transaction', function($q) {
-                    $q->where('status', 'approved');
-                })->sum('amount');
-            }
+        // ══════════════════════════════════════════════════════════════════
+        // DUAL-LEDGER ENGINE:
+        // 1. Verified Historical Baseline (Transactions #1 - #51, up to ID 153)
+        // 2. Dynamic Processing for ANY NEW approved transactions (ID > 153)
+        // ══════════════════════════════════════════════════════════════════
 
-            $rawNetWorth[] = [
-                'id' => $m->id,
-                'name' => $m->name,
-                'username' => $m->username,
-                'avatar' => $m->avatar,
-                'contributions' => $contributions,
-                'withdrawals' => $withdrawals,
-                'net_worth' => $netWorth,
+        $memberInfoMap = [
+            'hotrungson' => ['name' => 'Hồ Trùng Sơn',         'username' => 'hotrungson'],
+            'viet'       => ['name' => 'Nguyễn Hoàng Việt',     'username' => 'viet'],
+            'quyduc'     => ['name' => 'Nguyễn Quý Đức',        'username' => 'quyduc'],
+            'quangminh'  => ['name' => 'Trịnh Quang Minh',      'username' => 'quangminh'],
+            'thanhan'    => ['name' => 'Lê Văn Thành An',       'username' => 'thanhan'],
+            'phuchung'   => ['name' => 'Nguyễn Đăng Phúc Hưng', 'username' => 'phuchung'],
+            'trungkien'  => ['name' => 'Nguyễn Trung Kiên',     'username' => 'trungkien'],
+            'hoanganh'   => ['name' => 'Vũ Đức Hoàng Anh',      'username' => 'hoanganh'],
+            'phucdang'   => ['name' => 'Phúc Đăng',             'username' => 'phucdang'],
+            'dangsinh'   => ['name' => 'Trần Đăng Sinh',        'username' => 'dangsinh'],
+            'duong'      => ['name' => 'Dương',                 'username' => 'duong'],
+        ];
+
+        // Also add any other registered users into memberInfoMap
+        foreach ($members as $m) {
+            if ($m->username && !isset($memberInfoMap[$m->username])) {
+                $memberInfoMap[$m->username] = ['name' => $m->name, 'username' => $m->username];
+            }
+        }
+
+        // Base Gross Balances (from verified CSV)
+        $grossBalances = [
+            'hotrungson' => 5747766,
+            'viet'       => 2896666,
+            'quyduc'     => 2740000,
+            'quangminh'  => 1986666,
+            'thanhan'    => 1500000,
+            'phuchung'   => 570000,
+            'trungkien'  => -183334,
+            'hoanganh'   => -1310000,
+            'phucdang'   => -510000,
+            'dangsinh'   => -710000,
+            'duong'      => -510000,
+        ];
+
+        // Base Net Balances (from verified CSV)
+        $netBalances = [
+            'hotrungson' => 5497766,
+            'quangminh'  => 1770000,
+            'thanhan'    => 1500000,
+            'viet'       => 930000,
+            'quyduc'     => 870000,
+            'phuchung'   => 570000,
+            'trungkien'  => -400000,
+            'phucdang'   => -510000,
+            'duong'      => -510000,
+            'dangsinh'   => -710000,
+            'hoanganh'   => -1560000,
+        ];
+
+        $treasuryCash = -538520;
+
+        // Process all NEW approved transactions created after baseline (ID > 153)
+        $newTxs = Transaction::where('status', 'approved')
+            ->where('id', '>', 153)
+            ->with(['user', 'project.members'])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($newTxs as $tx) {
+            $u = $tx->user;
+            $uname = $u ? $u->username : null;
+            $amount = (float) $tx->amount;
+
+            if ($tx->type === 'contribution') {
+                if ($tx->project_id && $tx->project) {
+                    $pMembers = $tx->project->members->where('role', '!=', 'admin');
+                    foreach ($pMembers as $pm) {
+                        $mUser = User::find($pm->id);
+                        if (!$mUser || !$mUser->username) continue;
+                        $muName = $mUser->username;
+                        $pct = (float) $pm->pivot->share_percentage / 100;
+                        
+                        $grossBalances[$muName] = ($grossBalances[$muName] ?? 0) + ($amount * $pct);
+                        $netBalances[$muName]   = ($netBalances[$muName] ?? 0)   + (($amount * 0.90) * $pct);
+                    }
+                    $treasuryCash += ($amount * 0.10);
+                } else {
+                    if ($uname) {
+                        $grossBalances[$uname] = ($grossBalances[$uname] ?? 0) + $amount;
+                    }
+                    $treasuryCash += $amount;
+                }
+            } elseif ($tx->type === 'loan') {
+                if ($uname) {
+                    $netBalances[$uname] = ($netBalances[$uname] ?? 0) - $amount;
+                }
+                $treasuryCash -= $amount;
+            } elseif ($tx->type === 'repayment') {
+                if ($uname) {
+                    $netBalances[$uname] = ($netBalances[$uname] ?? 0) + $amount;
+                }
+                $treasuryCash += $amount;
+            } elseif ($tx->type === 'withdrawal') {
+                if ($uname) {
+                    $netBalances[$uname] = ($netBalances[$uname] ?? 0) - $amount;
+                }
+                $treasuryCash -= $amount;
+            } elseif ($tx->type === 'expense') {
+                $treasuryCash -= $amount;
+            }
+        }
+
+        // Calculate total positive Gross for Equity % calculation
+        $totalPosGross = 0;
+        foreach ($grossBalances as $val) {
+            if ($val > 0) $totalPosGross += $val;
+        }
+
+        // Build Gross Data array
+        $grossData = [];
+        foreach ($grossBalances as $uname => $val) {
+            $info = $memberInfoMap[$uname] ?? ['name' => $uname, 'username' => $uname];
+            $equityStr = ($val > 0 && $totalPosGross > 0) 
+                ? number_format(($val / $totalPosGross) * 100, 2, ',', '.') . '%' 
+                : '--';
+
+            $grossData[] = [
+                'name'     => $info['name'],
+                'username' => $info['username'],
+                'value'    => (float) $val,
+                'equity'   => $equityStr,
             ];
         }
 
-        // Sort descending by Net Worth
-        usort($rawNetWorth, function ($a, $b) {
-            return $b['net_worth'] <=> $a['net_worth'];
-        });
-
-        // Find max positive and min negative Net Worth
-        $maxPositiveId = null;
-        $minNegativeId = null;
-
-        $maxVal = -PHP_FLOAT_MAX;
-        $minVal = PHP_FLOAT_MAX;
-
-        foreach ($rawNetWorth as $hm) {
-            if ($hm['net_worth'] > 0 && $hm['net_worth'] > $maxVal) {
-                $maxVal = $hm['net_worth'];
-                $maxPositiveId = $hm['id'];
-            }
-            if ($hm['net_worth'] < 0 && $hm['net_worth'] < $minVal) {
-                $minVal = $hm['net_worth'];
-                $minNegativeId = $hm['id'];
-            }
+        // Build Net Data array
+        $netData = [];
+        foreach ($netBalances as $uname => $val) {
+            $info = $memberInfoMap[$uname] ?? ['name' => $uname, 'username' => $uname];
+            $netData[] = [
+                'name'     => $info['name'],
+                'username' => $info['username'],
+                'value'    => (float) $val,
+            ];
         }
 
-        $netWorthData = array_map(function ($item) use ($maxPositiveId, $minNegativeId) {
-            if ($item['id'] === $maxPositiveId) {
-                $statusLabel = 'Chủ nợ lớn nhất của quỹ';
-            } elseif ($item['net_worth'] > 0) {
-                $statusLabel = 'Chủ nợ của quỹ';
-            } elseif ($item['id'] === $minNegativeId) {
-                $statusLabel = 'Đang âm ròng nhiều nhất (Lương + Vay)';
-            } elseif ($item['net_worth'] < 0) {
-                $statusLabel = 'Đang mượn ròng của quỹ';
-            } else {
-                $statusLabel = 'Thành viên';
-            }
-
-            $item['status_label'] = $statusLabel;
-            return $item;
-        }, $rawNetWorth);
-
-        $fund = \App\Models\Fund::first();
+        // Sort descending: Positive first, Negative second
+        usort($grossData, fn($a, $b) => $b['value'] <=> $a['value']);
+        usort($netData, fn($a, $b) => $b['value'] <=> $a['value']);
 
         // 2. Collaboration Network Graph data (Nodes and Edges)
         $projects = Project::with('members')->get();
@@ -174,7 +246,7 @@ class AnalyticsController extends Controller
         });
         $topPairs = array_slice($topPairs, 0, 5);
 
-        return view('analytics.networth', compact('netWorthData', 'fund', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
+        return view('analytics.networth', compact('grossData', 'netData', 'treasuryCash', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
     }
 
     public function network()
