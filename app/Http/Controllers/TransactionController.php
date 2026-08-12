@@ -122,6 +122,10 @@ class TransactionController extends Controller
 
     public function store(Request $request)
     {
+        if (!$request->has('type') && $request->filled('project_id')) {
+            $request->merge(['type' => 'contribution']);
+        }
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'project_id' => 'nullable|exists:projects,id',
@@ -206,6 +210,10 @@ class TransactionController extends Controller
         $authUser = auth()->user();
         if (!$authUser?->isAdmin() && $transaction->user_id !== $authUser?->id) {
             return redirect()->back()->with('error', 'Bạn chỉ có quyền chỉnh sửa giao dịch của chính mình!');
+        }
+
+        if (!$request->has('type') && ($request->filled('project_id') || $transaction->project_id)) {
+            $request->merge(['type' => 'contribution']);
         }
 
         $validated = $request->validate([

@@ -639,26 +639,6 @@
                     <input type="hidden" name="project_id" value="{{ $project->id }}">
                     <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
-                    <!-- 1. Loại giao dịch & Loại Doanh Thu -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" x-data="{ selectedType: 'contribution' }">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
-                            <select name="type" x-model="selectedType" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <option value="contribution">Góp quỹ / Doanh thu</option>
-                                <option value="expense">Chi tiêu chung</option>
-                                <option value="loan">Vay cá nhân</option>
-                                <option value="repayment">Trả nợ</option>
-                            </select>
-                        </div>
-                        <div x-show="selectedType === 'contribution'">
-                            <label class="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Loại Doanh Thu</label>
-                            <select name="revenue_type" class="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-600 bg-white dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <option value="development" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền phát triển</option>
-                                <option value="subscription" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền thuê bao</option>
-                            </select>
-                        </div>
-                    </div>
-
                     <!-- 2. Số tiền -->
                     <div x-data="{
                         rawAmount: '',
@@ -772,27 +752,6 @@
                         <input type="hidden" name="user_id" :value="editTxForm.user_id">
                         <input type="text" :value="editTxForm.user_name || '{{ auth()->user()?->name }}'" readonly class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700/50 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none">
                     @endif
-                </div>
-
-                <!-- Transaction Type & Revenue Type -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
-                        <select name="type" x-model="editTxForm.type" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
-                            <option value="contribution">Góp quỹ / Doanh thu</option>
-                            <option value="expense">Chi tiêu chung</option>
-                            <option value="loan">Vay cá nhân</option>
-                            <option value="repayment">Trả nợ</option>
-                            <option value="withdrawal">Rút lương</option>
-                        </select>
-                    </div>
-                    <div x-show="editTxForm.type === 'contribution'">
-                        <label class="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Loại Doanh Thu</label>
-                        <select name="revenue_type" x-model="editTxForm.revenue_type" class="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-600 bg-white dark:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white outline-none">
-                            <option value="development" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền phát triển</option>
-                            <option value="subscription" class="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Tiền thuê bao</option>
-                        </select>
-                    </div>
                 </div>
 
                 <!-- Amount -->
