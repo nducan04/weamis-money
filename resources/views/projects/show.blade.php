@@ -10,8 +10,11 @@
     showDeleteTxModal: false,
     deleteTxForm: { id: null },
     editTxForm: { id: null, user_id: null, type: 'contribution', revenue_type: 'development', amount: '', description: '', billing_cycle: '', created_at: '' },
+    createTxMode: 'development',
+    editTxMode: 'development',
     openEditTxModal(tx) {
         this.editTxForm = Object.assign({}, tx);
+        this.editTxMode = tx.revenue_type === 'subscription' ? 'subscription' : 'development';
         this.showEditTxModal = true;
     },
     activeTxTab: 'attach',
@@ -115,30 +118,25 @@
     </div>
 
     <!-- High Level Overview Stats -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Doanh Thu</p>
-            <p class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
+            <p class="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-blue-200/60 dark:border-blue-700/40 shadow-sm">
-            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Tiền Phát Triển</p>
-            <p class="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">+{{ number_format($devRevenue, 0, ',', '.') }}đ</p>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-blue-200/60 dark:border-blue-700/40 shadow-sm">
+            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Doanh Thu Phát Triển</p>
+            <p class="text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400">+{{ number_format($devRevenue, 0, ',', '.') }}đ</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-purple-200/60 dark:border-purple-700/40 shadow-sm">
-            <p class="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-0.5">Tiền Thuê Bao</p>
-            <p class="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400">+{{ number_format($subRevenue, 0, ',', '.') }}đ</p>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-indigo-200/60 dark:border-indigo-700/40 shadow-sm">
+            <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-0.5">Phí Vận Hành</p>
+            <p class="text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400">+{{ number_format($subRevenue, 0, ',', '.') }}đ</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thành Viên</p>
-            <p class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ count($memberPayouts) }} <span class="text-sm font-bold text-slate-500">người</span></p>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Giao Dịch</p>
-            <p class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ $project->transactions->where('status', 'approved')->count() }} <span class="text-sm font-bold text-slate-500">GD</span></p>
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thành Viên & GD</p>
+            <p class="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">{{ count($memberPayouts) }} <span class="text-xs font-semibold text-slate-400">TV</span> / {{ $project->transactions->where('status', 'approved')->count() }} <span class="text-xs font-semibold text-slate-400">GD</span></p>
         </div>
     </div>
 
@@ -337,6 +335,19 @@
                                 <div class="flex flex-col gap-1">
                                     <div class="flex items-center gap-1.5 flex-wrap">
                                         <span class="font-bold text-slate-800 dark:text-slate-200 text-xs">{{ $cleanDesc }}</span>
+                                        @if($tx && $tx->type === 'expense')
+                                            <span class="px-2 py-0.5 bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 font-bold rounded text-[10px]">
+                                                Chi phí
+                                            </span>
+                                        @elseif($tx && $tx->revenue_type === 'subscription')
+                                            <span class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold rounded text-[10px]">
+                                                Vận hành
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-bold rounded text-[10px]">
+                                                Phát triển
+                                            </span>
+                                        @endif
                                         @if($isSplit)
                                             <span class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-extrabold rounded text-[10px]">
                                                 Tách từ GD #{{ $tx->id }} (Gốc {{ number_format($tx->amount, 0, ',', '.') }}đ)
@@ -632,12 +643,31 @@
                 </form>
             </div>
 
-            <!-- TAB 2: TẠO MỚI GIAO DỊCH TỐI GIẢN (5 TRƯỜNG CHÍNH) -->
+            <!-- TAB 2: TẠO MỚI GIAO DỊCH DỰ ÁN -->
             <div x-show="activeTxTab === 'create'" class="flex-1 overflow-y-auto min-h-0 pt-1">
                 <form action="{{ route('transactions.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3.5">
                     @csrf
                     <input type="hidden" name="project_id" value="{{ $project->id }}">
                     <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+                    <input type="hidden" name="type" value="contribution">
+                    <input type="hidden" name="revenue_type" :value="createTxMode">
+
+                    <!-- 1. Loại Giao Dịch (Pill Buttons) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Loại Doanh Thu</label>
+                        <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl text-center">
+                            <button type="button" @click="createTxMode = 'development'"
+                                    :class="createTxMode === 'development' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-bold'"
+                                    class="py-2.5 px-2 rounded-xl text-xs transition cursor-pointer">
+                                Doanh thu Phát triển
+                            </button>
+                            <button type="button" @click="createTxMode = 'subscription'"
+                                    :class="createTxMode === 'subscription' ? 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 shadow-sm font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-bold'"
+                                    class="py-2.5 px-2 rounded-xl text-xs transition cursor-pointer">
+                                Phí Vận hành
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- 2. Số tiền -->
                     <div x-data="{
@@ -664,11 +694,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Ghi Chú Nội Dung</label>
-                            <input type="text" name="description" required placeholder="VD: Phí vận hành Server..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <input type="text" name="description" required placeholder="VD: Hợp đồng phát triển, Phí server..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chu Kỳ Thu Phí</label>
-                            <input type="text" name="billing_cycle" placeholder="VD: Tháng 05/2026, Quý 2/2026..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <input type="text" name="billing_cycle" :placeholder="createTxMode === 'subscription' ? 'VD: Tháng 08/2026, Quý 3/2026...' : 'Không bắt buộc'" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                     </div>
 
@@ -738,6 +768,25 @@
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="project_id" value="{{ $project->id }}">
+                <input type="hidden" name="type" value="contribution">
+                <input type="hidden" name="revenue_type" :value="editTxMode">
+
+                <!-- 1. Loại Giao Dịch (Pill Buttons) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Loại Doanh Thu</label>
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-700/60 rounded-2xl text-center">
+                        <button type="button" @click="editTxMode = 'development'"
+                                :class="editTxMode === 'development' ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-bold'"
+                                class="py-2.5 px-2 rounded-xl text-xs transition cursor-pointer">
+                            Doanh thu Phát triển
+                        </button>
+                        <button type="button" @click="editTxMode = 'subscription'"
+                                :class="editTxMode === 'subscription' ? 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 shadow-sm font-black' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-bold'"
+                                class="py-2.5 px-2 rounded-xl text-xs transition cursor-pointer">
+                            Phí Vận hành
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Member Selector -->
                 <div>

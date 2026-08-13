@@ -15,6 +15,22 @@ Route::get('/api/db-resync', [DatabaseSyncController::class, 'resync'])->name('a
 
 /*
 |--------------------------------------------------------------------------
+| Public Routes (Guest & View-Only Mode)
+|--------------------------------------------------------------------------
+*/
+Route::get('/', [FundController::class, 'index'])->name('dashboard');
+Route::get('/history', [TransactionController::class, 'history'])->name('history');
+Route::get('/report', fn() => redirect()->route('dashboard'))->name('report');
+
+// Projects Overview (Overview Cards for Guests)
+Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+
+// Analytics: Net Worth & Collaboration Network Graph
+Route::get('/analytics/networth', [AnalyticsController::class, 'networth'])->name('analytics.networth');
+Route::get('/analytics/network', fn() => redirect()->route('analytics.networth'))->name('analytics.network');
+
+/*
+|--------------------------------------------------------------------------
 | Authentication Routes (Guest Only)
 |--------------------------------------------------------------------------
 */
@@ -28,7 +44,7 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Protected Application Routes (Requires Login)
+| Protected Application Routes (Requires Login - Member & Admin)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
@@ -36,23 +52,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('password.update');
 
-    Route::get('/', [FundController::class, 'index'])->name('dashboard');
-    Route::get('/history', [TransactionController::class, 'history'])->name('history');
-    Route::get('/report', fn() => redirect()->route('dashboard'))->name('report');
-
-    // Projects Management & Audit
-    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
-    Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    // Projects Management & Audit (Details require login)
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::delete('/projects/{project}/share-period', [ProjectController::class, 'destroySharePeriod'])->name('projects.destroy-share-period');
     Route::put('/projects/{project}/share-period', [ProjectController::class, 'updateSharePeriodDate'])->name('projects.update-share-period');
     Route::post('/projects/{project}/attach-transactions', [ProjectController::class, 'attachTransactions'])->name('projects.attach-transactions');
-
-    // Analytics: Net Worth & Collaboration Network Graph (Combined)
-    Route::get('/analytics/networth', [AnalyticsController::class, 'networth'])->name('analytics.networth');
-    Route::get('/analytics/network', fn() => redirect()->route('analytics.networth'))->name('analytics.network');
 
     // Transaction CRUD
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');

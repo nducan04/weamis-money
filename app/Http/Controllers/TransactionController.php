@@ -180,7 +180,7 @@ class TransactionController extends Controller
                 'amount' => $validated['amount'],
                 'description' => $validated['description'],
                 'billing_cycle' => $validated['billing_cycle'] ?? null,
-                'revenue_type' => $validated['revenue_type'] ?? (!empty($validated['project_id']) ? 'development' : null),
+                'revenue_type' => $validated['type'] === 'expense' ? null : ($validated['revenue_type'] ?? (!empty($validated['project_id']) ? 'development' : null)),
                 'evidence_type' => $evidenceType,
                 'evidence_value' => $evidenceValue,
                 'status' => $status,
@@ -271,8 +271,12 @@ class TransactionController extends Controller
             $transaction->amount = $validated['amount'];
             $transaction->description = $validated['description'];
             $transaction->billing_cycle = $validated['billing_cycle'] ?? null;
-            if (isset($validated['revenue_type'])) {
+            if ($validated['type'] === 'expense') {
+                $transaction->revenue_type = null;
+            } elseif (isset($validated['revenue_type'])) {
                 $transaction->revenue_type = $validated['revenue_type'];
+            } elseif (!empty($validated['project_id']) && $validated['type'] === 'contribution' && !$transaction->revenue_type) {
+                $transaction->revenue_type = 'development';
             }
             $transaction->evidence_type = $evidenceType;
             $transaction->evidence_value = $evidenceValue;

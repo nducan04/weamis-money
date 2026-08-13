@@ -81,7 +81,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Đã đăng xuất thành công.');
+        return redirect()->route('dashboard')->with('success', 'Đã đăng xuất thành công. Chuyển về chế độ Khách.');
     }
 
     public function showForgotPassword()

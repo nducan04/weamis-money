@@ -60,10 +60,10 @@
     sortOrder: 'desc',
     currentPage: 1,
     perPage: 15,
-    currentUserId: {{ auth()->id() }},
+    currentUserId: {{ auth()->id() ? auth()->id() : 'null' }},
     isCurrentUserAdmin: {{ auth()->user()?->isAdmin() ? 'true' : 'false' }},
     canEditTx(tx) {
-        if (!tx) return false;
+        if (!tx || !this.currentUserId) return false;
         return this.isCurrentUserAdmin || tx.user_id === this.currentUserId;
     },
     rawTransactions: {{ \Illuminate\Support\Js::from($allTransactions) }},
@@ -229,10 +229,12 @@ class="pb-12 sm:pb-8">
                 </template>
             </div>
 
-            <!-- Right Side: Thêm Giao Dịch Button -->
+            <!-- Right Side: Thêm Giao Dịch Button (Only for Logged In Users) -->
+            @auth
             <button @click="showAddModal = true" class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer flex-shrink-0">
                 <span>Thêm Giao Dịch</span>
             </button>
+            @endauth
         </div>
 
         <!-- Desktop Table -->

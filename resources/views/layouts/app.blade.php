@@ -127,7 +127,7 @@
                     <span class="hidden md:inline" x-show="darkMode">Sáng</span>
                 </button>
 
-                <!-- User Profile & Dropdown -->
+                <!-- User Profile & Dropdown (Auth) OR Guest Login Button (Guest) -->
                 @auth
                 <div class="relative" x-data="{ openProfile: false }">
                     <button @click="openProfile = !openProfile" class="flex items-center space-x-2 p-1.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/20 rounded-xl border border-white/20 text-white transition cursor-pointer">
@@ -144,6 +144,8 @@
                                     <span class="px-1.5 py-0.5 bg-amber-400 text-slate-900 rounded font-black text-[9px] uppercase">Admin</span>
                                 @elseif(auth()->user()->isLead())
                                     <span class="px-1.5 py-0.5 bg-indigo-400 text-white rounded font-black text-[9px] uppercase">Lead</span>
+                                @else
+                                    <span class="text-xs text-white font-bold">{{ auth()->user()->name }}</span>
                                 @endif
                             </p>
                         </div>
@@ -171,6 +173,15 @@
                             </button>
                         </form>
                     </div>
+                </div>
+                @else
+                <div class="flex items-center space-x-2">
+                    <span class="hidden md:inline-flex items-center px-2.5 py-1 rounded-xl bg-white/10 border border-white/20 text-[11px] font-bold text-emerald-100">
+                        Chế độ khách
+                    </span>
+                    <a href="{{ route('login') }}" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white text-emerald-800 hover:bg-emerald-50 rounded-xl font-black text-xs sm:text-sm shadow-md transition-all duration-200 flex items-center space-x-1.5 cursor-pointer">
+                        <span>🔑 Đăng nhập</span>
+                    </a>
                 </div>
                 @endauth
 
@@ -208,6 +219,14 @@
                     <span>🚪 Đăng xuất</span>
                 </button>
             </form>
+            @else
+            <div class="pb-2 border-b border-emerald-700/60">
+                <p class="font-extrabold text-sm text-white">Chế độ khách</p>
+                <p class="text-[10px] text-emerald-200 font-medium">Bạn đang xem dữ liệu ở chế độ chỉ đọc.</p>
+            </div>
+            <a href="{{ route('login') }}" @click="mobileMenuOpen = false" class="block text-center py-2.5 px-4 rounded-xl bg-white text-emerald-900 font-extrabold text-xs shadow-md transition">
+                🔑 Đăng Nhập Thành Viên
+            </a>
             @endauth
         </div>
     </header>
