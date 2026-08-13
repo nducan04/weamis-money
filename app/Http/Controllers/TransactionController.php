@@ -132,7 +132,7 @@ class TransactionController extends Controller
             'responsible_user_id' => 'nullable|exists:users,id',
             'claimant_user_id' => 'nullable|exists:users,id',
             'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal,adjustment',
-            'amount' => 'required|numeric|min:1000',
+            'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
             'billing_cycle' => 'nullable|string|max:100',
             'evidence_type' => 'nullable|in:file,link,text,none',
@@ -222,7 +222,7 @@ class TransactionController extends Controller
             'responsible_user_id' => 'nullable|exists:users,id',
             'claimant_user_id' => 'nullable|exists:users,id',
             'type' => 'required|in:contribution,expense,loan,repayment,distribution,withdrawal,adjustment',
-            'amount' => 'required|numeric|min:1000',
+            'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
             'billing_cycle' => 'nullable|string|max:100',
             'evidence_type' => 'nullable|in:file,link,text,none',
@@ -451,7 +451,11 @@ class TransactionController extends Controller
      */
     private function createJournalEntry(Transaction $tx): void
     {
-        $userAcc = Account::where('type', 'user')->where('owner_type', User::class)->where('owner_id', $tx->user_id)->first();
+        $user = $tx->user ?? User::find($tx->user_id);
+        $userAcc = Account::firstOrCreate(
+            ['type' => 'user', 'owner_type' => User::class, 'owner_id' => $tx->user_id],
+            ['name' => 'Ví ' . ($user ? $user->name : 'Thành viên #' . $tx->user_id), 'balance' => 0]
+        );
         $fundAcc = Account::where('type', 'fund')->first();
         $externalAcc = Account::where('type', 'external')->first();
 

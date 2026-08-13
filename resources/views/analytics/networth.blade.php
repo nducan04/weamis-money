@@ -93,7 +93,7 @@
                         <button id="btn-reset-view" title="Căn giữa mặc định" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-extrabold shadow-sm transition cursor-pointer">Căn giữa</button>
                     </div>
 
-                    <div id="network-graph" class="w-full h-[580px] bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-inner relative overflow-hidden"></div>
+                    <div id="network-graph" class="w-full h-[420px] sm:h-[580px] bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-inner relative overflow-hidden"></div>
                 </div>
             </div>
 
@@ -207,37 +207,36 @@
 
         const options = {
             nodes: {
-                borderWidthSelected: 4,
-                shadow: true
+                borderWidthSelected: 3,
+                shadow: false
             },
             edges: {
                 smooth: {
                     type: 'continuous',
                     roundness: 0.2
                 },
-                shadow: true
+                shadow: false
             },
             physics: {
                 barnesHut: {
-                    gravitationalConstant: -18000,
-                    centralGravity: 0.1,
-                    springLength: 220,
-                    springConstant: 0.02,
-                    damping: 0.1,
-                    avoidOverlap: 1
+                    gravitationalConstant: -6000,
+                    centralGravity: 0.3,
+                    springLength: 140,
+                    springConstant: 0.04,
+                    avoidOverlap: 0.5
                 },
-                maxVelocity: 50,
-                minVelocity: 0.1,
+                maxVelocity: 30,
+                minVelocity: 0.75,
                 solver: 'barnesHut',
                 stabilization: {
                     enabled: true,
-                    iterations: 1200,
-                    updateInterval: 25
+                    iterations: 150,
+                    updateInterval: 50
                 }
             },
             interaction: {
-                hover: true,
-                tooltipDelay: 100,
+                hover: false,
+                tooltipDelay: 300,
                 zoomView: true,
                 dragView: true
             }
@@ -245,16 +244,21 @@
 
         const network = new vis.Network(container, data, options);
 
+        // Turn off physics after stabilization to freeze CPU usage at 0% on mobile
+        network.once("stabilizationIterationsDone", function () {
+            network.setOptions({ physics: { enabled: false } });
+        });
+
         document.getElementById('btn-reset-view')?.addEventListener('click', function () {
-            network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+            network.fit({ animation: { duration: 300, easingFunction: 'easeInOutQuad' } });
         });
         document.getElementById('btn-zoom-in')?.addEventListener('click', function () {
             let scale = network.getScale();
-            network.moveTo({ scale: scale * 1.3, animation: { duration: 300 } });
+            network.moveTo({ scale: scale * 1.25, animation: { duration: 200 } });
         });
         document.getElementById('btn-zoom-out')?.addEventListener('click', function () {
             let scale = network.getScale();
-            network.moveTo({ scale: scale * 0.7, animation: { duration: 300 } });
+            network.moveTo({ scale: scale * 0.8, animation: { duration: 200 } });
         });
     });
 </script>

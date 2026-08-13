@@ -11,7 +11,8 @@
     quickType: 'expense',
     quickAmount: '',
     quickNote: '',
-    quickDate: new Date().toISOString().substring(0, 10),
+    quickDate: (() => { let d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })(),
+    quickTime: (() => { let d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); })(),
     get formattedQuickDate() {
         if (!this.quickDate) return '';
         let d = new Date(this.quickDate);
@@ -540,21 +541,27 @@ class="pb-12 sm:pb-8">
                 <input type="hidden" name="user_id" value="{{ auth()->id() }}">
                 <input type="hidden" name="type" :value="quickType">
 
-                <!-- Date Picker Row -->
+                <!-- Date & Time Picker Row -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Ngày giao dịch</label>
-                    <div class="flex items-center space-x-1.5 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5">
-                        <button type="button" @click="prevQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-                        </button>
-                        <div class="flex-1 text-center font-bold text-xs sm:text-sm text-slate-900 dark:text-white relative cursor-pointer" @click="$refs.nativeDatePickerModal.showPicker()">
-                            <span x-text="formattedQuickDate"></span>
-                            <input type="date" x-ref="nativeDatePickerModal" name="created_at" x-model="quickDate" class="absolute inset-0 opacity-0 cursor-pointer">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Thời gian giao dịch</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-2 flex items-center space-x-1.5 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5">
+                            <button type="button" @click="prevQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <div class="flex-1 text-center font-bold text-xs sm:text-sm text-slate-900 dark:text-white relative cursor-pointer" @click="$refs.nativeDatePickerModal.showPicker()">
+                                <span x-text="formattedQuickDate"></span>
+                                <input type="date" x-ref="nativeDatePickerModal" x-model="quickDate" class="absolute inset-0 opacity-0 cursor-pointer">
+                            </div>
+                            <button type="button" @click="nextQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
                         </div>
-                        <button type="button" @click="nextQuickDay()" class="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                        </button>
+                        <div class="col-span-1 flex items-center bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-2 py-1.5" title="Chọn giờ & phút">
+                            <input type="time" x-model="quickTime" class="w-full text-center text-xs font-extrabold bg-transparent text-slate-900 dark:text-white border-none outline-none focus:ring-0 p-0 cursor-pointer">
+                        </div>
                     </div>
+                    <input type="hidden" name="created_at" :value="quickDate && quickTime ? (quickDate + ' ' + quickTime + ':00') : quickDate">
                 </div>
 
                 <!-- Evidence Attachment Row -->
@@ -607,7 +614,7 @@ class="pb-12 sm:pb-8">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" x-text="quickType === 'expense' ? 'Số tiền chi' : 'Số tiền thu'"></label>
                     <div class="relative">
-                        <input type="number" name="amount" x-model="quickAmount" placeholder="0" required min="1000" step="1000"
+                        <input type="number" name="amount" x-model="quickAmount" placeholder="0" required min="1" step="any"
                                class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl pl-3 pr-8 py-2 text-base font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                         <span class="absolute right-3 top-2.5 text-xs font-bold text-slate-400">đ</span>
                     </div>
@@ -661,7 +668,7 @@ class="pb-12 sm:pb-8">
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Số tiền (VNĐ)</label>
-                        <input type="number" name="amount" x-model="selectedTx.amount" required step="1000" min="1000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold">
+                        <input type="number" name="amount" x-model="selectedTx.amount" required step="any" min="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold">
                     </div>
 
                     <div>

@@ -17,45 +17,61 @@ class AnalyticsController extends Controller
 
         // ══════════════════════════════════════════════════════════════════
         // DUAL-LEDGER ENGINE:
-        // 1. Verified Historical Baseline (Transactions #1 - #51, up to ID 153)
+        // 1. Verified Historical Baseline (Transactions up to ID 153)
         // 2. Dynamic Processing for ANY NEW approved transactions (ID > 153)
         // ══════════════════════════════════════════════════════════════════
 
-        // Map legacy baseline keys to active DB users (dynamically syncs name edits from Admin management)
-        $legacyKeyToUsername = [
-            'hotrungson' => 'hts',
-            'viet'       => 'nhv',
-            'quyduc'     => 'nqd',
-            'quangminh'  => 'tqm',
-            'thanhan'    => 'lvta',
-            'phuchung'   => 'ndph',
-            'trungkien'  => 'ntk',
-            'hoanganh'   => 'vdha',
-        ];
-
+        // Map all users and username aliases to canonical user_id
         $userByUsername = [];
         foreach ($members as $m) {
+            $userByUsername[$m->id] = $m->id;
             if ($m->username) {
-                $userByUsername[$m->username] = $m;
+                $userByUsername[$m->username] = $m->id;
+            }
+        }
+        
+        // Map legacy baseline keys to active DB users (supports usernames pd, tds, ndd, phucdang, etc. + name fallback)
+        $aliasMap = [
+            'hotrungson' => ['hts', 'son', 'hotrungson'],
+            'viet'       => ['nhv', 'viet'],
+            'quyduc'     => ['nqd', 'duc', 'quyduc'],
+            'quangminh'  => ['tqm', 'minh', 'quangminh'],
+            'thanhan'    => ['lvta', 'an', 'thanhan'],
+            'phuchung'   => ['ndph', 'hung', 'phuchung'],
+            'trungkien'  => ['ntk', 'kien', 'trungkien'],
+            'hoanganh'   => ['vdha', 'hoanganh'],
+            'phucdang'   => ['pd', 'phucdang'],
+            'dangsinh'   => ['tds', 'dangsinh'],
+            'duong'      => ['ndd', 'duong'],
+        ];
+
+        foreach ($aliasMap as $legacyKey => $possibleUsernames) {
+            $found = null;
+            foreach ((array)$possibleUsernames as $dbUname) {
+                $found = $members->firstWhere('username', $dbUname);
+                if ($found) break;
+            }
+            if (!$found) {
+                // Fallback by name matching if username differs
+                if ($legacyKey === 'phucdang') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'phúc đăng'));
+                if ($legacyKey === 'dangsinh') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'sinh'));
+                if ($legacyKey === 'duong')    $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'dương'));
+            }
+            if ($found) {
+                $userByUsername[$legacyKey] = $found->id;
             }
         }
 
-        $memberInfoMap = [];
+        // Initialize balances by user_id
+        $grossBalances = [];
+        $netBalances   = [];
         foreach ($members as $m) {
-            if ($m->username) {
-                $memberInfoMap[$m->username] = ['name' => $m->name, 'username' => $m->username];
-            }
+            $grossBalances[$m->id] = 0.0;
+            $netBalances[$m->id]   = 0.0;
         }
 
-        foreach ($legacyKeyToUsername as $legacyKey => $dbUsername) {
-            $u = $userByUsername[$dbUsername] ?? $userByUsername[$legacyKey] ?? null;
-            if ($u) {
-                $memberInfoMap[$legacyKey] = ['name' => $u->name, 'username' => $u->username];
-            }
-        }
-
-        // Base Gross Balances (from verified CSV)
-        $grossBalances = [
+        // Verified Base Gross Balances from Sheet
+        $legacyGrossBaseline = [
             'hotrungson' => 5747766,
             'viet'       => 2896666,
             'quyduc'     => 2740000,
@@ -63,14 +79,14 @@ class AnalyticsController extends Controller
             'thanhan'    => 1500000,
             'phuchung'   => 570000,
             'trungkien'  => -183334,
-            'hoanganh'   => -1310000,
+            'hoanganh'   => -310000,
             'phucdang'   => -510000,
             'dangsinh'   => -710000,
             'duong'      => -510000,
         ];
 
-        // Base Net Balances (from verified CSV)
-        $netBalances = [
+        // Verified Base Net Balances from Sheet
+        $legacyNetBaseline = [
             'hotrungson' => 5497766,
             'quangminh'  => 1770000,
             'thanhan'    => 1500000,
@@ -81,10 +97,24 @@ class AnalyticsController extends Controller
             'phucdang'   => -510000,
             'duong'      => -510000,
             'dangsinh'   => -710000,
-            'hoanganh'   => -1560000,
+            'hoanganh'   => -560000,
         ];
 
-        $treasuryCash = -538520;
+        foreach ($legacyGrossBaseline as $key => $val) {
+            $uid = $userByUsername[$key] ?? null;
+            if ($uid) {
+                $grossBalances[$uid] = (float) $val;
+            }
+        }
+
+        foreach ($legacyNetBaseline as $key => $val) {
+            $uid = $userByUsername[$key] ?? null;
+            if ($uid) {
+                $netBalances[$uid] = (float) $val;
+            }
+        }
+
+        $treasuryCash = -1538520;
 
         // Process all NEW approved transactions created after baseline (ID > 153)
         $newTxs = Transaction::where('status', 'approved')
@@ -94,44 +124,35 @@ class AnalyticsController extends Controller
             ->get();
 
         foreach ($newTxs as $tx) {
-            $u = $tx->user;
-            $uname = $u ? $u->username : null;
+            $uid = $tx->user_id;
             $amount = (float) $tx->amount;
 
             if ($tx->type === 'contribution') {
                 if ($tx->project_id && $tx->project) {
                     $pMembers = $tx->project->members->where('role', '!=', 'admin');
                     foreach ($pMembers as $pm) {
-                        $mUser = User::find($pm->id);
-                        if (!$mUser || !$mUser->username) continue;
-                        $muName = $mUser->username;
+                        $mUid = $pm->id;
                         $pct = (float) $pm->pivot->share_percentage / 100;
                         
-                        $grossBalances[$muName] = ($grossBalances[$muName] ?? 0) + ($amount * $pct);
-                        $netBalances[$muName]   = ($netBalances[$muName] ?? 0)   + (($amount * 0.90) * $pct);
+                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($amount * $pct);
+                        $netBalances[$mUid]   = ($netBalances[$mUid] ?? 0)   + (($amount * 0.90) * $pct);
                     }
                     $treasuryCash += ($amount * 0.10);
                 } else {
-                    if ($uname) {
-                        $grossBalances[$uname] = ($grossBalances[$uname] ?? 0) + $amount;
+                    if ($uid) {
+                        $grossBalances[$uid] = ($grossBalances[$uid] ?? 0) + $amount;
+                        $netBalances[$uid]   = ($netBalances[$uid] ?? 0)   + $amount;
                     }
-                    $treasuryCash += $amount;
                 }
-            } elseif ($tx->type === 'loan') {
-                if ($uname) {
-                    $netBalances[$uname] = ($netBalances[$uname] ?? 0) - $amount;
+            } elseif ($tx->type === 'loan' || $tx->type === 'withdrawal') {
+                if ($uid) {
+                    $netBalances[$uid] = ($netBalances[$uid] ?? 0) - $amount;
                 }
                 $treasuryCash -= $amount;
             } elseif ($tx->type === 'repayment') {
-                if ($uname) {
-                    $netBalances[$uname] = ($netBalances[$uname] ?? 0) + $amount;
+                if ($uid) {
+                    $netBalances[$uid] = ($netBalances[$uid] ?? 0) + $amount;
                 }
-                $treasuryCash += $amount;
-            } elseif ($tx->type === 'withdrawal') {
-                if ($uname) {
-                    $netBalances[$uname] = ($netBalances[$uname] ?? 0) - $amount;
-                }
-                $treasuryCash -= $amount;
             } elseif ($tx->type === 'expense') {
                 $treasuryCash -= $amount;
             }
@@ -139,21 +160,25 @@ class AnalyticsController extends Controller
 
         // Calculate total positive Gross for Equity % calculation
         $totalPosGross = 0;
-        foreach ($grossBalances as $val) {
+        foreach ($grossBalances as $uid => $val) {
             if ($val > 0) $totalPosGross += $val;
         }
 
+        $userMap = $members->keyBy('id');
+
         // Build Gross Data array
         $grossData = [];
-        foreach ($grossBalances as $uname => $val) {
-            $info = $memberInfoMap[$uname] ?? ['name' => $uname, 'username' => $uname];
+        foreach ($grossBalances as $uid => $val) {
+            $u = $userMap[$uid] ?? null;
+            if (!$u) continue;
+
             $equityStr = ($val > 0 && $totalPosGross > 0) 
                 ? number_format(($val / $totalPosGross) * 100, 2, ',', '.') . '%' 
                 : '--';
 
             $grossData[] = [
-                'name'     => $info['name'],
-                'username' => $info['username'],
+                'name'     => $u->name,
+                'username' => $u->username,
                 'value'    => (float) $val,
                 'equity'   => $equityStr,
             ];
@@ -161,16 +186,18 @@ class AnalyticsController extends Controller
 
         // Build Net Data array
         $netData = [];
-        foreach ($netBalances as $uname => $val) {
-            $info = $memberInfoMap[$uname] ?? ['name' => $uname, 'username' => $uname];
+        foreach ($netBalances as $uid => $val) {
+            $u = $userMap[$uid] ?? null;
+            if (!$u) continue;
+
             $netData[] = [
-                'name'     => $info['name'],
-                'username' => $info['username'],
+                'name'     => $u->name,
+                'username' => $u->username,
                 'value'    => (float) $val,
             ];
         }
 
-        // Sort descending: Positive first, Negative second
+        // Sort descending: Highest balance first
         usort($grossData, fn($a, $b) => $b['value'] <=> $a['value']);
         usort($netData, fn($a, $b) => $b['value'] <=> $a['value']);
 
