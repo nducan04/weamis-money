@@ -20,6 +20,11 @@ class User extends Authenticatable
         'current_debt',
     ];
 
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
     protected function casts(): array
     {
         return [

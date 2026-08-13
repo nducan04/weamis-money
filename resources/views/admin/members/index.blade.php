@@ -1,7 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6" x-data="{ showCreateModal: false, editMember: null, showResetModal: null, showDeleteMemberModal: null }">
+<div class="space-y-6" x-data="{ 
+    showCreateModal: false, 
+    editMember: null, 
+    showResetModal: null, 
+    showDeleteMemberModal: null
+}">
 
     <!-- Header Section -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -13,7 +18,7 @@
                 Xem toàn bộ danh sách tài khoản, tên đăng nhập, reset mật khẩu và phân quyền hệ thống.
             </p>
         </div>
-        <button @click="showCreateModal = true" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all duration-200 flex items-center space-x-2 cursor-pointer">
+        <button type="button" @click="showCreateModal = true" class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all duration-200 flex items-center space-x-2 cursor-pointer">
             <span>Thêm Tài Khoản Mới</span>
         </button>
     </div>
@@ -110,18 +115,18 @@
                             <td class="py-3.5 px-3">
                                 <div class="flex items-center justify-center space-x-1.5">
                                     <!-- Edit Button -->
-                                    <button @click="editMember = {{ json_encode($m) }}" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-lg transition cursor-pointer">
+                                    <button type="button" @click.stop="editMember = {{ json_encode(['id' => $m->id, 'name' => $m->name, 'username' => $m->username ?: '', 'email' => $m->email, 'role' => $m->role]) }}" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-lg transition cursor-pointer">
                                         ✏️ Sửa
                                     </button>
 
                                     <!-- Reset Password Button -->
-                                    <button @click="showResetModal = {{ json_encode($m) }}" class="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white font-bold text-xs rounded-lg transition cursor-pointer">
+                                    <button type="button" @click.stop="showResetModal = {{ json_encode(['id' => $m->id, 'name' => $m->name]) }}" class="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white font-bold text-xs rounded-lg transition cursor-pointer">
                                         🔑 Reset Mật Khẩu
                                     </button>
 
                                     <!-- Delete Button -->
                                     @if($m->id !== auth()->id())
-                                        <button type="button" @click="showDeleteMemberModal = { id: {{ $m->id }}, name: `{{ addslashes($m->name) }}` }" class="px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition cursor-pointer" title="Xóa tài khoản">
+                                        <button type="button" @click.stop="showDeleteMemberModal = {{ json_encode(['id' => $m->id, 'name' => $m->name]) }}" class="px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition cursor-pointer" title="Xóa tài khoản">
                                             🗑️
                                         </button>
                                     @endif
@@ -139,7 +144,7 @@
         <div @click.away="showCreateModal = false" class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700">
             <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
                 <h3 class="text-lg font-black text-slate-900 dark:text-white">➕ Thêm Tài Khoản Thành Viên Mới</h3>
-                <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                <button type="button" @click="showCreateModal = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
 
             <form action="{{ route('members.store') }}" method="POST" class="space-y-3.5">
@@ -183,11 +188,11 @@
 
     <!-- EDIT MEMBER MODAL -->
     <template x-if="editMember">
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
             <div @click.away="editMember = null" class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700">
                 <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
                     <h3 class="text-lg font-black text-slate-900 dark:text-white">✏️ Cập Nhật Thông Tin: <span class="text-emerald-600" x-text="editMember.name"></span></h3>
-                    <button @click="editMember = null" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <button type="button" @click="editMember = null" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
                 </div>
 
                 <form :action="'/members/' + editMember.id" method="POST" class="space-y-3.5">
@@ -228,11 +233,11 @@
 
     <!-- RESET PASSWORD MODAL -->
     <template x-if="showResetModal">
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
             <div @click.away="showResetModal = null" class="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-700">
                 <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700">
                     <h3 class="text-lg font-black text-slate-900 dark:text-white">🔑 Reset Mật Khẩu Cho: <span class="text-amber-500" x-text="showResetModal.name"></span></h3>
-                    <button @click="showResetModal = null" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                    <button type="button" @click="showResetModal = null" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
                 </div>
 
                 <form :action="'/members/' + showResetModal.id + '/reset-password'" method="POST" class="space-y-4">
@@ -250,6 +255,8 @@
                 </form>
             </div>
         </div>
+    </template>
+
     <!-- Delete Member Confirmation Modal -->
     <template x-if="showDeleteMemberModal">
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
