@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $son = User::create([
-            'name' => 'Hồ Trùng Sơn',
+            'name' => 'Hồ Trung Sơn',
             'username' => 'hts',
             'email' => 'son.ht@weamis.com',
             'password' => Hash::make('1234'),

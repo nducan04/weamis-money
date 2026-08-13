@@ -127,7 +127,7 @@
                                     <!-- Delete Button -->
                                     @if($m->id !== auth()->id())
                                         <button type="button" @click.stop="showDeleteMemberModal = {{ json_encode(['id' => $m->id, 'name' => $m->name]) }}" class="px-2 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition cursor-pointer" title="Xóa tài khoản">
-                                            🗑️
+                                            🗑️ Xóa
                                         </button>
                                     @endif
                                 </div>

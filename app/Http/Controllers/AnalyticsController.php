@@ -21,24 +21,36 @@ class AnalyticsController extends Controller
         // 2. Dynamic Processing for ANY NEW approved transactions (ID > 153)
         // ══════════════════════════════════════════════════════════════════
 
-        $memberInfoMap = [
-            'hotrungson' => ['name' => 'Hồ Trùng Sơn',         'username' => 'hotrungson'],
-            'viet'       => ['name' => 'Nguyễn Hoàng Việt',     'username' => 'viet'],
-            'quyduc'     => ['name' => 'Nguyễn Quý Đức',        'username' => 'quyduc'],
-            'quangminh'  => ['name' => 'Trịnh Quang Minh',      'username' => 'quangminh'],
-            'thanhan'    => ['name' => 'Lê Văn Thành An',       'username' => 'thanhan'],
-            'phuchung'   => ['name' => 'Nguyễn Đăng Phúc Hưng', 'username' => 'phuchung'],
-            'trungkien'  => ['name' => 'Nguyễn Trung Kiên',     'username' => 'trungkien'],
-            'hoanganh'   => ['name' => 'Vũ Đức Hoàng Anh',      'username' => 'hoanganh'],
-            'phucdang'   => ['name' => 'Phúc Đăng',             'username' => 'phucdang'],
-            'dangsinh'   => ['name' => 'Trần Đăng Sinh',        'username' => 'dangsinh'],
-            'duong'      => ['name' => 'Dương',                 'username' => 'duong'],
+        // Map legacy baseline keys to active DB users (dynamically syncs name edits from Admin management)
+        $legacyKeyToUsername = [
+            'hotrungson' => 'hts',
+            'viet'       => 'nhv',
+            'quyduc'     => 'nqd',
+            'quangminh'  => 'tqm',
+            'thanhan'    => 'lvta',
+            'phuchung'   => 'ndph',
+            'trungkien'  => 'ntk',
+            'hoanganh'   => 'vdha',
         ];
 
-        // Also add any other registered users into memberInfoMap
+        $userByUsername = [];
         foreach ($members as $m) {
-            if ($m->username && !isset($memberInfoMap[$m->username])) {
+            if ($m->username) {
+                $userByUsername[$m->username] = $m;
+            }
+        }
+
+        $memberInfoMap = [];
+        foreach ($members as $m) {
+            if ($m->username) {
                 $memberInfoMap[$m->username] = ['name' => $m->name, 'username' => $m->username];
+            }
+        }
+
+        foreach ($legacyKeyToUsername as $legacyKey => $dbUsername) {
+            $u = $userByUsername[$dbUsername] ?? $userByUsername[$legacyKey] ?? null;
+            if ($u) {
+                $memberInfoMap[$legacyKey] = ['name' => $u->name, 'username' => $u->username];
             }
         }
 

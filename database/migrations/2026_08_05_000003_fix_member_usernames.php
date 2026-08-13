@@ -10,7 +10,7 @@ return new class extends Migration
     {
         $mapping = [
             'Nguyễn Hoàng Việt'      => 'nhv',
-            'Hồ Trùng Sơn'           => 'hts',
+            'Hồ Trung Sơn'           => 'hts',
             'Nguyễn Quý Đức'         => 'nqd',
             'Nguyễn Đăng Phúc Hưng'  => 'ndph',
             'Nguyễn Trung Kiên'      => 'ntk',
