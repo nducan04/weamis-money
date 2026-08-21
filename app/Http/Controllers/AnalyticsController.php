@@ -116,11 +116,11 @@ class AnalyticsController extends Controller
 
         $treasuryCash = -1538520;
 
-        // Process all NEW approved transactions created after baseline (ID > 153)
+        // Process all NEW approved transactions created after historical sheet baseline (after 06/08/2026)
         $newTxs = Transaction::where('status', 'approved')
-            ->where('id', '>', 153)
+            ->where('created_at', '>', '2026-08-06 23:59:59')
             ->with(['user', 'project.members'])
-            ->orderBy('id')
+            ->orderBy('created_at')
             ->get();
 
         foreach ($newTxs as $tx) {
