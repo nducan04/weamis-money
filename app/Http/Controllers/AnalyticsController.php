@@ -129,15 +129,17 @@ class AnalyticsController extends Controller
 
             if ($tx->type === 'contribution') {
                 if ($tx->project_id && $tx->project) {
+                    $fundPct = (float) ($tx->project->weamis_fund_percentage ?? 10) / 100;
                     $pMembers = $tx->project->members->where('role', '!=', 'admin');
                     foreach ($pMembers as $pm) {
                         $mUid = $pm->id;
                         $pct = (float) $pm->pivot->share_percentage / 100;
                         
+                        // Project revenue increases Gross capital contribution
                         $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($amount * $pct);
-                        $netBalances[$mUid]   = ($netBalances[$mUid] ?? 0)   + (($amount * 0.90) * $pct);
+                        // Net liquid asset does NOT automatically increase with project revenue until distributed
                     }
-                    $treasuryCash += ($amount * 0.10);
+                    $treasuryCash += ($amount * $fundPct);
                 } else {
                     if ($uid) {
                         $grossBalances[$uid] = ($grossBalances[$uid] ?? 0) + $amount;
