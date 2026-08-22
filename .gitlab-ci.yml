@@ -17,7 +17,9 @@ deploy_production:
     - docker-compose -f docker-compose.yml up -d --build
     - docker exec weamis-money-app php artisan migrate --force
     - docker exec weamis-money-app php artisan config:clear
+    - docker exec weamis-money-app php artisan route:clear
     - docker exec weamis-money-app php artisan cache:clear
     - docker exec weamis-money-app php artisan view:clear
+    - docker exec weamis-money-app php artisan optimize:clear
 
 
