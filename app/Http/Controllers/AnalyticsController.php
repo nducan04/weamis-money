@@ -105,7 +105,7 @@ class AnalyticsController extends Controller
             'dangsinh'   => -958733,
             'hoanganh'   => -808733,
             'quocminh'   => -248733,
-            'minhduc'    => 1267,
+            'minhduc'    => -248733,
         ];
 
         foreach ($legacyGrossBaseline as $key => $val) {
@@ -207,9 +207,15 @@ class AnalyticsController extends Controller
                         $netBalances[$mUid]   = ($netBalances[$mUid] ?? 0)   + ($amount * $netPct);
                     }
                 } else {
+                    $isRepaymentDesc = str_contains(mb_strtolower($tx->description), 'trả lẩu') || str_contains(mb_strtolower($tx->description), 'trả nợ');
                     if ($uid) {
-                        $grossBalances[$uid] = ($grossBalances[$uid] ?? 0) + $amount;
-                        $netBalances[$uid]   = ($netBalances[$uid] ?? 0)   + $amount;
+                        if (!$isRepaymentDesc) {
+                            $grossBalances[$uid] = ($grossBalances[$uid] ?? 0) + $amount;
+                        }
+                        $netBalances[$uid] = ($netBalances[$uid] ?? 0) + $amount;
+                    }
+                    if ($isRepaymentDesc) {
+                        $treasuryCash += $amount;
                     }
                 }
             } elseif ($tx->type === 'loan' || $tx->type === 'withdrawal') {
@@ -221,6 +227,7 @@ class AnalyticsController extends Controller
                 if ($uid) {
                     $netBalances[$uid] = ($netBalances[$uid] ?? 0) + $amount;
                 }
+                $treasuryCash += $amount;
             } elseif ($tx->type === 'expense') {
                 $treasuryCash -= $amount;
             }
