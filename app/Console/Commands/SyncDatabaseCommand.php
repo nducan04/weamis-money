@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class SyncDatabaseCommand extends Command
 {
-    protected $signature = 'sync:db {action=pull : "pull" to download from prod, "push" to upload to prod} {--url= : Production URL (default: env SYNC_PROD_URL or https://money.vietnh.io.vn)} {--key= : Sync Key (default: env DB_SYNC_KEY)}';
+    protected $signature = 'sync:db {action=pull : "pull" to download from prod, "push" to upload to prod} {--force : Bỏ qua bước xác nhận khi push} {--url= : Production URL (default: env SYNC_PROD_URL or https://money.vietnh.io.vn)} {--key= : Sync Key (default: env DB_SYNC_KEY)}';
 
     protected $description = 'Đồng bộ 2 chiều Database giữa Local và Production';
 
@@ -68,7 +68,7 @@ class SyncDatabaseCommand extends Command
                 return Command::FAILURE;
             }
         } elseif ($action === 'push') {
-            if (!$this->confirm("⚠️ BẠN CÓ CHẮC CHẮN muốn đẩy dữ liệu từ Local lên ghi đè vào Production?")) {
+            if (!$this->option('force') && !$this->confirm("⚠️ BẠN CÓ CHẮC CHẮN muốn đẩy dữ liệu từ Local lên ghi đè vào Production?")) {
                 $this->warn("Đã hủy thao tác.");
                 return Command::SUCCESS;
             }
