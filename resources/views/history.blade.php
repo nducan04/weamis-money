@@ -628,18 +628,29 @@ class="pb-12 sm:pb-8">
                     </div>
                 </div>
 
+                <!-- On Behalf Of Member Row (Only visible for Income) -->
+                <div x-show="quickType !== 'expense'" x-cloak>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        <span>Nộp thay cho thành viên</span>
+                        <span class="text-[10px] text-slate-400 font-normal">(tùy chọn)</span>
+                    </label>
+                    <select name="responsible_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white cursor-pointer">
+                        <option value="">-- Chính mình (Không nộp hộ) --</option>
+                        @foreach($members->where('role', '!=', 'admin') as $m)
+                            <option value="{{ $m->id }}">{{ $m->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <!-- Fund Only Toggle -->
                 <div class="p-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-700/50 rounded-2xl transition hover:border-amber-400/80">
                     <label class="flex items-start space-x-3 cursor-pointer">
                         <input type="checkbox" name="is_fund_only" value="1" class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 dark:border-amber-600 cursor-pointer">
                         <div class="text-xs">
                             <span class="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
-                                <span>🏦 Tính vào quỹ</span>
+                                <span>Tính vào quỹ</span>
                                 <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-200/60 dark:bg-amber-900/50 px-1.5 py-0.5 rounded">(không tính vào Net & Gross)</span>
                             </span>
-                            <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
-                                Dòng tiền thuộc về Quỹ Weamis chung (ví dụ: người ngoài trả nợ quỹ, thu chi riêng của quỹ).
-                            </p>
                         </div>
                     </label>
                 </div>
@@ -682,6 +693,19 @@ class="pb-12 sm:pb-8">
                         </template>
                     </div>
 
+                    <div x-show="selectedTx.type !== 'expense'" x-cloak>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <span>Nộp thay cho thành viên</span>
+                            <span class="text-[10px] text-slate-400 font-normal">(tùy chọn)</span>
+                        </label>
+                        <select name="responsible_user_id" x-model="selectedTx.responsible_user_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
+                            <option value="">-- Chính mình (Không nộp hộ) --</option>
+                            @foreach($members->where('role', '!=', 'admin') as $m)
+                                <option value="{{ $m->id }}">{{ $m->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Loại Giao Dịch</label>
                         <select name="type" x-model="selectedTx.type" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-bold">
@@ -721,12 +745,9 @@ class="pb-12 sm:pb-8">
                             <input type="checkbox" name="is_fund_only" value="1" x-model="selectedTx.is_fund_only" class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 dark:border-amber-600 cursor-pointer">
                             <div class="text-xs">
                                 <span class="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
-                                    <span>🏦 Tính vào quỹ</span>
+                                    <span>Tính vào quỹ</span>
                                     <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-200/60 dark:bg-amber-900/50 px-1.5 py-0.5 rounded">(không tính vào Net & Gross)</span>
                                 </span>
-                                <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
-                                    Khoản tiền này thuộc về Quỹ Weamis, không cộng/trừ vào tài sản Net và Vốn Gross của thành viên.
-                                </p>
                             </div>
                         </label>
                     </div>

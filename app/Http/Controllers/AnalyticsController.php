@@ -208,24 +208,27 @@ class AnalyticsController extends Controller
                     }
                 } else {
                     $isRepaymentDesc = str_contains(mb_strtolower($tx->description), 'trả lẩu') || str_contains(mb_strtolower($tx->description), 'trả nợ');
-                    if ($uid) {
+                    $targetUid = $tx->responsible_user_id ?: $uid;
+                    if ($targetUid) {
                         if (!$isRepaymentDesc) {
-                            $grossBalances[$uid] = ($grossBalances[$uid] ?? 0) + $amount;
+                            $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) + $amount;
                         }
-                        $netBalances[$uid] = ($netBalances[$uid] ?? 0) + $amount;
+                        $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) + $amount;
                     }
                     if ($isRepaymentDesc) {
                         $treasuryCash += $amount;
                     }
                 }
             } elseif ($tx->type === 'loan' || $tx->type === 'withdrawal') {
-                if ($uid) {
-                    $netBalances[$uid] = ($netBalances[$uid] ?? 0) - $amount;
+                $targetUid = $tx->responsible_user_id ?: $uid;
+                if ($targetUid) {
+                    $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) - $amount;
                 }
                 $treasuryCash -= $amount;
             } elseif ($tx->type === 'repayment') {
-                if ($uid) {
-                    $netBalances[$uid] = ($netBalances[$uid] ?? 0) + $amount;
+                $targetUid = $tx->responsible_user_id ?: $uid;
+                if ($targetUid) {
+                    $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) + $amount;
                 }
                 $treasuryCash += $amount;
             } elseif ($tx->type === 'expense') {

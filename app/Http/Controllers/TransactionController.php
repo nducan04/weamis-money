@@ -43,7 +43,9 @@ class TransactionController extends Controller
                 'user_avatar' => $tx->user ? $tx->user->avatar : null,
                 'project_id' => $tx->project_id,
                 'project_name' => $tx->project ? $tx->project->name : null,
+                'responsible_user_id' => $tx->responsible_user_id,
                 'responsible_user_name' => $tx->responsibleUser ? $tx->responsibleUser->name : null,
+                'claimant_user_id' => $tx->claimant_user_id,
                 'claimant_user_name' => $tx->claimantUser ? $tx->claimantUser->name : null,
                 'type' => $tx->type,
                 'amount' => (float)$tx->amount,
@@ -476,10 +478,11 @@ class TransactionController extends Controller
      */
     private function createJournalEntry(Transaction $tx): void
     {
-        $user = $tx->user ?? User::find($tx->user_id);
+        $targetUserId = $tx->responsible_user_id ?: $tx->user_id;
+        $user = User::find($targetUserId);
         $userAcc = Account::firstOrCreate(
-            ['type' => 'user', 'owner_type' => User::class, 'owner_id' => $tx->user_id],
-            ['name' => 'Ví ' . ($user ? $user->name : 'Thành viên #' . $tx->user_id), 'balance' => 0]
+            ['type' => 'user', 'owner_type' => User::class, 'owner_id' => $targetUserId],
+            ['name' => 'Ví ' . ($user ? $user->name : 'Thành viên #' . $targetUserId), 'balance' => 0]
         );
         $fundAcc = Account::where('type', 'fund')->first();
         $externalAcc = Account::where('type', 'external')->first();
