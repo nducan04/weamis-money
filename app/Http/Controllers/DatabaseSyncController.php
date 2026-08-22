@@ -39,14 +39,14 @@ class DatabaseSyncController extends Controller
             'status' => 'success',
             'timestamp' => now()->toIso8601String(),
             'data' => [
-                'funds'           => Schema::hasTable('funds') ? Fund::all() : [],
-                'users'           => Schema::hasTable('users') ? User::all() : [],
-                'projects'        => Schema::hasTable('projects') ? Project::all() : [],
+                'funds'           => Schema::hasTable('funds') ? DB::table('funds')->get() : [],
+                'users'           => Schema::hasTable('users') ? DB::table('users')->get() : [],
+                'projects'        => Schema::hasTable('projects') ? DB::table('projects')->get() : [],
                 'project_members' => Schema::hasTable('project_members') ? DB::table('project_members')->get() : [],
-                'transactions'    => Schema::hasTable('transactions') ? Transaction::withTrashed()->get() : [],
-                'accounts'        => Schema::hasTable('accounts') ? Account::all() : [],
-                'journal_entries' => Schema::hasTable('journal_entries') ? JournalEntry::withTrashed()->get() : [],
-                'distributions'   => Schema::hasTable('distributions') ? Distribution::all() : [],
+                'transactions'    => Schema::hasTable('transactions') ? DB::table('transactions')->get() : [],
+                'accounts'        => Schema::hasTable('accounts') ? DB::table('accounts')->get() : [],
+                'journal_entries' => Schema::hasTable('journal_entries') ? DB::table('journal_entries')->get() : [],
+                'distributions'   => Schema::hasTable('distributions') ? DB::table('distributions')->get() : [],
             ]
         ]);
     }
