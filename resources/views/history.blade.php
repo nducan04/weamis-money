@@ -272,6 +272,11 @@ class="pb-12 sm:pb-8">
                                         <template x-if="tx.project_name">
                                             <span class="block text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold" x-text="'📁 ' + tx.project_name"></span>
                                         </template>
+                                        <template x-if="tx.is_fund_only">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 mt-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 font-extrabold text-[10px] rounded shadow-xs border border-amber-300/60 dark:border-amber-700/50">
+                                                🏦 Vào Quỹ
+                                            </span>
+                                        </template>
                                     </div>
                                 </div>
                             </td>
@@ -403,6 +408,9 @@ class="pb-12 sm:pb-8">
                         </template>
                         <template x-if="tx.type === 'adjustment'">
                             <span class="px-2 py-0.5 bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 font-bold rounded text-[10px] flex-shrink-0">Điều chỉnh</span>
+                        </template>
+                        <template x-if="tx.is_fund_only">
+                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 font-extrabold rounded text-[10px] flex-shrink-0 border border-amber-300/60 dark:border-amber-700/50">🏦 Vào Quỹ</span>
                         </template>
                         <template x-if="tx.project_name">
                             <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold rounded text-[10px] flex-shrink-0" x-text="'📂 ' + tx.project_name"></span>
@@ -620,6 +628,22 @@ class="pb-12 sm:pb-8">
                     </div>
                 </div>
 
+                <!-- Fund Only Toggle -->
+                <div class="p-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-700/50 rounded-2xl transition hover:border-amber-400/80">
+                    <label class="flex items-start space-x-3 cursor-pointer">
+                        <input type="checkbox" name="is_fund_only" value="1" class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 dark:border-amber-600 cursor-pointer">
+                        <div class="text-xs">
+                            <span class="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                <span>🏦 Tính vào quỹ</span>
+                                <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-200/60 dark:bg-amber-900/50 px-1.5 py-0.5 rounded">(không tính vào Net & Gross)</span>
+                            </span>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
+                                Dòng tiền thuộc về Quỹ Weamis chung (ví dụ: người ngoài trả nợ quỹ, thu chi riêng của quỹ).
+                            </p>
+                        </div>
+                    </label>
+                </div>
+
                 <!-- Submit Button -->
                 <div class="pt-2">
                     <button type="submit" 
@@ -689,6 +713,22 @@ class="pb-12 sm:pb-8">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nội dung</label>
                         <input type="text" name="description" x-model="selectedTx.description" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm">
+                    </div>
+
+                    <!-- Fund Only Toggle in Edit Modal -->
+                    <div class="p-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-700/50 rounded-2xl">
+                        <label class="flex items-start space-x-3 cursor-pointer">
+                            <input type="checkbox" name="is_fund_only" value="1" x-model="selectedTx.is_fund_only" class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 dark:border-amber-600 cursor-pointer">
+                            <div class="text-xs">
+                                <span class="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                    <span>🏦 Tính vào quỹ</span>
+                                    <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-200/60 dark:bg-amber-900/50 px-1.5 py-0.5 rounded">(không tính vào Net & Gross)</span>
+                                </span>
+                                <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
+                                    Khoản tiền này thuộc về Quỹ Weamis, không cộng/trừ vào tài sản Net và Vốn Gross của thành viên.
+                                </p>
+                            </div>
+                        </label>
                     </div>
 
                     <div class="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-[11px] text-amber-800 dark:text-amber-200">

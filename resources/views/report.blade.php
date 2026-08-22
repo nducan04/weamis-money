@@ -283,9 +283,36 @@
 
             get projectBreakdown() {
                 return this.rawProjects.map(p => {
-                    let pTxs = this.reportTransactions.filter(tx => tx.project_id === p.id);
-                    let income = pTxs.filter(tx => tx.type === 'contribution' || tx.type === 'repayment').reduce((s, tx) => s + (parseFloat(tx.amount) || 0), 0);
-                    let expense = pTxs.filter(tx => tx.type === 'expense' || tx.type === 'loan').reduce((s, tx) => s + (parseFloat(tx.amount) || 0), 0);
+                    let income = 0;
+                    let expense = 0;
+                    let txCount = 0;
+
+                    this.reportTransactions.forEach(tx => {
+                        let matchesProject = false;
+                        let projectIncomeAmt = 0;
+                        let projectExpenseAmt = 0;
+
+                        if (tx.project_id === p.id) {
+                            matchesProject = true;
+                            if (tx.type === 'contribution' || tx.type === 'repayment') projectIncomeAmt = tx.amount;
+                            if (tx.type === 'expense' || tx.type === 'loan') projectExpenseAmt = tx.amount;
+                        } else if (tx.splits && tx.splits.length > 0) {
+                            tx.splits.forEach(sp => {
+                                if (sp.owner_type === 'App\\Models\\Project' && sp.owner_id === p.id) {
+                                    matchesProject = true;
+                                    if (tx.type === 'contribution' || tx.type === 'repayment') projectIncomeAmt += sp.amount;
+                                    if (tx.type === 'expense' || tx.type === 'loan') projectExpenseAmt += sp.amount;
+                                }
+                            });
+                        }
+
+                        if (matchesProject) {
+                            income += projectIncomeAmt;
+                            expense += projectExpenseAmt;
+                            txCount++;
+                        }
+                    });
+
                     let fundCut = (income * p.weamis_fund_percentage) / 100;
                     let netDistributable = Math.max(0, income - fundCut - expense);
                     
@@ -295,7 +322,7 @@
                         expense: expense,
                         fundCut: fundCut,
                         netDistributable: netDistributable,
-                        txCount: pTxs.length
+                        txCount: txCount
                     };
                 }).filter(p => p.income > 0 || p.expense > 0);
             },

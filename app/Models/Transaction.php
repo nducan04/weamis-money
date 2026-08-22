@@ -24,12 +24,14 @@ class Transaction extends Model
         'evidence_type',
         'evidence_value',
         'status',
+        'is_fund_only',
         'approved_by',
         'created_at',
     ];
 
     protected $casts = [
         'amount' => 'float',
+        'is_fund_only' => 'boolean',
     ];
 
     public function fund()

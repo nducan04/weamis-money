@@ -43,6 +43,8 @@ class AnalyticsController extends Controller
             'phucdang'   => ['pd', 'phucdang'],
             'dangsinh'   => ['tds', 'dangsinh'],
             'duong'      => ['ndd', 'duong'],
+            'quocminh'   => ['qm', 'quocminh'],
+            'minhduc'    => ['md', 'minhduc'],
         ];
 
         foreach ($aliasMap as $legacyKey => $possibleUsernames) {
@@ -56,6 +58,8 @@ class AnalyticsController extends Controller
                 if ($legacyKey === 'phucdang') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'phúc đăng'));
                 if ($legacyKey === 'dangsinh') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'sinh'));
                 if ($legacyKey === 'duong')    $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'dương'));
+                if ($legacyKey === 'quocminh') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'quốc minh'));
+                if ($legacyKey === 'minhduc')  $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'minh đức'));
             }
             if ($found) {
                 $userByUsername[$legacyKey] = $found->id;
@@ -83,21 +87,25 @@ class AnalyticsController extends Controller
             'phucdang'   => -510000,
             'dangsinh'   => -710000,
             'duong'      => -510000,
+            'quocminh'   => 0,
+            'minhduc'    => 0,
         ];
 
-        // Verified Base Net Balances from Sheet
+        // Verified Base Net Balances from Sheet (after Lẩu Phan Đào Duy Anh split)
         $legacyNetBaseline = [
-            'hotrungson' => 5497766,
-            'quangminh'  => 1770000,
-            'thanhan'    => 1500000,
-            'viet'       => 930000,
-            'quyduc'     => 870000,
-            'phuchung'   => 570000,
-            'trungkien'  => -400000,
+            'hotrungson' => 5249033,
+            'quangminh'  => 1521267,
+            'thanhan'    => 1251267,
+            'viet'       => 432534,
+            'quyduc'     => 372534,
+            'phuchung'   => 321267,
+            'trungkien'  => -648733,
             'phucdang'   => -510000,
             'duong'      => -510000,
-            'dangsinh'   => -710000,
-            'hoanganh'   => -560000,
+            'dangsinh'   => -958733,
+            'hoanganh'   => -808733,
+            'quocminh'   => -248733,
+            'minhduc'    => 1267,
         ];
 
         foreach ($legacyGrossBaseline as $key => $val) {
@@ -114,32 +122,90 @@ class AnalyticsController extends Controller
             }
         }
 
-        $treasuryCash = -1538520;
+        $treasuryCash = 1695000;
 
-        // Process all NEW approved transactions created after historical sheet baseline (after 06/08/2026)
+        // Process all NEW approved transactions created after baseline (ID > 153)
         $newTxs = Transaction::where('status', 'approved')
-            ->where('created_at', '>', '2026-08-06 23:59:59')
-            ->with(['user', 'project.members'])
-            ->orderBy('created_at')
+            ->where('id', '>', 153)
+            ->with(['user', 'project.members', 'journalEntries.toAccount'])
+            ->orderBy('id')
             ->get();
 
         foreach ($newTxs as $tx) {
             $uid = $tx->user_id;
             $amount = (float) $tx->amount;
 
+            if ($tx->is_fund_only) {
+                // Direct fund impact: No impact on personal Net or Gross
+                if ($tx->type === 'contribution' || $tx->type === 'repayment' || $tx->type === 'profit' || $tx->type === 'adjustment') {
+                    $treasuryCash += $amount;
+                } elseif ($tx->type === 'expense' || $tx->type === 'loan' || $tx->type === 'withdrawal' || $tx->type === 'distribution') {
+                    $treasuryCash -= $amount;
+                }
+                continue;
+            }
+
+            // Check if tx has split journal entries pointing to projects
+            $projectEntries = $tx->journalEntries->filter(fn($je) => $je->toAccount && $je->toAccount->type === 'project');
+
             if ($tx->type === 'contribution') {
-                if ($tx->project_id && $tx->project) {
-                    $fundPct = (float) ($tx->project->weamis_fund_percentage ?? 10) / 100;
+                if ($projectEntries->isNotEmpty()) {
+                    // Process each project split separately
+                    foreach ($projectEntries as $je) {
+                        $projId = $je->toAccount->owner_id;
+                        $project = Project::with('members')->find($projId);
+                        $jeAmount = (float) $je->amount;
+
+                        if ($project) {
+                            $pMembers = $project->members->where('role', '!=', 'admin');
+                            $fundPct = (float) $project->weamis_fund_percentage / 100;
+                            $treasuryCash += ($jeAmount * $fundPct);
+
+                            // Net calculation: direct share_percentage on gross amount
+                            foreach ($pMembers as $pm) {
+                                $mUid = $pm->id;
+                                $netPct = (float) $pm->pivot->share_percentage / 100;
+                                $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($jeAmount * $netPct);
+                            }
+
+                            // Gross calculation (Sweat Equity)
+                            if ($projId == 15 || $projId == 14 || $projId == 16) { // Wifi marketing: equal split of fund cut across project members
+                                $memberCount = $pMembers->count();
+                                $fundCut = $jeAmount * $fundPct;
+                                foreach ($pMembers as $pm) {
+                                    $mUid = $pm->id;
+                                    $netPct = (float) $pm->pivot->share_percentage / 100;
+                                    $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $netPct) + ($fundCut / $memberCount);
+                                }
+                            } elseif ($projId == 17) { // Landing BMG: 50% Kiên, 50% Minh
+                                foreach ($pMembers as $pm) {
+                                    $mUid = $pm->id;
+                                    $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * 0.50);
+                                }
+                            } else {
+                                $totalMemberShare = $pMembers->sum(fn($pm) => (float)$pm->pivot->share_percentage);
+                                foreach ($pMembers as $pm) {
+                                    $mUid = $pm->id;
+                                    $grossRatio = $totalMemberShare > 0 ? ((float)$pm->pivot->share_percentage / $totalMemberShare) : 0;
+                                    $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $grossRatio);
+                                }
+                            }
+                        }
+                    }
+                } elseif ($tx->project_id && $tx->project) {
                     $pMembers = $tx->project->members->where('role', '!=', 'admin');
+                    $fundPct = (float) $tx->project->weamis_fund_percentage / 100;
+                    $treasuryCash += ($amount * $fundPct);
+                    $totalMemberShare = $pMembers->sum(fn($pm) => (float)$pm->pivot->share_percentage);
+
                     foreach ($pMembers as $pm) {
                         $mUid = $pm->id;
-                        $pct = (float) $pm->pivot->share_percentage / 100;
-                        
-                        // Project revenue increases Gross capital contribution
-                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($amount * $pct);
-                        // Net liquid asset does NOT automatically increase with project revenue until distributed
+                        $netPct = (float) $pm->pivot->share_percentage / 100;
+                        $grossRatio = $totalMemberShare > 0 ? ((float)$pm->pivot->share_percentage / $totalMemberShare) : $netPct;
+
+                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($amount * $grossRatio);
+                        $netBalances[$mUid]   = ($netBalances[$mUid] ?? 0)   + ($amount * $netPct);
                     }
-                    $treasuryCash += ($amount * $fundPct);
                 } else {
                     if ($uid) {
                         $grossBalances[$uid] = ($grossBalances[$uid] ?? 0) + $amount;
@@ -181,7 +247,7 @@ class AnalyticsController extends Controller
             $grossData[] = [
                 'name'     => $u->name,
                 'username' => $u->username,
-                'value'    => (float) $val,
+                'value'    => (float) round($val, 0),
                 'equity'   => $equityStr,
             ];
         }
@@ -195,7 +261,7 @@ class AnalyticsController extends Controller
             $netData[] = [
                 'name'     => $u->name,
                 'username' => $u->username,
-                'value'    => (float) $val,
+                'value'    => (float) round($val, 0),
             ];
         }
 

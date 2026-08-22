@@ -9,9 +9,10 @@
         treasuryCash: {{ $treasuryCash }},
         get activeData() { return this.viewMode === 'gross' ? this.grossData : this.netData; },
         formatMoney(v) {
-            let abs = Math.abs(v);
+            let num = Math.round(Number(v) || 0);
+            let abs = Math.abs(num);
             let formatted = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            return (v >= 0 ? '+' : '-') + formatted;
+            return (num >= 0 ? '+' : '-') + formatted;
         },
         rankLabel(idx) {
             if (idx === 0) return '👑 TOP 1';

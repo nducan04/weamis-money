@@ -33,13 +33,8 @@
         @php
             $totalProjectsCount = $projects->count();
             $activeProjectsCount = $projects->where('status', 'active')->count();
-            $totalProjectsIncome = $projects->sum(function($p) {
-                return $p->transactions->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-            });
-            $totalFundCutAll = $projects->sum(function($p) {
-                $inc = $p->transactions->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-                return ($inc * $p->weamis_fund_percentage) / 100;
-            });
+            $totalProjectsIncome = $projects->sum('calculated_income');
+            $totalFundCutAll = $projects->sum('calculated_fund_cut');
         @endphp
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
             <div>
@@ -67,9 +62,9 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @forelse($projects as $p)
             @php
-                $pIncome = $p->transactions->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
-                $pExpense = $p->transactions->where('status', 'approved')->where('type', 'expense')->sum('amount');
-                $fundCut = ($pIncome * $p->weamis_fund_percentage) / 100;
+                $pIncome = $p->calculated_income;
+                $pExpense = $p->calculated_expense;
+                $fundCut = $p->calculated_fund_cut;
                 $distributable = max(0, $pIncome - $fundCut);
             @endphp
             <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">

@@ -16,6 +16,23 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::with(['lead', 'members', 'transactions'])->latest()->get();
+        
+        $projects->each(function($p) {
+            $acc = Account::where('type', 'project')->where('owner_type', Project::class)->where('owner_id', $p->id)->first();
+            if ($acc) {
+                $p->calculated_income = (float) JournalEntry::where('to_account_id', $acc->id)
+                    ->whereHas('transaction', function($q) { $q->where('status', 'approved'); })
+                    ->sum('amount');
+                $p->calculated_expense = (float) JournalEntry::where('from_account_id', $acc->id)
+                    ->whereHas('transaction', function($q) { $q->where('status', 'approved'); })
+                    ->sum('amount');
+            } else {
+                $p->calculated_income = (float) $p->transactions->where('status', 'approved')->whereIn('type', ['contribution', 'repayment'])->sum('amount');
+                $p->calculated_expense = (float) $p->transactions->where('status', 'approved')->where('type', 'expense')->sum('amount');
+            }
+            $p->calculated_fund_cut = ($p->calculated_income * (float)$p->weamis_fund_percentage) / 100;
+        });
+
         $members = User::where('role', '!=', 'admin')->orderBy('id')->get();
 
         return view('projects.index', compact('projects', 'members'));

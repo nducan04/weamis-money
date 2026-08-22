@@ -52,6 +52,7 @@ class TransactionController extends Controller
                 'evidence_type' => $tx->evidence_type ?? 'none',
                 'evidence_value' => $tx->evidence_value ?? null,
                 'status' => $tx->status,
+                'is_fund_only' => (bool)$tx->is_fund_only,
                 'created_at' => $tx->created_at ? $tx->created_at->format('Y-m-d\TH:i') : '',
                 'created_at_formatted' => $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : '',
                 'from_account_name' => $firstJe && $firstJe->fromAccount ? $firstJe->fromAccount->name : null,
@@ -78,7 +79,16 @@ class TransactionController extends Controller
             ['name' => 'Trả nợ thuê Ltd', 'balance' => 7135340.00]
         );
 
-        $allTransactions = Transaction::with(['user', 'project', 'responsibleUser', 'claimantUser', 'approver'])->latest()->get()->map(function($tx) {
+        $allTransactions = Transaction::with(['user', 'project', 'responsibleUser', 'claimantUser', 'approver', 'journalEntries.toAccount'])->latest()->get()->map(function($tx) {
+            $splits = $tx->journalEntries->map(function($je) {
+                return [
+                    'to_account_id' => $je->to_account_id,
+                    'owner_type' => $je->toAccount?->owner_type,
+                    'owner_id' => $je->toAccount?->owner_id,
+                    'amount' => (float)$je->amount,
+                ];
+            })->values()->all();
+
             return [
                 'id' => $tx->id,
                 'user_id' => $tx->user_id,
@@ -95,8 +105,11 @@ class TransactionController extends Controller
                 'evidence_type' => $tx->evidence_type ?? 'none',
                 'evidence_value' => $tx->evidence_value ?? null,
                 'status' => $tx->status,
+                'is_fund_only' => (bool)$tx->is_fund_only,
                 'created_at' => $tx->created_at ? $tx->created_at->format('Y-m-d\TH:i') : '',
                 'created_at_formatted' => $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : '',
+                'is_split' => count($splits) > 1,
+                'splits' => $splits,
             ];
         });
 
@@ -140,6 +153,7 @@ class TransactionController extends Controller
             'evidence_text' => 'nullable|string',
             'evidence_file' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
             'revenue_type' => 'nullable|in:development,subscription',
+            'is_fund_only' => 'nullable|boolean',
             'created_at' => 'nullable|date',
         ]);
 
@@ -166,7 +180,9 @@ class TransactionController extends Controller
             $evidenceValue = $validated['evidence_text'];
         }
 
-        DB::transaction(function () use ($fund, $user, $validated, $evidenceType, $evidenceValue) {
+        $isFundOnly = $request->boolean('is_fund_only', false);
+
+        DB::transaction(function () use ($fund, $user, $validated, $evidenceType, $evidenceValue, $isFundOnly) {
             $status = 'approved';
             $adminUser = User::where('role', 'admin')->first() ?? $user;
 
@@ -184,6 +200,7 @@ class TransactionController extends Controller
                 'evidence_type' => $evidenceType,
                 'evidence_value' => $evidenceValue,
                 'status' => $status,
+                'is_fund_only' => $isFundOnly,
                 'approved_by' => $status === 'approved' ? $adminUser->id : null,
             ];
 
@@ -194,7 +211,7 @@ class TransactionController extends Controller
             $tx = Transaction::create($txData);
 
             if ($status === 'approved') {
-                $this->applyUserDebtImpact($user, $validated['type'], $validated['amount']);
+                $this->applyUserDebtImpact($user, $validated['type'], $validated['amount'], $isFundOnly);
                 $this->createJournalEntry($tx);
             }
 
@@ -230,6 +247,7 @@ class TransactionController extends Controller
             'evidence_text' => 'nullable|string',
             'evidence_file' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
             'revenue_type' => 'nullable|in:development,subscription',
+            'is_fund_only' => 'nullable|boolean',
             'created_at' => 'nullable|date',
         ]);
 
@@ -254,14 +272,16 @@ class TransactionController extends Controller
             $evidenceValue = $validated['evidence_text'];
         }
 
-        DB::transaction(function () use ($transaction, $fund, $validated, $evidenceType, $evidenceValue) {
+        $isFundOnly = $request->boolean('is_fund_only', false);
+
+        DB::transaction(function () use ($transaction, $fund, $validated, $evidenceType, $evidenceValue, $isFundOnly) {
             $oldUser = User::findOrFail($transaction->user_id);
             $newUser = User::findOrFail($validated['user_id']);
 
             if ($transaction->status === 'approved') {
-                $this->revertUserDebtImpact($oldUser, $transaction->type, $transaction->amount);
+                $this->revertUserDebtImpact($oldUser, $transaction->type, $transaction->amount, (bool)$transaction->is_fund_only);
                 $this->deleteJournalEntries($transaction);
-                $this->applyUserDebtImpact($newUser, $validated['type'], $validated['amount']);
+                $this->applyUserDebtImpact($newUser, $validated['type'], $validated['amount'], $isFundOnly);
             }
             $transaction->user_id = $newUser->id;
             $transaction->project_id = $validated['project_id'] ?? null;
@@ -271,6 +291,7 @@ class TransactionController extends Controller
             $transaction->amount = $validated['amount'];
             $transaction->description = $validated['description'];
             $transaction->billing_cycle = $validated['billing_cycle'] ?? null;
+            $transaction->is_fund_only = $isFundOnly;
             if ($validated['type'] === 'expense') {
                 $transaction->revenue_type = null;
             } elseif (isset($validated['revenue_type'])) {
@@ -306,7 +327,7 @@ class TransactionController extends Controller
 
         DB::transaction(function () use ($transaction, $user) {
             if ($transaction->status === 'approved') {
-                $this->revertUserDebtImpact($user, $transaction->type, $transaction->amount);
+                $this->revertUserDebtImpact($user, $transaction->type, $transaction->amount, (bool)$transaction->is_fund_only);
                 $this->deleteJournalEntries($transaction);
             }
 
@@ -340,7 +361,7 @@ class TransactionController extends Controller
                 'approved_by' => $adminUser->id,
             ]);
 
-            $this->applyUserDebtImpact($user, $transaction->type, $transaction->amount);
+            $this->applyUserDebtImpact($user, $transaction->type, $transaction->amount, (bool)$transaction->is_fund_only);
             $this->createJournalEntry($transaction);
 
             // ALWAYS sync fund balance as the very last step
@@ -424,8 +445,10 @@ class TransactionController extends Controller
      * Only handles user debt tracking (loan/repayment).
      * Fund balance is NOT touched here - syncFundBalance handles that.
      */
-    private function applyUserDebtImpact(User $user, string $type, float $amount): void
+    private function applyUserDebtImpact(User $user, string $type, float $amount, bool $isFundOnly = false): void
     {
+        if ($isFundOnly) return;
+
         if ($type === 'repayment') {
             $user->decrement('current_debt', min($amount, $user->current_debt));
         } elseif ($type === 'loan') {
@@ -437,8 +460,10 @@ class TransactionController extends Controller
      * Only reverts user debt tracking (loan/repayment).
      * Fund balance is NOT touched here - syncFundBalance handles that.
      */
-    private function revertUserDebtImpact(User $user, string $type, float $amount): void
+    private function revertUserDebtImpact(User $user, string $type, float $amount, bool $isFundOnly = false): void
     {
+        if ($isFundOnly) return;
+
         if ($type === 'repayment') {
             $user->increment('current_debt', $amount);
         } elseif ($type === 'loan') {
@@ -471,30 +496,41 @@ class TransactionController extends Controller
         $fromAccId = null;
         $toAccId = null;
 
-        switch ($tx->type) {
-            case 'contribution':
-            case 'repayment':
-            case 'profit':
-                $fromAccId = $userAcc->id;
-                $toAccId = $targetAcc->id;
-                break;
-            case 'adjustment':
-                $fromAccId = $externalAcc->id;
-                $toAccId = $fundAcc->id;
-                break;
-            case 'loan':
-            case 'withdrawal':
-            case 'distribution':
-                $fromAccId = $fundAcc->id;
-                $toAccId = $userAcc->id;
-                break;
-            case 'expense':
+        if ($tx->is_fund_only) {
+            // Direct flow between external and fund - does NOT touch member wallet
+            if ($tx->type === 'expense') {
                 $fromAccId = $targetAcc->id;
-                $toAccId = $userAcc->id;
-                break;
-            default:
+                $toAccId = $externalAcc->id;
+            } else {
                 $fromAccId = $externalAcc->id;
                 $toAccId = $targetAcc->id;
+            }
+        } else {
+            switch ($tx->type) {
+                case 'contribution':
+                case 'repayment':
+                case 'profit':
+                    $fromAccId = $userAcc->id;
+                    $toAccId = $targetAcc->id;
+                    break;
+                case 'adjustment':
+                    $fromAccId = $externalAcc->id;
+                    $toAccId = $fundAcc->id;
+                    break;
+                case 'loan':
+                case 'withdrawal':
+                case 'distribution':
+                    $fromAccId = $fundAcc->id;
+                    $toAccId = $userAcc->id;
+                    break;
+                case 'expense':
+                    $fromAccId = $targetAcc->id;
+                    $toAccId = $userAcc->id;
+                    break;
+                default:
+                    $fromAccId = $externalAcc->id;
+                    $toAccId = $targetAcc->id;
+            }
         }
 
         JournalEntry::create([
