@@ -94,8 +94,8 @@ class AnalyticsController extends Controller
         // Verified Base Net Balances from Sheet (after Lẩu Phan Đào Duy Anh split)
         $legacyNetBaseline = [
             'hotrungson' => 5249033,
-            'quangminh'  => 1521267,
-            'thanhan'    => 1251267,
+            'quangminh'  => 2171267,
+            'thanhan'    => 1301267,
             'viet'       => 432534,
             'quyduc'     => 372534,
             'phuchung'   => 321267,
@@ -122,7 +122,7 @@ class AnalyticsController extends Controller
             }
         }
 
-        $treasuryCash = 1695000;
+        $treasuryCash = 995000;
 
         // Process all NEW approved transactions created after baseline (ID > 153)
         $newTxs = Transaction::where('status', 'approved')
