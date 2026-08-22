@@ -145,49 +145,66 @@ class AnalyticsController extends Controller
                 continue;
             }
 
-            // Check if tx has split journal entries pointing to projects
+            // Check if tx has split journal entries pointing to projects or users
+            $hasMultipleSplits = $tx->journalEntries->count() > 1;
             $projectEntries = $tx->journalEntries->filter(fn($je) => $je->toAccount && $je->toAccount->type === 'project');
+            $userEntries = $tx->journalEntries->filter(fn($je) => $je->toAccount && $je->toAccount->type === 'user');
 
-            if ($tx->type === 'contribution') {
-                if ($projectEntries->isNotEmpty()) {
-                    // Process each project split separately
-                    foreach ($projectEntries as $je) {
-                        $projId = $je->toAccount->owner_id;
-                        $project = Project::with('members')->find($projId);
-                        $jeAmount = (float) $je->amount;
-
-                        if ($project) {
-                            $pMembers = $project->members->where('role', '!=', 'admin')->unique('id');
-                            $fundPct = (float) $project->weamis_fund_percentage / 100;
-                            $treasuryCash += ($jeAmount * $fundPct);
-
-                            // Net calculation: direct share_percentage on gross amount
-                            foreach ($pMembers as $pm) {
-                                $mUid = $pm->id;
-                                $netPct = (float) $pm->pivot->share_percentage / 100;
-                                $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($jeAmount * $netPct);
+            if ($tx->type === 'contribution' || $tx->type === 'repayment' || $tx->type === 'profit') {
+                if ($hasMultipleSplits && ($projectEntries->isNotEmpty() || $userEntries->isNotEmpty())) {
+                    // Process user splits (direct allocation to individual user accounts)
+                    if ($userEntries->isNotEmpty()) {
+                        $treasuryCash += $userEntries->sum('amount');
+                        foreach ($userEntries as $je) {
+                            $targetUid = $je->toAccount->owner_id;
+                            $jeAmount = (float)$je->amount;
+                            if ($targetUid) {
+                                $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) + $jeAmount;
+                                $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) + $jeAmount;
                             }
+                        }
+                    }
 
-                            // Gross calculation (Sweat Equity)
-                            if ($projId == 15 || $projId == 14 || $projId == 16) { // Wifi marketing: equal split of fund cut across project members
-                                $memberCount = $pMembers->count();
-                                $fundCut = $jeAmount * $fundPct;
+                    // Process project splits (distribution according to project shares)
+                    if ($projectEntries->isNotEmpty()) {
+                        foreach ($projectEntries as $je) {
+                            $projId = $je->toAccount->owner_id;
+                            $project = Project::with('members')->find($projId);
+                            $jeAmount = (float) $je->amount;
+
+                            if ($project) {
+                                $pMembers = $project->members->where('role', '!=', 'admin')->unique('id');
+                                $fundPct = (float) $project->weamis_fund_percentage / 100;
+                                $treasuryCash += ($jeAmount * $fundPct);
+
+                                // Net calculation: direct share_percentage on gross amount
                                 foreach ($pMembers as $pm) {
                                     $mUid = $pm->id;
                                     $netPct = (float) $pm->pivot->share_percentage / 100;
-                                    $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $netPct) + ($fundCut / $memberCount);
+                                    $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($jeAmount * $netPct);
                                 }
-                            } elseif ($projId == 17) { // Landing BMG: 50% Kiên, 50% Minh
-                                foreach ($pMembers as $pm) {
-                                    $mUid = $pm->id;
-                                    $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * 0.50);
-                                }
-                            } else {
-                                $totalMemberShare = $pMembers->sum(fn($pm) => (float)$pm->pivot->share_percentage);
-                                foreach ($pMembers as $pm) {
-                                    $mUid = $pm->id;
-                                    $grossRatio = $totalMemberShare > 0 ? ((float)$pm->pivot->share_percentage / $totalMemberShare) : 0;
-                                    $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $grossRatio);
+
+                                // Gross calculation (Sweat Equity)
+                                if ($projId == 15 || $projId == 14 || $projId == 16) { // Wifi marketing: equal split of fund cut across project members
+                                    $memberCount = $pMembers->count();
+                                    $fundCut = $jeAmount * $fundPct;
+                                    foreach ($pMembers as $pm) {
+                                        $mUid = $pm->id;
+                                        $netPct = (float) $pm->pivot->share_percentage / 100;
+                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $netPct) + ($fundCut / $memberCount);
+                                    }
+                                } elseif ($projId == 17) { // Landing BMG: 50% Kiên, 50% Minh
+                                    foreach ($pMembers as $pm) {
+                                        $mUid = $pm->id;
+                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * 0.50);
+                                    }
+                                } else {
+                                    $totalMemberShare = $pMembers->sum(fn($pm) => (float)$pm->pivot->share_percentage);
+                                    foreach ($pMembers as $pm) {
+                                        $mUid = $pm->id;
+                                        $grossRatio = $totalMemberShare > 0 ? ((float)$pm->pivot->share_percentage / $totalMemberShare) : 0;
+                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $grossRatio);
+                                    }
                                 }
                             }
                         }

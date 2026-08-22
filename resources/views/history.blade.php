@@ -893,15 +893,24 @@ class="pb-12 sm:pb-8">
                     <template x-for="(row, idx) in splitRows" :key="idx">
                         <div class="p-3.5 bg-slate-50 dark:bg-slate-700/40 rounded-2xl border border-slate-200/80 dark:border-slate-600/60 flex items-center gap-3">
                             <div class="flex-1">
-                                <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1" x-text="'Dòng ' + (idx + 1) + ': Dự án nhận'"></label>
+                                <label class="block text-[10px] font-extrabold uppercase text-slate-400 mb-1" x-text="'Dòng ' + (idx + 1) + ': Người nhận / Dự án'"></label>
                                 <select :name="'splits[' + idx + '][to_account_id]'" x-model="row.to_account_id" required class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
-                                    <option value="">-- Chọn Dự án --</option>
-                                    @foreach($accounts->where('type', 'project') as $acc)
-                                        <option value="{{ $acc->id }}">{{ str_replace('Dự án ', '', $acc->name) }}</option>
-                                    @endforeach
-                                    @foreach($accounts->where('type', 'fund') as $acc)
-                                        <option value="{{ $acc->id }}">{{ $acc->name }} (Quỹ chung)</option>
-                                    @endforeach
+                                    <option value="">-- Chọn Người nhận / Dự án --</option>
+                                    <optgroup label="👤 Thành viên (Cá nhân)">
+                                        @foreach($accounts->where('type', 'user') as $acc)
+                                            <option value="{{ $acc->id }}">{{ str_replace('Ví ', '', $acc->name) }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="📁 Dự án">
+                                        @foreach($accounts->where('type', 'project') as $acc)
+                                            <option value="{{ $acc->id }}">{{ str_replace('Dự án ', '', $acc->name) }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="🏦 Quỹ chung">
+                                        @foreach($accounts->where('type', 'fund') as $acc)
+                                            <option value="{{ $acc->id }}">{{ $acc->name }}</option>
+                                        @endforeach
+                                    </optgroup>
                                 </select>
                             </div>
 
