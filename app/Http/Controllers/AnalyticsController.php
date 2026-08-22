@@ -77,10 +77,10 @@ class AnalyticsController extends Controller
         // Verified Base Gross Balances from Sheet
         $legacyGrossBaseline = [
             'hotrungson' => 5747766,
-            'viet'       => 2896666,
-            'quyduc'     => 2740000,
-            'quangminh'  => 1986666,
-            'thanhan'    => 1500000,
+            'viet'       => 2546666,
+            'quyduc'     => 2390000,
+            'quangminh'  => 2636666,
+            'thanhan'    => 1550000,
             'phuchung'   => 570000,
             'trungkien'  => -183334,
             'hoanganh'   => -310000,
