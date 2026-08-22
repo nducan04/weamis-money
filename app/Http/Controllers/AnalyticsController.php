@@ -157,7 +157,7 @@ class AnalyticsController extends Controller
                         $jeAmount = (float) $je->amount;
 
                         if ($project) {
-                            $pMembers = $project->members->where('role', '!=', 'admin');
+                            $pMembers = $project->members->where('role', '!=', 'admin')->unique('id');
                             $fundPct = (float) $project->weamis_fund_percentage / 100;
                             $treasuryCash += ($jeAmount * $fundPct);
 
@@ -193,7 +193,7 @@ class AnalyticsController extends Controller
                         }
                     }
                 } elseif ($tx->project_id && $tx->project) {
-                    $pMembers = $tx->project->members->where('role', '!=', 'admin');
+                    $pMembers = $tx->project->members->where('role', '!=', 'admin')->unique('id');
                     $fundPct = (float) $tx->project->weamis_fund_percentage / 100;
                     $treasuryCash += ($amount * $fundPct);
                     $totalMemberShare = $pMembers->sum(fn($pm) => (float)$pm->pivot->share_percentage);
