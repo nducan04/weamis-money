@@ -237,12 +237,12 @@ class AnalyticsController extends Controller
                         $treasuryCash += $amount;
                     }
                 }
-            } elseif ($tx->type === 'loan' || $tx->type === 'withdrawal') {
+            } elseif ($tx->type === 'loan' || $tx->type === 'withdrawal' || $tx->type === 'expense') {
                 $targetUid = $tx->responsible_user_id ?: $uid;
                 if ($targetUid) {
                     $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) - $amount;
+                    $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) - $amount;
                 }
-                $treasuryCash -= $amount;
             } elseif ($tx->type === 'repayment') {
                 $targetUid = $tx->responsible_user_id ?: $uid;
                 if ($targetUid) {
