@@ -140,6 +140,9 @@ class TransactionController extends Controller
         if (!$request->has('type') && $request->filled('project_id')) {
             $request->merge(['type' => 'contribution']);
         }
+        if (!$request->has('user_id') && auth()->check()) {
+            $request->merge(['user_id' => auth()->id()]);
+        }
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',

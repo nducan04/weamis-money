@@ -628,16 +628,15 @@ class="pb-12 sm:pb-8">
                     </div>
                 </div>
 
-                <!-- On Behalf Of Member Row (Only visible for Income) -->
-                <div x-show="quickType !== 'expense'" x-cloak>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        <span>Nộp thay cho thành viên</span>
-                        <span class="text-[10px] text-slate-400 font-normal">(tùy chọn)</span>
-                    </label>
+                <!-- Responsible Member Row (Visible for BOTH Income and Expense) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" x-text="quickType === 'expense' ? 'Chi tiêu / Rút tiền của' : 'Nộp thay cho thành viên'"></label>
                     <select name="responsible_user_id" class="w-full bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-white cursor-pointer">
-                        <option value="">-- Chính mình (Không nộp hộ) --</option>
+                        <option value="">-- Chính mình ({{ auth()->user()?->name }}) --</option>
                         @foreach($members->where('role', '!=', 'admin') as $m)
-                            <option value="{{ $m->id }}">{{ $m->name }}</option>
+                            @if($m->id !== auth()->id())
+                                <option value="{{ $m->id }}">{{ $m->name }}</option>
+                            @endif
                         @endforeach
                     </select>
                 </div>
@@ -693,13 +692,10 @@ class="pb-12 sm:pb-8">
                         </template>
                     </div>
 
-                    <div x-show="selectedTx.type !== 'expense'" x-cloak>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            <span>Nộp thay cho thành viên</span>
-                            <span class="text-[10px] text-slate-400 font-normal">(tùy chọn)</span>
-                        </label>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" x-text="selectedTx.type === 'expense' ? 'Chi tiêu / Rút tiền của' : 'Nộp thay cho thành viên'"></label>
                         <select name="responsible_user_id" x-model="selectedTx.responsible_user_id" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-sm font-medium">
-                            <option value="">-- Chính mình (Không nộp hộ) --</option>
+                            <option value="">-- Chính người tạo (Không nộp/rút hộ) --</option>
                             @foreach($members->where('role', '!=', 'admin') as $m)
                                 <option value="{{ $m->id }}">{{ $m->name }}</option>
                             @endforeach
