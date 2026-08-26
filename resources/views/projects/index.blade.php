@@ -90,15 +90,23 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 font-medium">{{ $p->description ?: 'Không có mô tả dự án' }}</p>
 
                     <!-- Financial Summary -->
-                    <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-700/40 p-3 rounded-2xl mb-4 border border-slate-100 dark:border-slate-700/60 text-xs">
+                    <div class="grid {{ ($pExpense > 0 && $pIncome > 0) ? 'grid-cols-3' : 'grid-cols-2' }} gap-2 bg-slate-50 dark:bg-slate-700/40 p-3 rounded-2xl mb-4 border border-slate-100 dark:border-slate-700/60 text-xs">
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Thu</p>
                             <p class="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">+{{ number_format($pIncome, 0, ',', '.') }}đ</p>
                         </div>
+                        @if($pExpense > 0)
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng Chi</p>
+                            <p class="font-extrabold text-rose-600 dark:text-rose-400 text-sm">-{{ number_format($pExpense, 0, ',', '.') }}đ</p>
+                        </div>
+                        @endif
+                        @if($pExpense == 0 || $pIncome > 0)
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase">Quỹ Weamis ({{ number_format($p->weamis_fund_percentage, 0) }}%)</p>
                             <p class="font-extrabold text-amber-600 dark:text-amber-400 text-sm">{{ number_format($fundCut, 0, ',', '.') }}đ</p>
                         </div>
+                        @endif
                     </div>
 
                     <!-- Members avatars & shares -->
