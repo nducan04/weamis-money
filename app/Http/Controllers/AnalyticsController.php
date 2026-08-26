@@ -339,14 +339,14 @@ class AnalyticsController extends Controller
                 'font' => ['color' => '#0f172a', 'face' => 'Plus Jakarta Sans', 'size' => 14, 'bold' => 'true', 'vadjust' => 0]
             ];
 
-            $pMembers = $p->members->where('role', '!=', 'admin');
-            $pMemberIds = $pMembers->pluck('id')->toArray();
-            foreach ($pMemberIds as $uid) {
-                $pm = $pMembers->where('id', $uid)->first();
+            $activeShares = ProjectMember::getActiveShares($p->id)->filter(fn($pm) => $pm->user && $pm->user->role !== 'admin');
+            $pMemberIds = $activeShares->pluck('user_id')->toArray();
+            foreach ($activeShares as $pm) {
+                $uid = $pm->user_id;
                 $edges[] = [
                     'from' => 'u_' . $uid,
                     'to' => 'p_' . $p->id,
-                    'label' => $pm->pivot->share_percentage . '%',
+                    'label' => $pm->share_percentage . '%',
                     'color' => ['color' => '#10b981', 'highlight' => '#34d399'],
                     'width' => 3,
                     'font' => ['color' => '#10b981', 'size' => 14, 'face' => 'Plus Jakarta Sans', 'bold' => 'true', 'strokeWidth' => 4, 'strokeColor' => '#0f172a']

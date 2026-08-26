@@ -31,6 +31,7 @@ class ProjectController extends Controller
                 $p->calculated_expense = (float) $p->transactions->where('status', 'approved')->where('type', 'expense')->sum('amount');
             }
             $p->calculated_fund_cut = ($p->calculated_income * (float)$p->weamis_fund_percentage) / 100;
+            $p->active_members = ProjectMember::getActiveShares($p->id)->filter(fn($pm) => $pm->user && $pm->user->role !== 'admin');
         });
 
         $members = User::where('role', '!=', 'admin')->orderBy('id')->get();

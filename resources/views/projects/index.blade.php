@@ -103,12 +103,12 @@
 
                     <!-- Members avatars & shares -->
                     <div class="space-y-1.5 mb-4">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thành viên tham gia ({{ $p->members->count() }}):</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Thành viên tham gia ({{ $p->active_members->count() }}):</p>
                         <div class="flex flex-wrap gap-1.5">
-                            @foreach($p->members as $m)
+                            @foreach($p->active_members as $pm)
                                 <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[11px] font-bold flex items-center space-x-1">
-                                    <span>{{ $m->name }}</span>
-                                    <span class="text-indigo-600 dark:text-indigo-400">({{ number_format($m->pivot->share_percentage, 0) }}%)</span>
+                                    <span>{{ $pm->user?->name }}</span>
+                                    <span class="text-indigo-600 dark:text-indigo-400">({{ number_format($pm->share_percentage, 0) }}%)</span>
                                 </span>
                             @endforeach
                         </div>
