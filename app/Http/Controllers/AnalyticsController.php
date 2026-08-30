@@ -170,59 +170,71 @@ class AnalyticsController extends Controller
                     if ($projectEntries->isNotEmpty()) {
                         foreach ($projectEntries as $je) {
                             $projId = $je->toAccount->owner_id;
-                            $project = Project::with('members')->find($projId);
+                            $project = Project::find($projId);
                             $jeAmount = (float) $je->amount;
 
                             if ($project) {
-                                $pMembers = $project->members->where('role', '!=', 'admin')->unique('id');
+                                $pDate = $tx->created_at ? $tx->created_at->format('Y-m-d') : null;
+                                $activeShares = \App\Models\ProjectMember::getActiveShares($projId, $pDate)->where('role', '!=', 'admin');
                                 $fundPct = (float) $project->weamis_fund_percentage / 100;
-                                $treasuryCash += ($jeAmount * $fundPct);
 
-                                // Net calculation: direct share_percentage on gross amount
-                                foreach ($pMembers as $pm) {
-                                    $mUid = $pm->id;
-                                    $netPct = (float) $pm->pivot->share_percentage / 100;
-                                    $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($jeAmount * $netPct);
+                                if ($project->code === 'CNS' || $projId == 20) {
+                                    $treasuryCash += $jeAmount;
+                                } else {
+                                    $treasuryCash += ($jeAmount * $fundPct);
+                                    foreach ($activeShares as $as) {
+                                        $mUid = $as->user_id;
+                                        $netPct = (float) $as->share_percentage / 100;
+                                        $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($jeAmount * $netPct);
+                                    }
                                 }
 
                                 // Gross calculation (Sweat Equity)
                                 if ($projId == 15 || $projId == 14 || $projId == 16) { // Wifi marketing: equal split of fund cut across project members
-                                    $memberCount = $pMembers->count();
+                                    $memberCount = $activeShares->count();
                                     $fundCut = $jeAmount * $fundPct;
-                                    foreach ($pMembers as $pm) {
-                                        $mUid = $pm->id;
-                                        $netPct = (float) $pm->pivot->share_percentage / 100;
+                                    foreach ($activeShares as $as) {
+                                        $mUid = $as->user_id;
+                                        $netPct = (float) $as->share_percentage / 100;
                                         $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $netPct) + ($fundCut / $memberCount);
                                     }
                                 } elseif ($projId == 17) { // Landing BMG: 50% Kiên, 50% Minh
-                                    foreach ($pMembers as $pm) {
-                                        $mUid = $pm->id;
+                                    foreach ($activeShares as $as) {
+                                        $mUid = $as->user_id;
                                         $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * 0.50);
                                     }
                                 } else {
-                                    $totalMemberShare = $pMembers->sum(fn($pm) => (float)$pm->pivot->share_percentage);
-                                    foreach ($pMembers as $pm) {
-                                        $mUid = $pm->id;
-                                        $grossRatio = $totalMemberShare > 0 ? ((float)$pm->pivot->share_percentage / $totalMemberShare) : 0;
-                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $grossRatio);
+                                    foreach ($activeShares as $as) {
+                                        $mUid = $as->user_id;
+                                        $grossPct = (float) $as->share_percentage / 100;
+                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $grossPct);
                                     }
                                 }
                             }
                         }
                     }
                 } elseif ($tx->project_id && $tx->project) {
-                    $pMembers = $tx->project->members->where('role', '!=', 'admin')->unique('id');
+                    $projId = $tx->project_id;
+                    $pDate = $tx->created_at ? $tx->created_at->format('Y-m-d') : null;
+                    $activeShares = \App\Models\ProjectMember::getActiveShares($projId, $pDate)->where('role', '!=', 'admin');
                     $fundPct = (float) $tx->project->weamis_fund_percentage / 100;
-                    $treasuryCash += ($amount * $fundPct);
-                    $totalMemberShare = $pMembers->sum(fn($pm) => (float)$pm->pivot->share_percentage);
 
-                    foreach ($pMembers as $pm) {
-                        $mUid = $pm->id;
-                        $netPct = (float) $pm->pivot->share_percentage / 100;
-                        $grossRatio = $totalMemberShare > 0 ? ((float)$pm->pivot->share_percentage / $totalMemberShare) : $netPct;
+                    if ($tx->project->code === 'CNS' || $projId == 20) {
+                        // CNS: MoMo deposit is full fund cut / net of external salary
+                        $treasuryCash += $amount;
+                    } else {
+                        $treasuryCash += ($amount * $fundPct);
+                        foreach ($activeShares as $as) {
+                            $mUid = $as->user_id;
+                            $netPct = (float) $as->share_percentage / 100;
+                            $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($amount * $netPct);
+                        }
+                    }
 
-                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($amount * $grossRatio);
-                        $netBalances[$mUid]   = ($netBalances[$mUid] ?? 0)   + ($amount * $netPct);
+                    foreach ($activeShares as $as) {
+                        $mUid = $as->user_id;
+                        $grossPct = (float) $as->share_percentage / 100;
+                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($amount * $grossPct);
                     }
                 } else {
                     $isRepaymentDesc = str_contains(mb_strtolower($tx->description), 'trả lẩu') || str_contains(mb_strtolower($tx->description), 'trả nợ');
