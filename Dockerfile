@@ -1,4 +1,7 @@
-FROM php:8.5-fpm-alpine
+FROM php:8.3-fpm-alpine
+
+# Use production php.ini
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # Install system dependencies & PHP extensions
 RUN apk add --no-cache \
