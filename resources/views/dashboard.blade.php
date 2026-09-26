@@ -220,7 +220,7 @@ class="space-y-6">
                                 </div>
                             </div>
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#e8f0fe] text-[#1a73e8] dark:bg-[#002b4d] dark:text-[#8ab4f8]">
-                                {{ number_format($m->share_percentage, 0) }}%
+                                {{ $m->share_percentage > 0 ? number_format($m->share_percentage, 2, ',', '.') . '%' : '--' }}
                             </span>
                         </div>
                     @endforeach
