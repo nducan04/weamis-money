@@ -14,6 +14,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Weamis Money') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/weamis-avatar.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/weamis-avatar.png') }}">
 
     <!-- Google Fonts: Roboto & Google Sans Style Display Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -119,9 +121,7 @@
             <!-- Left: Logo & Navigation Tabs -->
             <div class="flex items-center space-x-6 min-w-0">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5 flex-shrink-0 group">
-                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#1a73e8] to-[#4285f4] text-white flex items-center justify-center font-bold text-lg shadow-sm group-hover:scale-105 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
+                    <img src="{{ asset('images/weamis-avatar.png') }}" alt="Weamis Avatar" class="w-9 h-9 rounded-2xl object-cover shadow-sm group-hover:scale-105 transition-transform border border-slate-200 dark:border-slate-700 bg-white">
                     <div class="min-w-0">
                         <h1 class="font-bold text-base sm:text-lg tracking-tight text-[#202124] dark:text-[#e3e3e3] leading-none flex items-center gap-1.5">
                             <span>Weamis Money</span>

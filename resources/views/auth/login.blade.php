@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Đăng Nhập | Weamis Money</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/weamis-avatar.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/weamis-avatar.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -122,8 +124,8 @@
                         
                         <!-- Floating Logo Container -->
                         <div class="relative animate-float">
-                            <div class="w-36 h-36 rounded-3xl bg-gradient-to-tr from-white via-emerald-50 to-teal-100 text-emerald-600 font-black text-7xl flex items-center justify-center shadow-2xl shadow-black/30 ring-8 ring-white/20">
-                                💲
+                            <div class="w-36 h-36 rounded-3xl bg-white p-3 flex items-center justify-center shadow-2xl shadow-black/30 ring-8 ring-white/20 overflow-hidden">
+                                <img src="{{ asset('images/weamis-avatar.png') }}" alt="Weamis" class="w-full h-full object-contain">
                             </div>
                             <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-28 h-4 bg-emerald-900/40 rounded-full blur-md -z-10"></div>
                         </div>
