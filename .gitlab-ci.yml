@@ -1,11 +1,33 @@
 variables:
   AUTO_DEVOPS_EXPLICITLY_DISABLED: "1"
+  DOCKER_BUILDKIT: "1"
 
 include: []
 
 stages:
+  - verify
   - deploy
 
+# -----------------------------------------------------------------------------
+# Stage 1: Verify Code Conventions & Syntax
+# -----------------------------------------------------------------------------
+code_quality:
+  stage: verify
+  image: php:8.3-cli-alpine
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  before_script:
+    - apk add --no-cache curl git unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  script:
+    - echo "Running PHP syntax and code quality checks..."
+    - find app config routes -type f -name "*.php" -print0 | xargs -0 -n1 php -l
+  allow_failure: false
+
+# -----------------------------------------------------------------------------
+# Stage 2: Zero-Downtime Deployment & Production Optimization
+# -----------------------------------------------------------------------------
 deploy_production:
   stage: deploy
   image: docker:cli
@@ -14,12 +36,16 @@ deploy_production:
   before_script:
     - apk add --no-cache git docker-compose
   script:
+    - echo "===> 1. Creating pre-migration safety backup of SQLite database..."
+    - docker exec weamis-money-app cp /var/www/html/database/sqlite/database.sqlite /var/www/html/database/sqlite/database.sqlite.bak || true
+
+    - echo "===> 2. Building and updating container services..."
     - docker-compose -f docker-compose.yml up -d --build
+
+    - echo "===> 3. Running database migrations (Zero-Downtime)..."
     - docker exec weamis-money-app php artisan migrate --force
-    - docker exec weamis-money-app php artisan config:clear
-    - docker exec weamis-money-app php artisan route:clear
-    - docker exec weamis-money-app php artisan cache:clear
-    - docker exec weamis-money-app php artisan view:clear
+
+    - echo "===> 4. Warming and optimizing production caches..."
     - docker exec weamis-money-app php artisan optimize:clear
-
-
+    - docker exec weamis-money-app php artisan optimize
+    - docker exec weamis-money-app php artisan about
