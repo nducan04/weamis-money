@@ -22,3 +22,5 @@ yarn-error.log
 Tài sản ròng - Gross.csv
 Tài sản ròng - Net.csv
 scratch/
+supervisord.log
+.agents/skills
