@@ -45,6 +45,7 @@ class AnalyticsController extends Controller
             'duong'      => ['ndd', 'duong'],
             'quocminh'   => ['qm', 'quocminh'],
             'minhduc'    => ['md', 'minhduc'],
+            'nda'        => ['nda'],
         ];
 
         foreach ($aliasMap as $legacyKey => $possibleUsernames) {
@@ -74,38 +75,40 @@ class AnalyticsController extends Controller
             $netBalances[$m->id]   = 0.0;
         }
 
-        // Verified Base Gross Balances from Sheet
+        // Verified Base Gross Balances from Sheet (Page 8 - Tổng Gross dương: 17.576.384đ)
         $legacyGrossBaseline = [
             'hotrungson' => 5747766,
-            'viet'       => 2546666,
-            'quyduc'     => 2390000,
-            'quangminh'  => 2636666,
-            'thanhan'    => 1550000,
+            'viet'       => 5004887,
+            'quyduc'     => 2765000,
+            'quangminh'  => 573732,
+            'thanhan'    => 2050000,
             'phuchung'   => 570000,
-            'trungkien'  => -183334,
+            'duong'      => 90000,
+            'trungkien'  => 774999,
             'hoanganh'   => -310000,
             'phucdang'   => -510000,
             'dangsinh'   => -710000,
-            'duong'      => -510000,
             'quocminh'   => 0,
             'minhduc'    => 0,
+            'nda'        => 0,
         ];
 
-        // Verified Base Net Balances from Sheet (after Lẩu Phan Đào Duy Anh split)
+        // Verified Base Net Balances from Sheet (Page 1 - Tài sản ròng)
         $legacyNetBaseline = [
             'hotrungson' => 5249033,
-            'quangminh'  => 2171267,
-            'thanhan'    => 1301267,
-            'viet'       => 432534,
+            'viet'       => 907422,
             'quyduc'     => 372534,
+            'quangminh'  => 0,
+            'thanhan'    => 1801267,
             'phuchung'   => 321267,
-            'trungkien'  => -648733,
-            'phucdang'   => -510000,
-            'duong'      => -510000,
-            'dangsinh'   => -958733,
+            'duong'      => 90000,
+            'trungkien'  => -298733,
             'hoanganh'   => -808733,
+            'phucdang'   => -510000,
+            'dangsinh'   => -958733,
             'quocminh'   => -248733,
-            'minhduc'    => -248733,
+            'minhduc'    => 1267,
+            'nda'        => 0,
         ];
 
         foreach ($legacyGrossBaseline as $key => $val) {
@@ -122,11 +125,11 @@ class AnalyticsController extends Controller
             }
         }
 
-        $treasuryCash = 995000;
+        $treasuryCash = 3650000;
 
-        // Process all NEW approved transactions created after baseline (created after 06/08/2026)
+        // Process all NEW approved transactions created after baseline (created after 29/08/2026 23:59:59)
         $newTxs = Transaction::where('status', 'approved')
-            ->where('created_at', '>', '2026-08-06 23:59:59')
+            ->where('created_at', '>', '2026-08-29 23:59:59')
             ->with(['user', 'project.members', 'journalEntries.toAccount'])
             ->orderBy('id')
             ->get();

@@ -1,4 +1,7 @@
-FROM php:8.5-fpm-alpine
+FROM php:8.3-fpm-alpine
+
+# Use production php.ini
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # Install system dependencies & PHP extensions
 RUN apk add --no-cache \
@@ -10,9 +13,10 @@ RUN apk add --no-cache \
     zip \
     unzip \
     oniguruma-dev \
-    libzip-dev
+    libzip-dev \
+    postgresql-dev
 
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
