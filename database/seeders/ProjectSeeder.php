@@ -137,5 +137,34 @@ class ProjectSeeder extends Seeder
             $tx5m->project_id = $p5->id;
             $tx5m->save();
         }
+
+        // Project 6: CNS (Chứng nhận số)
+        $nqd = User::where('username', 'nqd')->orWhere('name', 'LIKE', '%Quý Đức%')->first();
+        $p6 = Project::firstOrCreate(
+            ['code' => 'CNS'],
+            [
+                'name' => 'Chứng nhận số',
+                'description' => 'Dự án Chứng nhận số',
+                'weamis_fund_percentage' => 10.00,
+                'lead_user_id' => $nhv ? $nhv->id : $leadId,
+                'created_by_user_id' => $nhv ? $nhv->id : $leadId,
+                'status' => 'active',
+            ]
+        );
+        if ($nhv) ProjectMember::firstOrCreate(['project_id' => $p6->id, 'user_id' => $nhv->id, 'effective_from' => '2026-08-01'], ['share_percentage' => 75.00]);
+        if ($nqd) ProjectMember::firstOrCreate(['project_id' => $p6->id, 'user_id' => $nqd->id, 'effective_from' => '2026-08-01'], ['share_percentage' => 15.00]);
+
+        // Attach 2.5M transaction to CNS
+        $txCns = \App\Models\Transaction::where('amount', 2500000)
+            ->where(function ($q) {
+                $q->where('description', 'like', '%cns t8%')
+                  ->orWhere('description', 'like', '%rate Việt 75 NQD 15%');
+            })->first();
+        if ($txCns) {
+            $txCns->project_id = $p6->id;
+            $txCns->is_fund_only = false;
+            $txCns->revenue_type = 'development';
+            $txCns->save();
+        }
     }
 }
