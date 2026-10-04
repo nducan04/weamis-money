@@ -285,8 +285,11 @@ class AnalyticsController extends Controller
                 : '--';
 
             $grossData[] = [
+                'id'       => $u->id,
                 'name'     => $u->name,
                 'username' => $u->username,
+                'avatar'   => $u->avatar,
+                'email'    => $u->email,
                 'value'    => (float) round($val, 0),
                 'equity'   => $equityStr,
             ];
@@ -299,8 +302,11 @@ class AnalyticsController extends Controller
             if (!$u) continue;
 
             $netData[] = [
+                'id'       => $u->id,
                 'name'     => $u->name,
                 'username' => $u->username,
+                'avatar'   => $u->avatar,
+                'email'    => $u->email,
                 'value'    => (float) round($val, 0),
             ];
         }
