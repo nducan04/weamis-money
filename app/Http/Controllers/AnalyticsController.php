@@ -242,9 +242,7 @@ class AnalyticsController extends Controller
                     $isRepaymentDesc = str_contains(mb_strtolower($tx->description), 'trả lẩu') || str_contains(mb_strtolower($tx->description), 'trả nợ');
                     $targetUid = $tx->responsible_user_id ?: $uid;
                     if ($targetUid) {
-                        if (!$isRepaymentDesc) {
-                            $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) + $amount;
-                        }
+                        $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) + $amount;
                         $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) + $amount;
                     }
                     if ($isRepaymentDesc) {
