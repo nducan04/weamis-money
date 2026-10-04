@@ -6,6 +6,9 @@ use App\Models\User;
 use App\Models\Project;
 use App\Models\ProjectMember;
 use App\Models\Transaction;
+use App\Models\Fund;
+use App\Models\Account;
+use App\Models\JournalEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -15,255 +18,34 @@ class AnalyticsController extends Controller
     {
         $members = User::where('role', '!=', 'admin')->get();
 
+        Fund::syncBalance();
+        $fund = Fund::first();
+        $treasuryCash = $fund ? (float)$fund->balance : 0.0;
+
         // ══════════════════════════════════════════════════════════════════
-        // DUAL-LEDGER ENGINE:
-        // 1. Verified Historical Baseline (Transactions up to ID 153)
-        // 2. Dynamic Processing for ANY NEW approved transactions (ID > 153)
+        // PURE DOUBLE-ENTRY GENERAL LEDGER (SỔ CÁI KÉP TOÀN DIỆN)
+        // 1. Net Balance: Tổng Có (In to user) - Tổng Nợ (Out from user)
+        // 2. Gross Equity: Tổng công sức / giá trị tạo ra (Total credited In)
         // ══════════════════════════════════════════════════════════════════
-
-        // Map all users and username aliases to canonical user_id
-        $userByUsername = [];
-        foreach ($members as $m) {
-            $userByUsername[$m->id] = $m->id;
-            if ($m->username) {
-                $userByUsername[$m->username] = $m->id;
-            }
-        }
-        
-        // Map legacy baseline keys to active DB users (supports usernames pd, tds, ndd, phucdang, etc. + name fallback)
-        $aliasMap = [
-            'hotrungson' => ['hts', 'son', 'hotrungson'],
-            'viet'       => ['nhv', 'viet'],
-            'quyduc'     => ['nqd', 'duc', 'quyduc'],
-            'quangminh'  => ['tqm', 'minh', 'quangminh'],
-            'thanhan'    => ['lvta', 'an', 'thanhan'],
-            'phuchung'   => ['ndph', 'hung', 'phuchung'],
-            'trungkien'  => ['ntk', 'kien', 'trungkien'],
-            'hoanganh'   => ['vdha', 'hoanganh'],
-            'phucdang'   => ['pd', 'phucdang'],
-            'dangsinh'   => ['tds', 'dangsinh'],
-            'duong'      => ['ndd', 'duong'],
-            'quocminh'   => ['qm', 'quocminh'],
-            'minhduc'    => ['md', 'minhduc'],
-            'nda'        => ['nda'],
-        ];
-
-        foreach ($aliasMap as $legacyKey => $possibleUsernames) {
-            $found = null;
-            foreach ((array)$possibleUsernames as $dbUname) {
-                $found = $members->firstWhere('username', $dbUname);
-                if ($found) break;
-            }
-            if (!$found) {
-                // Fallback by name matching if username differs
-                if ($legacyKey === 'phucdang') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'phúc đăng'));
-                if ($legacyKey === 'dangsinh') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'sinh'));
-                if ($legacyKey === 'duong')    $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'dương'));
-                if ($legacyKey === 'quocminh') $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'quốc minh'));
-                if ($legacyKey === 'minhduc')  $found = $members->first(fn($u) => str_contains(mb_strtolower($u->name), 'minh đức'));
-            }
-            if ($found) {
-                $userByUsername[$legacyKey] = $found->id;
-            }
-        }
-
-        // Initialize balances by user_id
         $grossBalances = [];
         $netBalances   = [];
+
         foreach ($members as $m) {
-            $grossBalances[$m->id] = 0.0;
-            $netBalances[$m->id]   = 0.0;
-        }
+            $userAcc = Account::where('type', 'user')->where('owner_id', $m->id)->first();
+            $in = 0.0;
+            $out = 0.0;
 
-        // Verified Base Gross Balances from Sheet (Page 8 - Tổng Gross dương: 17.576.384đ)
-        $legacyGrossBaseline = [
-            'hotrungson' => 5747766,
-            'viet'       => 5004887,
-            'quyduc'     => 2765000,
-            'quangminh'  => 573732,
-            'thanhan'    => 2050000,
-            'phuchung'   => 570000,
-            'duong'      => 90000,
-            'trungkien'  => 774999,
-            'hoanganh'   => -310000,
-            'phucdang'   => -510000,
-            'dangsinh'   => -710000,
-            'quocminh'   => 0,
-            'minhduc'    => 0,
-            'nda'        => 0,
-        ];
-
-        // Verified Base Net Balances from Sheet (Page 1 - Tài sản ròng)
-        $legacyNetBaseline = [
-            'hotrungson' => 5249033,
-            'viet'       => 907422,
-            'quyduc'     => 372534,
-            'quangminh'  => 0,
-            'thanhan'    => 1801267,
-            'phuchung'   => 321267,
-            'duong'      => 90000,
-            'trungkien'  => -298733,
-            'hoanganh'   => -808733,
-            'phucdang'   => -510000,
-            'dangsinh'   => -958733,
-            'quocminh'   => -248733,
-            'minhduc'    => 1267,
-            'nda'        => 0,
-        ];
-
-        foreach ($legacyGrossBaseline as $key => $val) {
-            $uid = $userByUsername[$key] ?? null;
-            if ($uid) {
-                $grossBalances[$uid] = (float) $val;
-            }
-        }
-
-        foreach ($legacyNetBaseline as $key => $val) {
-            $uid = $userByUsername[$key] ?? null;
-            if ($uid) {
-                $netBalances[$uid] = (float) $val;
-            }
-        }
-
-        $treasuryCash = 3650000;
-
-        // Process all NEW approved transactions created after baseline (created after 29/08/2026 23:59:59)
-        $newTxs = Transaction::where('status', 'approved')
-            ->where('created_at', '>', '2026-08-29 23:59:59')
-            ->with(['user', 'project.members', 'journalEntries.toAccount'])
-            ->orderBy('id')
-            ->get();
-
-        foreach ($newTxs as $tx) {
-            $uid = $tx->user_id;
-            $amount = (float) $tx->amount;
-
-            if ($tx->is_fund_only) {
-                // Direct fund impact: No impact on personal Net or Gross
-                if ($tx->type === 'contribution' || $tx->type === 'repayment' || $tx->type === 'profit' || $tx->type === 'adjustment') {
-                    $treasuryCash += $amount;
-                } elseif ($tx->type === 'expense' || $tx->type === 'loan' || $tx->type === 'withdrawal' || $tx->type === 'distribution') {
-                    $treasuryCash -= $amount;
-                }
-                continue;
+            if ($userAcc) {
+                $in = (float) JournalEntry::where('to_account_id', $userAcc->id)
+                    ->whereHas('transaction', fn($q) => $q->where('status', 'approved'))
+                    ->sum('amount');
+                $out = (float) JournalEntry::where('from_account_id', $userAcc->id)
+                    ->whereHas('transaction', fn($q) => $q->where('status', 'approved'))
+                    ->sum('amount');
             }
 
-            // Check if tx has split journal entries pointing to projects or users
-            $hasMultipleSplits = $tx->journalEntries->count() > 1;
-            $projectEntries = $tx->journalEntries->filter(fn($je) => $je->toAccount && $je->toAccount->type === 'project');
-            $userEntries = $tx->journalEntries->filter(fn($je) => $je->toAccount && $je->toAccount->type === 'user');
-
-            if ($tx->type === 'contribution' || $tx->type === 'repayment' || $tx->type === 'profit') {
-                if ($hasMultipleSplits && ($projectEntries->isNotEmpty() || $userEntries->isNotEmpty())) {
-                    // Process user splits (direct allocation to individual user accounts)
-                    if ($userEntries->isNotEmpty()) {
-                        $treasuryCash += $userEntries->sum('amount');
-                        foreach ($userEntries as $je) {
-                            $targetUid = $je->toAccount->owner_id;
-                            $jeAmount = (float)$je->amount;
-                            if ($targetUid) {
-                                $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) + $jeAmount;
-                                $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) + $jeAmount;
-                            }
-                        }
-                    }
-
-                    // Process project splits (distribution according to project shares)
-                    if ($projectEntries->isNotEmpty()) {
-                        foreach ($projectEntries as $je) {
-                            $projId = $je->toAccount->owner_id;
-                            $project = Project::find($projId);
-                            $jeAmount = (float) $je->amount;
-
-                            if ($project) {
-                                $pDate = $tx->created_at ? $tx->created_at->format('Y-m-d') : null;
-                                $activeShares = \App\Models\ProjectMember::getActiveShares($projId, $pDate)->where('role', '!=', 'admin');
-                                $fundPct = (float) $project->weamis_fund_percentage / 100;
-
-                                if ($project->code === 'CNS' || $projId == 20) {
-                                    $treasuryCash += $jeAmount;
-                                } else {
-                                    $treasuryCash += ($jeAmount * $fundPct);
-                                    foreach ($activeShares as $as) {
-                                        $mUid = $as->user_id;
-                                        $netPct = (float) $as->share_percentage / 100;
-                                        $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($jeAmount * $netPct);
-                                    }
-                                }
-
-                                // Gross calculation (Sweat Equity)
-                                if ($projId == 15 || $projId == 14 || $projId == 16) { // Wifi marketing: equal split of fund cut across project members
-                                    $memberCount = $activeShares->count();
-                                    $fundCut = $jeAmount * $fundPct;
-                                    foreach ($activeShares as $as) {
-                                        $mUid = $as->user_id;
-                                        $netPct = (float) $as->share_percentage / 100;
-                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $netPct) + ($fundCut / $memberCount);
-                                    }
-                                } elseif ($projId == 17) { // Landing BMG: 50% Kiên, 50% Minh
-                                    foreach ($activeShares as $as) {
-                                        $mUid = $as->user_id;
-                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * 0.50);
-                                    }
-                                } else {
-                                    foreach ($activeShares as $as) {
-                                        $mUid = $as->user_id;
-                                        $grossPct = (float) $as->share_percentage / 100;
-                                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($jeAmount * $grossPct);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } elseif ($tx->project_id && $tx->project) {
-                    $projId = $tx->project_id;
-                    $pDate = $tx->created_at ? $tx->created_at->format('Y-m-d') : null;
-                    $activeShares = \App\Models\ProjectMember::getActiveShares($projId, $pDate)->where('role', '!=', 'admin');
-                    $fundPct = (float) $tx->project->weamis_fund_percentage / 100;
-
-                    if ($tx->project->code === 'CNS' || $projId == 20) {
-                        // CNS: MoMo deposit is full fund cut / net of external salary
-                        $treasuryCash += $amount;
-                    } else {
-                        $treasuryCash += ($amount * $fundPct);
-                        foreach ($activeShares as $as) {
-                            $mUid = $as->user_id;
-                            $netPct = (float) $as->share_percentage / 100;
-                            $netBalances[$mUid] = ($netBalances[$mUid] ?? 0) + ($amount * $netPct);
-                        }
-                    }
-
-                    foreach ($activeShares as $as) {
-                        $mUid = $as->user_id;
-                        $grossPct = (float) $as->share_percentage / 100;
-                        $grossBalances[$mUid] = ($grossBalances[$mUid] ?? 0) + ($amount * $grossPct);
-                    }
-                } else {
-                    $isRepaymentDesc = str_contains(mb_strtolower($tx->description), 'trả lẩu') || str_contains(mb_strtolower($tx->description), 'trả nợ');
-                    $targetUid = $tx->responsible_user_id ?: $uid;
-                    if ($targetUid) {
-                        $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) + $amount;
-                        $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) + $amount;
-                    }
-                    if ($isRepaymentDesc) {
-                        $treasuryCash += $amount;
-                    }
-                }
-            } elseif ($tx->type === 'loan' || $tx->type === 'withdrawal' || $tx->type === 'expense') {
-                $targetUid = $tx->responsible_user_id ?: $uid;
-                if ($targetUid) {
-                    $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) - $amount;
-                    $grossBalances[$targetUid] = ($grossBalances[$targetUid] ?? 0) - $amount;
-                }
-            } elseif ($tx->type === 'repayment') {
-                $targetUid = $tx->responsible_user_id ?: $uid;
-                if ($targetUid) {
-                    $netBalances[$targetUid] = ($netBalances[$targetUid] ?? 0) + $amount;
-                }
-                $treasuryCash += $amount;
-            } elseif ($tx->type === 'expense') {
-                $treasuryCash -= $amount;
-            }
+            $netBalances[$m->id] = $in - $out;
+            $grossBalances[$m->id] = $in;
         }
 
         // Calculate total positive Gross for Equity % calculation
