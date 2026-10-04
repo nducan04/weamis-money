@@ -25,7 +25,7 @@ class AnalyticsController extends Controller
         // ══════════════════════════════════════════════════════════════════
         // PURE DOUBLE-ENTRY GENERAL LEDGER (SỔ CÁI KÉP TOÀN DIỆN)
         // 1. Net Balance: Tổng Có (In to user) - Tổng Nợ (Out from user)
-        // 2. Gross Equity: Tổng công sức / giá trị tạo ra (Total credited In)
+        // 2. Gross Sweat-Equity: Vốn Cống Hiến Giữ Lại (Retained Equity = max(0, Net))
         // ══════════════════════════════════════════════════════════════════
         $grossBalances = [];
         $netBalances   = [];
@@ -42,17 +42,22 @@ class AnalyticsController extends Controller
                 $out = (float) JournalEntry::where('from_account_id', $userAcc->id)
                     ->whereHas('transaction', fn($q) => $q->where('status', 'approved'))
                     ->sum('amount');
+                
+                // Đồng bộ cột balance của Account để mọi trang (History, Networth) nhất quán 100%
+                $netVal = $in - $out;
+                $userAcc->update(['balance' => $netVal]);
+            } else {
+                $netVal = 0.0;
             }
 
-            $netBalances[$m->id] = $in - $out;
-            $grossBalances[$m->id] = $in;
+            $netBalances[$m->id] = $netVal;
+            // Vốn cống hiến ngầm thực tế (Gross Retained Equity): 
+            // Nếu rút sạch lương âm cả ví thì cống hiến ròng còn lại = 0₫
+            $grossBalances[$m->id] = max(0.0, $netVal);
         }
 
         // Calculate total positive Gross for Equity % calculation
-        $totalPosGross = 0;
-        foreach ($grossBalances as $uid => $val) {
-            if ($val > 0) $totalPosGross += $val;
-        }
+        $totalPosGross = array_sum($grossBalances);
 
         $userMap = $members->keyBy('id');
 
