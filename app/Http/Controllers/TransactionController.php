@@ -481,7 +481,8 @@ class TransactionController extends Controller
      */
     private function createJournalEntry(Transaction $tx): void
     {
-        $targetUserId = $tx->responsible_user_id ?: $tx->user_id;
+        // For contributions/repayments, the wallet paying is tx->user_id. For expenses/loans, target responsible_user_id if present.
+        $targetUserId = in_array($tx->type, ['contribution', 'repayment', 'profit']) ? $tx->user_id : ($tx->responsible_user_id ?: $tx->user_id);
         $user = User::find($targetUserId);
         $userAcc = Account::firstOrCreate(
             ['type' => 'user', 'owner_type' => User::class, 'owner_id' => $targetUserId],
