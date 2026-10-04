@@ -23,10 +23,37 @@ class AnalyticsController extends Controller
         $treasuryCash = $fund ? (float)$fund->balance : 0.0;
 
         // ══════════════════════════════════════════════════════════════════
-        // PURE DOUBLE-ENTRY GENERAL LEDGER (SỔ CÁI KÉP TOÀN DIỆN)
-        // 1. Net Balance: Tổng Có (In to user) - Tổng Nợ (Out from user)
-        // 2. Gross Sweat-Equity: Vốn Cống Hiến Giữ Lại (Retained Equity = max(0, Net))
+        // DUAL-AXIS FINANCIAL ENGINE:
+        // 1. Net Balance: PURE DOUBLE-ENTRY (SỔ CÁI KÉP TOÀN DIỆN: Tổng Có - Tổng Nợ)
+        // 2. Gross Sweat-Equity: VỐN CỐNG HIẾN LŨY KẾ (Excel Page 8 + New Project Revenue)
         // ══════════════════════════════════════════════════════════════════
+        
+        // Base Gross Balances from Master Sheet (Page 8 - Vốn cống hiến ngầm tích lũy)
+        $legacyGrossBaseline = [
+            'hts'  => 5747766, // Hồ Trung Sơn
+            'nhv'  => 5004887, // Nguyễn Hoàng Việt
+            'nqd'  => 2765000, // Nguyễn Quý Đức
+            'lvta' => 2050000, // Lê Văn Thành An
+            'ntk'  => 774999,  // Nguyễn Trung Kiên
+            'tqm'  => 573732,  // Trịnh Quang Minh
+            'ndph' => 570000,  // Nguyễn Đăng Phúc Hưng
+            'ndd'  => 90000,   // Dương
+            'vdha' => -310000, // Vũ Đức Hoàng Anh
+            'pd'   => -510000, // Phúc Đăng
+            'tds'  => -710000, // Đăng Sinh
+            'qm'   => 0,       // Quốc Minh
+            'md'   => 0,       // Minh Đức
+            'nda'  => 0,       // Nguyễn Đức An
+        ];
+
+        // Additional Sweat-Equity from post-baseline project deliverables (CNS T8, T9, Weamis Money, contributions)
+        $deltaGross = [
+            'nhv'  => 3750000, // CNS T8 (1.875M @ 75%) + CNS T9 (1.875M @ 75%)
+            'nqd'  => 750000,  // CNS T8 (375k @ 15%) + CNS T9 (375k @ 15%)
+            'nda'  => 1000000, // Weamis Money (1.000.000₫ tổng giá trị dự án)
+            'ndph' => 500000,  // Góp tiền bù lẩu bạn (TX 78)
+        ];
+
         $grossBalances = [];
         $netBalances   = [];
 
@@ -51,13 +78,20 @@ class AnalyticsController extends Controller
             }
 
             $netBalances[$m->id] = $netVal;
-            // Vốn cống hiến ngầm thực tế (Gross Retained Equity): 
-            // Nếu rút sạch lương âm cả ví thì cống hiến ròng còn lại = 0₫
-            $grossBalances[$m->id] = max(0.0, $netVal);
+
+            // Gross Sweat-Equity: Base Sheet Page 8 + Delta Project Contribution
+            $base = $legacyGrossBaseline[$m->username] ?? 0.0;
+            $delta = $deltaGross[$m->username] ?? 0.0;
+            $grossBalances[$m->id] = (float) ($base + $delta);
         }
 
         // Calculate total positive Gross for Equity % calculation
-        $totalPosGross = array_sum($grossBalances);
+        $totalPosGross = 0.0;
+        foreach ($grossBalances as $uid => $val) {
+            if ($val > 0) {
+                $totalPosGross += $val;
+            }
+        }
 
         $userMap = $members->keyBy('id');
 
