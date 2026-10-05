@@ -24,8 +24,10 @@ class AnalyticsController extends Controller
 
         // ══════════════════════════════════════════════════════════════════
         // DUAL-AXIS FINANCIAL ENGINE:
-        // 1. Net Balance: PURE DOUBLE-ENTRY (SỔ CÁI KÉP TOÀN DIỆN: Tổng Có - Tổng Nợ)
-        // 2. Gross Sweat-Equity: VỐN CỐNG HIẾN LŨY KẾ (Excel Page 8 + New Project Revenue)
+        // 1. Net Balance: PURE DOUBLE-ENTRY (SỔ CÁI KÉP: Tổng Có - Tổng Nợ)
+        //    -> Phản ánh tài sản, lương còn để dư trong tổ chức (loại trừ 10% quỹ)
+        // 2. Gross Sweat-Equity: DYNAMIC SLICING PIE (Tỷ lệ 1:1:1)
+        //    -> Slices = Base (Page 8) + Doanh thu tạo ra (R) - Tiền đã rút bỏ túi (W)
         // ══════════════════════════════════════════════════════════════════
         
         // Base Gross Balances from Master Sheet (Page 8 - Vốn cống hiến ngầm tích lũy)
@@ -54,6 +56,12 @@ class AnalyticsController extends Controller
             'ndph' => 500000,  // Góp tiền bù lẩu bạn (TX 78)
         ];
 
+        // Recovered Cash / Salary Withdrawn (W x 1.0)
+        // Khấu trừ phần thù lao đã rút tiền mặt bỏ túi ra khỏi Slices cống hiến
+        $recoveredCash = [
+            'nda' => 900000,  // Đức An đã rút 900.000₫ lương dự án Weamis Money
+        ];
+
         $grossBalances = [];
         $netBalances   = [];
 
@@ -79,10 +87,12 @@ class AnalyticsController extends Controller
 
             $netBalances[$m->id] = $netVal;
 
-            // Gross Sweat-Equity: Base Sheet Page 8 + Delta Project Contribution
+            // Gross Sweat-Equity (Dynamic Slicing Pie 1:1:1):
+            // Slices = Base Sheet Page 8 + Delta Project Contribution (R) - Recovered Cash (W)
             $base = $legacyGrossBaseline[$m->username] ?? 0.0;
             $delta = $deltaGross[$m->username] ?? 0.0;
-            $grossBalances[$m->id] = (float) ($base + $delta);
+            $withdrawn = $recoveredCash[$m->username] ?? 0.0;
+            $grossBalances[$m->id] = (float) ($base + $delta - $withdrawn);
         }
 
         // Calculate total positive Gross for Equity % calculation
