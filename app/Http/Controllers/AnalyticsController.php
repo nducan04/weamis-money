@@ -64,11 +64,15 @@ class AnalyticsController extends Controller
 
         $grossBalances = [];
         $netBalances   = [];
+        $memberLedgers = [];
+        $inMap         = [];
+        $outMap        = [];
 
         foreach ($members as $m) {
             $userAcc = Account::where('type', 'user')->where('owner_id', $m->id)->first();
             $in = 0.0;
             $out = 0.0;
+            $memberLedger = [];
 
             if ($userAcc) {
                 $in = (float) JournalEntry::where('to_account_id', $userAcc->id)
@@ -81,11 +85,35 @@ class AnalyticsController extends Controller
                 // Đồng bộ cột balance của Account để mọi trang (History, Networth) nhất quán 100%
                 $netVal = $in - $out;
                 $userAcc->update(['balance' => $netVal]);
+
+                // Lấy toàn bộ lịch sử bút toán cá nhân để drilldown tra cứu chi tiết
+                $memberLedger = JournalEntry::where(function($q) use ($userAcc) {
+                    $q->where('to_account_id', $userAcc->id)->orWhere('from_account_id', $userAcc->id);
+                })->whereHas('transaction', fn($q) => $q->where('status', 'approved'))
+                  ->with('transaction')
+                  ->latest('id')
+                  ->get()
+                  ->map(function($e) use ($userAcc) {
+                      $isCredit = ($e->to_account_id === $userAcc->id);
+                      return [
+                          'id'        => $e->id,
+                          'tx_id'     => $e->transaction_id,
+                          'date'      => $e->transaction?->created_at ? $e->transaction->created_at->format('d/m/Y H:i') : '',
+                          'desc'      => $e->transaction?->description ?? '',
+                          'type'      => $e->transaction?->type ?? '',
+                          'is_credit' => $isCredit,
+                          'amount'    => (float)$e->amount,
+                          'memo'      => $e->memo ?? '',
+                      ];
+                  })->values()->all();
             } else {
                 $netVal = 0.0;
             }
 
-            $netBalances[$m->id] = $netVal;
+            $inMap[$m->id]         = $in;
+            $outMap[$m->id]        = $out;
+            $netBalances[$m->id]   = $netVal;
+            $memberLedgers[$m->id] = $memberLedger;
 
             // Gross Sweat-Equity (Dynamic Slicing Pie 1:1:1):
             // Slices = Base Sheet Page 8 + Delta Project Contribution (R) - Recovered Cash (W)
@@ -126,19 +154,21 @@ class AnalyticsController extends Controller
             ];
         }
 
-        // Build Net Data array
+        // Build Net Data array (kèm IN / OUT để phục vụ SSOT Spreadsheet Table)
         $netData = [];
         foreach ($netBalances as $uid => $val) {
             $u = $userMap[$uid] ?? null;
             if (!$u) continue;
 
             $netData[] = [
-                'id'       => $u->id,
-                'name'     => $u->name,
-                'username' => $u->username,
-                'avatar'   => $u->avatar,
-                'email'    => $u->email,
-                'value'    => (float) round($val, 0),
+                'id'        => $u->id,
+                'name'      => $u->name,
+                'username'  => $u->username,
+                'avatar'    => $u->avatar,
+                'email'     => $u->email,
+                'in_value'  => (float) round($inMap[$uid] ?? 0, 0),
+                'out_value' => (float) round($outMap[$uid] ?? 0, 0),
+                'value'     => (float) round($val, 0),
             ];
         }
 
@@ -230,7 +260,7 @@ class AnalyticsController extends Controller
         });
         $topPairs = array_slice($topPairs, 0, 5);
 
-        return view('analytics.networth', compact('grossData', 'netData', 'treasuryCash', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
+        return view('analytics.networth', compact('grossData', 'netData', 'memberLedgers', 'treasuryCash', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
     }
 
     public function network()
