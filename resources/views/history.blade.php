@@ -2,7 +2,6 @@
 
 @section('content')
 <div x-data="{ 
-    activeView: 'cashflow', // 'cashflow' (Sổ Quỹ Momo) hoặc 'settlement' (Bảng Lương & Công Nợ Thành Viên)
     showCalendar: false,
     showAddModal: false,
     showEditModal: false,
@@ -199,22 +198,8 @@ class="pb-12 sm:pb-8">
     <!-- Main Container Card -->
     <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-slate-700 shadow-md">
         
-        <!-- Two-Tab Mode Switcher -->
-        <div class="flex items-center space-x-2 p-1.5 bg-slate-100 dark:bg-slate-700/60 rounded-2xl mb-5 max-w-md">
-            <button type="button" @click="activeView = 'cashflow'"
-                    class="flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm transition-all duration-150 flex items-center justify-center space-x-1.5 cursor-pointer"
-                    :class="activeView === 'cashflow' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'">
-                <span>🏦 Sổ Quỹ Momo</span>
-            </button>
-            <button type="button" @click="activeView = 'settlement'"
-                    class="flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm transition-all duration-150 flex items-center justify-center space-x-1.5 cursor-pointer"
-                    :class="activeView === 'settlement' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'">
-                <span>👥 Lương & Công Nợ</span>
-            </button>
-        </div>
-
         <!-- Single Horizontal Action & Filter Bar -->
-        <div x-show="activeView === 'cashflow'" class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 pb-5 border-b border-slate-100 dark:border-slate-700">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 pb-5 border-b border-slate-100 dark:border-slate-700">
             <!-- Left Side: Filters & Total Count -->
             <div class="flex flex-col sm:flex-row sm:flex-wrap items-center gap-2.5 w-full md:w-auto">
                 <input type="text" x-model="filterSearch" placeholder="Tìm kiếm nội dung..." class="w-full sm:w-48 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-medium focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white">
@@ -254,7 +239,7 @@ class="pb-12 sm:pb-8">
         </div>
 
         <!-- Desktop Table (Cashflow View) -->
-        <div x-show="activeView === 'cashflow'" class="hidden lg:block overflow-x-auto">
+        <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
                 <thead class="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-700/30 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                     <tr>
@@ -377,7 +362,7 @@ class="pb-12 sm:pb-8">
         </div>
 
         <!-- Mobile Cards (Cashflow View) -->
-        <div x-show="activeView === 'cashflow'" class="lg:hidden space-y-3">
+        <div class="lg:hidden space-y-3">
             <template x-for="(tx, index) in paginatedTransactions" :key="tx.id">
                 <div class="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-700 hover:shadow-md transition">
                     <div class="flex items-center justify-between mb-2">
@@ -494,7 +479,7 @@ class="pb-12 sm:pb-8">
         </div>
 
         <!-- Alpine.js Client-Side Pagination (Cashflow View) -->
-        <template x-if="activeView === 'cashflow' && totalPages > 1">
+        <template x-if="totalPages > 1">
             <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p class="text-xs text-slate-400 font-medium">
@@ -526,58 +511,6 @@ class="pb-12 sm:pb-8">
                 </div>
             </div>
         </template>
-
-        <!-- VIEW TAB 2: BẢNG LƯƠNG & CÔNG NỢ THÀNH VIÊN (SETTLEMENT PORTAL) -->
-        <div x-show="activeView === 'settlement'" x-cloak class="space-y-4">
-            <div class="p-4 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/50 rounded-2xl mb-4">
-                <h4 class="text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider mb-1">💡 Bảng Quyết Toán & Đối Soát Công Nợ Thành Viên</h4>
-                <p class="text-[11px] text-indigo-700 dark:text-indigo-300 leading-relaxed">
-                    Nguyên tắc kế toán: <strong>Lương nhận được</strong> cấn trừ với <strong>Khoản ăn uống / Nợ cá nhân</strong>. Số tiền dương màu xanh là công ty chi trả cho thành viên, số âm màu đỏ là thành viên cần cấn trừ / hoàn trả quỹ.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                @foreach($members->where('role', '!=', 'admin') as $m)
-                    @php
-                        $userAcc = $accounts->where('type', 'user')->where('owner_id', $m->id)->first();
-                        $balance = $userAcc ? (float)$userAcc->balance : 0;
-                        $debt = (float)$m->current_debt;
-                    @endphp
-                    <div class="p-4 rounded-2xl border transition-all duration-150 {{ $balance >= 0 ? 'bg-white dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 hover:border-emerald-400' : 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-900/40 hover:border-rose-400' }}">
-                        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-700/60 mb-3">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 font-black text-xs flex items-center justify-center text-slate-800 dark:text-slate-200">
-                                    {{ mb_substr($m->name, 0, 2) }}
-                                </div>
-                                <div>
-                                    <h5 class="text-xs font-black text-slate-900 dark:text-white">{{ $m->name }}</h5>
-                                    <span class="text-[10px] text-slate-400">ID: #{{ $m->id }}</span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-[10px] uppercase font-bold text-slate-400 block">Thực Lĩnh / Nợ</span>
-                                <span class="text-sm font-black {{ $balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
-                                    {{ $balance >= 0 ? '+' : '' }}{{ number_format($balance) }}đ
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                                <span class="text-[10px] text-slate-400 block font-bold">Nợ ăn uống/ứng</span>
-                                <span class="font-extrabold text-rose-600 dark:text-rose-400">{{ number_format($debt) }}đ</span>
-                            </div>
-                            <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                                <span class="text-[10px] text-slate-400 block font-bold">Trạng thái sổ</span>
-                                <span class="font-extrabold {{ $balance >= 0 ? 'text-emerald-600' : 'text-amber-500' }}">
-                                    {{ $balance >= 0 ? 'Chờ thanh toán' : 'Cần cấn trừ' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
     </div>
 
     <!-- MODAL: THÊM GIAO DỊCH MỚI -->
