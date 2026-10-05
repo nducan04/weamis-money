@@ -64,6 +64,10 @@
 
     <!-- ApexCharts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- Tabulator (Enterprise Spreadsheet Engine) -->
+    <link href="https://unpkg.com/tabulator-tables@5.5.4/dist/css/tabulator_simple.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.4/dist/js/tabulator.min.js"></script>
     
     <style>
         [x-cloak] { display: none !important; }
@@ -71,6 +75,61 @@
         body {
             font-family: 'Google Sans', 'Plus Jakarta Sans', sans-serif;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* Tremor Style Tabulator Spreadsheet Theme */
+        .tabulator {
+            background-color: transparent !important;
+            border: none !important;
+            font-size: 12px !important;
+        }
+        .tabulator .tabulator-header {
+            background-color: #f8f9fa !important;
+            border-bottom: 1px solid #dadce0 !important;
+            color: #5f6368 !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            font-size: 10px !important;
+        }
+        .dark .tabulator .tabulator-header {
+            background-color: rgba(40, 42, 44, 0.6) !important;
+            border-bottom: 1px solid #282a2c !important;
+            color: #9aa0a6 !important;
+        }
+        .tabulator .tabulator-header .tabulator-col {
+            background-color: transparent !important;
+            border-right: none !important;
+            padding: 8px 12px !important;
+        }
+        .tabulator .tabulator-row {
+            background-color: transparent !important;
+            border-bottom: 1px solid #f1f3f4 !important;
+            color: #202124 !important;
+            transition: background-color 0.15s ease !important;
+        }
+        .dark .tabulator .tabulator-row {
+            border-bottom: 1px solid #282a2c !important;
+            color: #e3e3e3 !important;
+        }
+        .tabulator .tabulator-row:hover {
+            background-color: rgba(241, 243, 244, 0.7) !important;
+        }
+        .dark .tabulator .tabulator-row:hover {
+            background-color: rgba(40, 42, 44, 0.5) !important;
+        }
+        .tabulator .tabulator-cell {
+            border-right: none !important;
+            padding: 10px 12px !important;
+            vertical-align: middle !important;
+        }
+        .tabulator .tabulator-footer {
+            background-color: transparent !important;
+            border-top: 1px solid #dadce0 !important;
+            padding: 8px 12px !important;
+        }
+        .dark .tabulator .tabulator-footer {
+            border-top: 1px solid #282a2c !important;
         }
         
         /* Google Smooth Minimal Scrollbar */

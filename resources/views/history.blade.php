@@ -259,12 +259,33 @@ class="pb-12 sm:pb-8">
                 </template>
             </div>
 
-            <!-- Right Side: Thêm Giao Dịch Button (Only for Logged In Users) -->
-            @auth
-            <button @click="showAddModal = true" class="w-full md:w-auto px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer flex-shrink-0">
-                <span>Thêm Giao Dịch</span>
-            </button>
-            @endauth
+            <!-- Right Side: Export CSV & Thêm Giao Dịch Button -->
+            <div class="flex items-center gap-2 w-full md:w-auto">
+                <button type="button" 
+                        @click="(() => {
+                            let csvContent = 'data:text/csv;charset=utf-8,ID,Thời Gian,Thành Viên,Số Tiền,Loại,Nội Dung\n';
+                            filteredTransactions.forEach(t => {
+                                let row = [t.id, t.created_at_formatted, '\"' + (t.user_name || '') + '\"', t.amount, t.type, '\"' + (t.description || '').replace(/\"/g, '\"\"') + '\"'];
+                                csvContent += row.join(',') + '\n';
+                            });
+                            let encodedUri = encodeURI(csvContent);
+                            let link = document.createElement('a');
+                            link.setAttribute('href', encodedUri);
+                            link.setAttribute('download', 'weamis_transactions_' + new Date().toISOString().substring(0,10) + '.csv');
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        })()"
+                        class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs">
+                    <span>📥 Xuất CSV</span>
+                </button>
+
+                @auth
+                <button @click="showAddModal = true" class="px-4 py-2 bg-[#1a73e8] hover:bg-[#1557b0] text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer flex-shrink-0">
+                    <span>+ Thêm Giao Dịch</span>
+                </button>
+                @endauth
+            </div>
         </div>
 
         <!-- Desktop Table (Cashflow View) -->
