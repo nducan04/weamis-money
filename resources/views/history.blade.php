@@ -216,14 +216,43 @@ class="pb-12 sm:pb-8">
                     <option value="asc">Cũ nhất ➔ Mới nhất</option>
                 </select>
 
+                <select x-model="filterType" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white cursor-pointer">
+                    <option value="">Tất cả loại luồng</option>
+                    <option value="expense">Chi tiêu / Rút quỹ</option>
+                    <option value="contribution">Nạp quỹ / Đóng góp</option>
+                    <option value="salary">Chi lương / Thù lao</option>
+                    <option value="debt">Nợ / Tạm ứng</option>
+                    <option value="repayment">Trả nợ / Hoàn ứng</option>
+                    <option value="distribution">Lương thực nhận</option>
+                </select>
+
+                <!-- Quick Date Filter Chips -->
+                <div class="flex items-center space-x-1 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl text-xs font-bold w-full sm:w-auto overflow-x-auto">
+                    <button type="button" @click="filterDateFrom = ''; filterDateTo = '';" 
+                            :class="(!filterDateFrom && !filterDateTo) ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'"
+                            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap">
+                        Tất cả
+                    </button>
+                    <button type="button" @click="(() => { let d = new Date().toISOString().substring(0,10); filterDateFrom = d; filterDateTo = d; })()" 
+                            :class="(filterDateFrom && filterDateFrom === filterDateTo && filterDateFrom === new Date().toISOString().substring(0,10)) ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'"
+                            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap">
+                        Hôm nay
+                    </button>
+                    <button type="button" @click="(() => { let now = new Date(); let y = now.getFullYear(); let m = String(now.getMonth()+1).padStart(2,'0'); filterDateFrom = y + '-' + m + '-01'; filterDateTo = ''; })()" 
+                            :class="(filterDateFrom && filterDateFrom.endsWith('-01') && !filterDateTo) ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'"
+                            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap">
+                        Tháng này
+                    </button>
+                </div>
+
                 <p class="text-xs text-slate-500 font-bold whitespace-nowrap self-start sm:self-center">
                     Tổng số: <span class="text-emerald-600 dark:text-emerald-400 font-extrabold" x-text="filteredTransactions.length"></span> giao dịch
-                    <template x-if="filterSearch || filterMemberId || sortOrder !== 'desc'">
+                    <template x-if="filterSearch || filterMemberId || filterType || filterDateFrom || filterDateTo || sortOrder !== 'desc'">
                         <span class="text-indigo-500 font-bold"> (đang lọc)</span>
                     </template>
                 </p>
 
-                <template x-if="filterSearch || filterMemberId || sortOrder !== 'desc'">
+                <template x-if="filterSearch || filterMemberId || filterType || filterDateFrom || filterDateTo || sortOrder !== 'desc'">
                     <button @click="resetFilters()" class="px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer">
                         <span>✕ Xóa lọc</span>
                     </button>
