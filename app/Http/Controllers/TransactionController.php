@@ -527,8 +527,9 @@ class TransactionController extends Controller
                 case 'contribution':
                 case 'repayment':
                 case 'profit':
-                    $fromAccId = $userAcc->id;
-                    $toAccId = $targetAcc->id;
+                    // Tiền ghi Có (tăng số dư) vào ví cá nhân thành viên
+                    $fromAccId = $targetAcc->id;
+                    $toAccId = $userAcc->id;
                     break;
                 case 'adjustment':
                     $fromAccId = $externalAcc->id;
@@ -536,11 +537,13 @@ class TransactionController extends Controller
                     break;
                 case 'loan':
                 case 'withdrawal':
-                case 'distribution':
-                    $fromAccId = $fundAcc->id;
-                    $toAccId = $userAcc->id;
-                    break;
                 case 'expense':
+                    // Tiền ghi Nợ (trừ số dư / giảm tài sản) khỏi ví cá nhân thành viên
+                    $fromAccId = $userAcc->id;
+                    $toAccId = $targetAcc->id;
+                    break;
+                case 'distribution':
+                    // Phân bổ lợi nhuận dự án vào ví cá nhân thành viên
                     $fromAccId = $targetAcc->id;
                     $toAccId = $userAcc->id;
                     break;
@@ -555,7 +558,7 @@ class TransactionController extends Controller
             'from_account_id' => $fromAccId,
             'to_account_id' => $toAccId,
             'amount' => $tx->amount,
-            'memo' => $tx->type . ': ' . $tx->description,
+            'memo' => $tx->type . ': ' . $tx->description . ($fromAccId === $userAcc->id ? ' (Trừ: ' . ($user ? $user->name : '') . ')' : ' (Nhận: ' . ($user ? $user->name : '') . ')'),
         ]);
 
         // Update cached balances
@@ -595,11 +598,8 @@ class TransactionController extends Controller
         $totalIn = JournalEntry::where('to_account_id', $acc->id)->sum('amount');
         $totalOut = JournalEntry::where('from_account_id', $acc->id)->sum('amount');
 
-        if ($acc->type === 'user') {
-            $acc->balance = $totalOut - $totalIn;
-        } else {
-            $acc->balance = $totalIn - $totalOut;
-        }
+        // All accounts consistently follow Net = In - Out
+        $acc->balance = $totalIn - $totalOut;
         $acc->save();
     }
 
