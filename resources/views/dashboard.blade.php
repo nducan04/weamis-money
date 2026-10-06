@@ -114,84 +114,46 @@ class="space-y-6">
     <!-- 2. Charts & Financial Visualizations -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Donut Distribution Chart (8 Cols) -->
-        <div class="lg:col-span-8 bg-white dark:bg-[#1e1f20] rounded-3xl p-5 sm:p-6 border border-[#dadce0] dark:border-[#282a2c] shadow-sm">
-            <div class="flex items-center justify-between pb-4 border-b border-[#f1f3f4] dark:border-[#282a2c] mb-4">
+        <!-- ApexCharts Donut Distribution Chart (8 Cols) -->
+        <div class="lg:col-span-8 bg-white dark:bg-[#1e1f20] rounded-3xl p-5 sm:p-6 border border-[#dadce0] dark:border-[#282a2c] shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between pb-4 border-b border-[#f1f3f4] dark:border-[#282a2c] mb-2">
                 <div>
                     <h3 class="font-bold text-sm sm:text-base text-[#202124] dark:text-white">Tỷ Lệ Cơ Cấu Dòng Tiền</h3>
-                    <p class="text-[11px] text-[#5f6368] dark:text-[#9aa0a6]">Phân bổ tỷ trọng Thu, Chi và Cho Vay</p>
+                    <p class="text-[11px] text-[#5f6368] dark:text-[#9aa0a6]">Phân bổ tỷ trọng Thu, Chi và Cho Vay Quỹ</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] uppercase font-bold text-[#5f6368] dark:text-[#9aa0a6] block">Tổng Lưu Chuyển</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-[#202124] dark:text-white font-mono">
+                        {{ number_format($totalIncome + $totalExpense + $totalLoans, 0, ',', '.') }}₫
+                    </span>
                 </div>
             </div>
 
-            @php
-                $donutItems = [];
-                $donutTotal = max(1, $totalIncome + $totalExpense + $totalLoans);
-                $rawDonut = [
-                    ['label' => 'Tổng Thu', 'value' => $totalIncome, 'color' => '#137333'],
-                    ['label' => 'Tổng Chi', 'value' => $totalExpense, 'color' => '#c5221f'],
-                    ['label' => 'Đang Vay', 'value' => $totalLoans, 'color' => '#1a73e8'],
-                ];
-                $cx = 220; $cy = 150; $outerR = 92; $innerR = 62;
-                $cumAngle = -90;
-                foreach ($rawDonut as $item) {
-                    if ($item['value'] <= 0) continue;
-                    $pct = ($item['value'] / $donutTotal) * 100;
-                    $angle = ($pct / 100) * 360;
-                    $startAngle = $cumAngle;
-                    $endAngle = $cumAngle + $angle;
-                    $cumAngle = $endAngle;
-                    $effAngle = min($angle, 359.99);
-                    $effEnd = $startAngle + $effAngle;
-                    $sRad = deg2rad($startAngle); $eRad = deg2rad($effEnd);
-                    $x1 = $cx + $outerR * cos($sRad); $y1 = $cy + $outerR * sin($sRad);
-                    $x2 = $cx + $outerR * cos($eRad); $y2 = $cy + $outerR * sin($eRad);
-                    $ix1 = $cx + $innerR * cos($eRad); $iy1 = $cy + $innerR * sin($eRad);
-                    $ix2 = $cx + $innerR * cos($sRad); $iy2 = $cy + $innerR * sin($sRad);
-                    $la = $effAngle > 180 ? 1 : 0;
-                    $d = "M {$x1} {$y1} A {$outerR} {$outerR} 0 {$la} 1 {$x2} {$y2} L {$ix1} {$iy1} A {$innerR} {$innerR} 0 {$la} 0 {$ix2} {$iy2} Z";
-                    $midRad = deg2rad(($startAngle + $endAngle) / 2);
-                    $lsx = round($cx + $outerR * cos($midRad), 1);
-                    $lsy = round($cy + $outerR * sin($midRad), 1);
-                    $lex = round($cx + ($outerR + 24) * cos($midRad), 1);
-                    $ley = round($cy + ($outerR + 24) * sin($midRad), 1);
-                    $isR = $lex >= $cx;
-                    $lhx = $isR ? $lex + 28 : $lex - 28;
-                    $donutItems[] = [
-                        'd' => $d, 'color' => $item['color'], 'label' => $item['label'],
-                        'pct' => number_format($pct, 1, ',', '.'),
-                        'lsx' => $lsx, 'lsy' => $lsy, 'lex' => $lex, 'ley' => $ley,
-                        'lhx' => round($lhx, 1), 'lhy' => round($ley, 1),
-                        'anchor' => $isR ? 'start' : 'end', 'txOff' => $isR ? 5 : -5,
-                    ];
-                }
-            @endphp
+            <!-- ApexCharts Container -->
+            <div class="py-2 flex items-center justify-center min-h-[290px]">
+                <div id="fundBreakdownChart" class="w-full"></div>
+            </div>
 
-            <svg viewBox="0 0 440 300" class="w-full max-w-[460px] mx-auto">
-                @foreach($donutItems as $sl)
-                    <path d="{{ $sl['d'] }}" fill="{{ $sl['color'] }}" class="transition-opacity duration-200 hover:opacity-85" />
-                @endforeach
-                <circle cx="{{ $cx }}" cy="{{ $cy }}" r="{{ $innerR }}" class="fill-white dark:fill-[#1e1f20]" />
-                <text x="{{ $cx }}" y="{{ $cy - 8 }}" text-anchor="middle" font-size="10" font-weight="700" class="fill-[#5f6368] dark:fill-[#9aa0a6] uppercase tracking-wider">Số Dư</text>
-                <text x="{{ $cx }}" y="{{ $cy + 12 }}" text-anchor="middle" font-size="14" font-weight="800" class="fill-[#202124] dark:fill-white font-mono">{{ number_format($fund->balance, 0, ',', '.') }}₫</text>
-
-                @foreach($donutItems as $sl)
-                    <polyline points="{{ $sl['lsx'] }},{{ $sl['lsy'] }} {{ $sl['lex'] }},{{ $sl['ley'] }} {{ $sl['lhx'] }},{{ $sl['lhy'] }}" fill="none" stroke="{{ $sl['color'] }}" stroke-width="2" />
-                    <circle cx="{{ $sl['lhx'] }}" cy="{{ $sl['lhy'] }}" r="3" fill="{{ $sl['color'] }}" />
-                    <text x="{{ $sl['lhx'] + $sl['txOff'] }}" y="{{ $sl['lhy'] - 3 }}" text-anchor="{{ $sl['anchor'] }}" font-size="12" font-weight="800" class="fill-[#202124] dark:fill-white font-mono">{{ $sl['pct'] }}%</text>
-                    <text x="{{ $sl['lhx'] + $sl['txOff'] }}" y="{{ $sl['lhy'] + 12 }}" text-anchor="{{ $sl['anchor'] }}" font-size="10" font-weight="700" fill="{{ $sl['color'] }}">{{ $sl['label'] }}</text>
-                @endforeach
-            </svg>
-
-            <!-- Legend Pills -->
-            <div class="flex items-center justify-center flex-wrap gap-x-5 gap-y-2 mt-4 pt-3 border-t border-[#f1f3f4] dark:border-[#282a2c]">
-                @foreach($rawDonut as $rd)
-                    @if($rd['value'] > 0)
-                    <div class="flex items-center space-x-1.5 text-xs font-semibold text-[#3c4043] dark:text-[#bdc1c6]">
-                        <span class="w-2.5 h-2.5 rounded-full" style="background: {{ $rd['color'] }}"></span>
-                        <span>{{ $rd['label'] }}</span>
-                    </div>
-                    @endif
-                @endforeach
+            <!-- Metric Summary Footer -->
+            <div class="grid grid-cols-3 gap-2 pt-4 border-t border-[#f1f3f4] dark:border-[#282a2c] text-center">
+                <div class="p-2 rounded-xl bg-[#f8f9fa] dark:bg-[#282a2c]/40">
+                    <span class="text-[10px] font-bold text-[#137333] dark:text-[#81c995] uppercase block">Tổng Thu</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-[#202124] dark:text-white font-mono">
+                        {{ number_format($totalIncome, 0, ',', '.') }}₫
+                    </span>
+                </div>
+                <div class="p-2 rounded-xl bg-[#f8f9fa] dark:bg-[#282a2c]/40">
+                    <span class="text-[10px] font-bold text-[#c5221f] dark:text-[#f28b82] uppercase block">Tổng Chi</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-[#202124] dark:text-white font-mono">
+                        {{ number_format($totalExpense, 0, ',', '.') }}₫
+                    </span>
+                </div>
+                <div class="p-2 rounded-xl bg-[#f8f9fa] dark:bg-[#282a2c]/40">
+                    <span class="text-[10px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] uppercase block">Đang Vay</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-[#202124] dark:text-white font-mono">
+                        {{ number_format($totalLoans, 0, ',', '.') }}₫
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -317,4 +279,145 @@ class="space-y-6">
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const isDark = document.documentElement.classList.contains('dark');
+    const income = {{ (float)$totalIncome }};
+    const expense = {{ (float)$totalExpense }};
+    const loans = {{ (float)$totalLoans }};
+    const balance = {{ (float)$fund->balance }};
+
+    const options = {
+        series: [income, expense, loans],
+        labels: ['Tổng Thu', 'Tổng Chi', 'Đang Cho Vay'],
+        colors: ['#137333', '#c5221f', '#1a73e8'],
+        chart: {
+            type: 'donut',
+            height: 310,
+            fontFamily: '"Google Sans", "Plus Jakarta Sans", Roboto, sans-serif',
+            background: 'transparent',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 600,
+                animateGradually: {
+                    enabled: true,
+                    delay: 150
+                },
+                dynamicAnimation: {
+                    enabled: true,
+                    speed: 350
+                }
+            }
+        },
+        stroke: {
+            show: true,
+            width: 2,
+            colors: [isDark ? '#1e1f20' : '#ffffff']
+        },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '72%',
+                    labels: {
+                        show: true,
+                        name: {
+                            show: true,
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: isDark ? '#9aa0a6' : '#5f6368',
+                            offsetY: -6
+                        },
+                        value: {
+                            show: true,
+                            fontSize: '18px',
+                            fontFamily: '"Roboto Mono", monospace',
+                            fontWeight: 800,
+                            color: isDark ? '#ffffff' : '#202124',
+                            offsetY: 4,
+                            formatter: function (val) {
+                                return new Intl.NumberFormat('vi-VN').format(val) + '₫';
+                            }
+                        },
+                        total: {
+                            show: true,
+                            showAlways: true,
+                            label: 'Số Dư Quỹ',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: isDark ? '#9aa0a6' : '#5f6368',
+                            formatter: function () {
+                                return new Intl.NumberFormat('vi-VN').format(balance) + '₫';
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        legend: {
+            show: true,
+            position: 'bottom',
+            horizontalAlign: 'center',
+            fontSize: '12px',
+            fontWeight: 600,
+            labels: {
+                colors: isDark ? '#bdc1c6' : '#3c4043'
+            },
+            markers: {
+                width: 9,
+                height: 9,
+                radius: 12
+            },
+            itemMargin: {
+                horizontal: 10,
+                vertical: 4
+            }
+        },
+        tooltip: {
+            theme: isDark ? 'dark' : 'light',
+            y: {
+                formatter: function (val) {
+                    return new Intl.NumberFormat('vi-VN').format(val) + ' ₫';
+                }
+            }
+        }
+    };
+
+    const chartEl = document.querySelector("#fundBreakdownChart");
+    if (chartEl && typeof ApexCharts !== 'undefined') {
+        const chart = new ApexCharts(chartEl, options);
+        chart.render();
+
+        // Listen for dark mode toggle if user switches theme dynamically
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    const darkNow = document.documentElement.classList.contains('dark');
+                    chart.updateOptions({
+                        stroke: { colors: [darkNow ? '#1e1f20' : '#ffffff'] },
+                        tooltip: { theme: darkNow ? 'dark' : 'light' },
+                        legend: { labels: { colors: darkNow ? '#bdc1c6' : '#3c4043' } },
+                        plotOptions: {
+                            pie: {
+                                donut: {
+                                    labels: {
+                                        name: { color: darkNow ? '#9aa0a6' : '#5f6368' },
+                                        value: { color: darkNow ? '#ffffff' : '#202124' },
+                                        total: { color: darkNow ? '#9aa0a6' : '#5f6368' }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+    }
+});
+</script>
 @endsection

@@ -124,31 +124,31 @@
 
     <!-- High Level Overview Stats -->
     <div class="grid grid-cols-2 lg:grid-cols-{{ $totalExpense > 0 ? '5' : '4' }} gap-3.5 sm:gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tổng Doanh Thu</p>
-            <p class="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">+{{ number_format($totalIncome, 0, ',', '.') }}đ</p>
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-[#282a2c] shadow-xs">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-[#9aa0a6] uppercase tracking-wider mb-0.5">Tổng Doanh Thu</p>
+            <p class="text-lg sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">+{{ number_format($totalIncome, 0, ',', '.') }}<span class="text-xs font-bold ml-0.5">₫</span></p>
         </div>
 
         @if($totalExpense > 0)
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-rose-200/60 dark:border-rose-700/40 shadow-sm">
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-rose-200/60 dark:border-rose-900/40 shadow-xs">
             <p class="text-[10px] font-bold text-rose-500 uppercase tracking-wider mb-0.5">Tổng Chi Phí</p>
-            <p class="text-lg sm:text-2xl font-black text-rose-600 dark:text-rose-400">-{{ number_format($totalExpense, 0, ',', '.') }}đ</p>
+            <p class="text-lg sm:text-2xl font-extrabold text-[#c5221f] dark:text-[#f28b82] font-mono">-{{ number_format($totalExpense, 0, ',', '.') }}<span class="text-xs font-bold ml-0.5">₫</span></p>
         </div>
         @endif
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-blue-200/60 dark:border-blue-700/40 shadow-sm">
-            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Doanh Thu Phát Triển</p>
-            <p class="text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400">+{{ number_format($devRevenue, 0, ',', '.') }}đ</p>
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-blue-200/60 dark:border-blue-900/40 shadow-xs">
+            <p class="text-[10px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] uppercase tracking-wider mb-0.5">Doanh Thu Phát Triển</p>
+            <p class="text-lg sm:text-2xl font-extrabold text-[#1a73e8] dark:text-[#8ab4f8] font-mono">+{{ number_format($devRevenue, 0, ',', '.') }}<span class="text-xs font-bold ml-0.5">₫</span></p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-indigo-200/60 dark:border-indigo-700/40 shadow-sm">
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-indigo-200/60 dark:border-indigo-900/40 shadow-xs">
             <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-0.5">Phí Vận Hành</p>
-            <p class="text-lg sm:text-2xl font-black text-indigo-600 dark:text-indigo-400">+{{ number_format($subRevenue, 0, ',', '.') }}đ</p>
+            <p class="text-lg sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 font-mono">+{{ number_format($subRevenue, 0, ',', '.') }}<span class="text-xs font-bold ml-0.5">₫</span></p>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Thành Viên & GD</p>
-            <p class="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">{{ count($memberPayouts) }} <span class="text-xs font-semibold text-slate-400">TV</span> / {{ $project->transactions->where('status', 'approved')->count() }} <span class="text-xs font-semibold text-slate-400">GD</span></p>
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-[#282a2c] shadow-xs">
+            <p class="text-[10px] font-bold text-slate-500 dark:text-[#9aa0a6] uppercase tracking-wider mb-0.5">Thành Viên & GD</p>
+            <p class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white font-mono">{{ count($memberPayouts) }} <span class="text-xs font-semibold text-slate-400">TV</span> / {{ $project->transactions->where('status', 'approved')->count() }} <span class="text-xs font-semibold text-slate-400">GD</span></p>
         </div>
     </div>
 
