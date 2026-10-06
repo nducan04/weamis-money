@@ -151,8 +151,15 @@ class ProjectSeeder extends Seeder
                 'status' => 'active',
             ]
         );
-        if ($nhv) ProjectMember::firstOrCreate(['project_id' => $p6->id, 'user_id' => $nhv->id, 'effective_from' => '2026-08-01'], ['share_percentage' => 75.00]);
-        if ($nqd) ProjectMember::firstOrCreate(['project_id' => $p6->id, 'user_id' => $nqd->id, 'effective_from' => '2026-08-01'], ['share_percentage' => 15.00]);
+        $hasEffectiveFrom = Schema::hasColumn('project_members', 'effective_from');
+        $nhvCond = ['project_id' => $p6->id, 'user_id' => $nhv->id];
+        $nqdCond = ['project_id' => $p6->id, 'user_id' => $nqd->id];
+        if ($hasEffectiveFrom) {
+            $nhvCond['effective_from'] = '2026-08-01';
+            $nqdCond['effective_from'] = '2026-08-01';
+        }
+        if ($nhv) ProjectMember::firstOrCreate($nhvCond, ['share_percentage' => 75.00]);
+        if ($nqd) ProjectMember::firstOrCreate($nqdCond, ['share_percentage' => 15.00]);
 
         // Attach 2.5M transaction to CNS
         $txCns = \App\Models\Transaction::where('amount', 2500000)

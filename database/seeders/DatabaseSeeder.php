@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,11 +20,14 @@ class DatabaseSeeder extends Seeder
         Fund::query()->delete();
 
         // 1. Create Fund
-        $fund = Fund::create([
+        $fundData = [
             'name' => 'Trả nợ thuê Ltd',
             'balance' => 7133503.00,
-            'total_profit' => 1200000.00,
-        ]);
+        ];
+        if (Schema::hasColumn('funds', 'total_profit')) {
+            $fundData['total_profit'] = 1200000.00;
+        }
+        $fund = Fund::create($fundData);
 
         // 2. Create Admin Account and All 8 Real Team Members
         $admin = User::create([
