@@ -30,30 +30,27 @@ class AnalyticsController extends Controller
         //    -> Slices = Base (Page 8) + Doanh thu tạo ra (R) - Tiền đã rút bỏ túi (W)
         // ══════════════════════════════════════════════════════════════════
         
-        // Base Gross Balances from Master Sheet (Page 8 - Vốn cống hiến ngầm tích lũy)
+        // Base Gross Balances from Master Sheet (Tài sản ròng - Gross.csv Dòng 81)
         $legacyGrossBaseline = [
-            'hts'  => 5747766, // Hồ Trung Sơn
-            'nhv'  => 5004887, // Nguyễn Hoàng Việt
-            'nqd'  => 2765000, // Nguyễn Quý Đức
-            'lvta' => 2050000, // Lê Văn Thành An
-            'ntk'  => 774999,  // Nguyễn Trung Kiên
-            'tqm'  => 573732,  // Trịnh Quang Minh
-            'ndph' => 570000,  // Nguyễn Đăng Phúc Hưng
-            'ndd'  => 90000,   // Dương
+            'hts'  => 5082766, // Hồ Trùng Sơn (31,27% sheet gốc)
+            'nhv'  => 5088220, // Nguyễn Hoàng Việt (31,30% sheet gốc)
+            'nqd'  => 2025667, // Nguyễn Quý Đức (12,46% sheet gốc)
+            'lvta' => 2050000, // Lê Văn Thành An (12,61% sheet gốc)
+            'ntk'  => 774999,  // Nguyễn Trung Kiên (4,77% sheet gốc)
+            'tqm'  => 573732,  // Trịnh Quang Minh (3,53% sheet gốc)
+            'ndph' => 570000,  // Nguyễn Đăng Phúc Hưng (3,51% sheet gốc)
+            'ndd'  => 90000,   // Dương (0,55% sheet gốc)
             'vdha' => -310000, // Vũ Đức Hoàng Anh
             'pd'   => -510000, // Phúc Đăng
-            'tds'  => -710000, // Đăng Sinh
+            'tds'  => -315000, // Đăng Sinh (-315.000₫ sheet gốc)
             'qm'   => 0,       // Quốc Minh
             'md'   => 0,       // Minh Đức
             'nda'  => 0,       // Nguyễn Đức An
         ];
 
-        // Additional Sweat-Equity from post-baseline project deliverables (CNS T8, T9, Weamis Money, contributions)
+        // Additional Sweat-Equity from post-baseline project deliverables (Weamis Money)
         $deltaGross = [
-            'nhv'  => 3750000, // CNS T8 (1.875M @ 75%) + CNS T9 (1.875M @ 75%)
-            'nqd'  => 750000,  // CNS T8 (375k @ 15%) + CNS T9 (375k @ 15%)
             'nda'  => 1000000, // Weamis Money (1.000.000₫ tổng giá trị dự án)
-            'ndph' => 500000,  // Góp tiền bù lẩu bạn (TX 78)
         ];
 
         // Recovered Cash / Salary Withdrawn (W x 1.0)
