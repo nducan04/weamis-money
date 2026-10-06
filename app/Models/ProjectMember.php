@@ -21,6 +21,17 @@ class ProjectMember extends Model
         'share_percentage' => 'float',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('project_members', 'effective_from')) {
+                if (empty($model->effective_from)) {
+                    $model->effective_from = '2026-08-01';
+                }
+            }
+        });
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class);

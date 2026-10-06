@@ -64,6 +64,16 @@ class TransactionController extends Controller
             ];
         });
 
+        // Synchronize all user account balances with double-entry journal entries
+        foreach ($members as $m) {
+            $userAcc = Account::where('type', 'user')->where('owner_id', $m->id)->first();
+            if ($userAcc) {
+                $in = (float) JournalEntry::where('to_account_id', $userAcc->id)->whereHas('transaction', fn($q) => $q->where('status', 'approved'))->sum('amount');
+                $out = (float) JournalEntry::where('from_account_id', $userAcc->id)->whereHas('transaction', fn($q) => $q->where('status', 'approved'))->sum('amount');
+                $userAcc->update(['balance' => $in - $out]);
+            }
+        }
+
         $accounts = Account::orderBy('type')->orderBy('name')->get();
 
         return view('history', compact('members', 'projects', 'fund', 'allTransactions', 'accounts'));

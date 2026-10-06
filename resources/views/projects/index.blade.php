@@ -36,25 +36,28 @@
             $totalProjectsIncome = $projects->sum('calculated_income');
             $totalFundCutAll = $projects->sum('calculated_fund_cut');
         @endphp
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-[#282a2c] shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Số Dự Án</p>
-                <p class="text-lg font-black text-slate-900 dark:text-white">{{ $totalProjectsCount }} <span class="text-xs font-semibold text-slate-400">({{ $activeProjectsCount }} đang chạy)</span></p>
+                <p class="text-[10px] font-bold text-slate-500 dark:text-[#9aa0a6] uppercase tracking-wider">Tổng Số Dự Án</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1 font-mono">{{ $totalProjectsCount }} <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">({{ $activeProjectsCount }} đang chạy)</span></p>
             </div>
+            <span class="p-2.5 bg-slate-100 dark:bg-[#282a2c] rounded-xl text-lg">📁</span>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-[#282a2c] shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Doanh Thu Dự Án</p>
-                <p class="text-lg font-black text-indigo-600 dark:text-indigo-400">+{{ number_format($totalProjectsIncome, 0, ',', '.') }}đ</p>
+                <p class="text-[10px] font-bold text-slate-500 dark:text-[#9aa0a6] uppercase tracking-wider">Doanh Thu Dự Án</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 font-mono">+{{ number_format($totalProjectsIncome, 0, ',', '.') }}<span class="text-xs font-bold ml-0.5">₫</span></p>
             </div>
+            <span class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl text-lg">📈</span>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center space-x-3">
+        <div class="bg-white dark:bg-[#1e1f20] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-[#282a2c] shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trích Về Quỹ Chung</p>
-                <p class="text-lg font-black text-amber-600 dark:text-amber-400">{{ number_format($totalFundCutAll, 0, ',', '.') }}đ</p>
+                <p class="text-[10px] font-bold text-slate-500 dark:text-[#9aa0a6] uppercase tracking-wider">Trích Về Quỹ Chung</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 font-mono">{{ number_format($totalFundCutAll, 0, ',', '.') }}<span class="text-xs font-bold ml-0.5">₫</span></p>
             </div>
+            <span class="p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl text-lg">🏦</span>
         </div>
     </div>
 
