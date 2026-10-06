@@ -48,16 +48,11 @@ class AnalyticsController extends Controller
             'nda'  => 0,       // Nguyễn Đức An
         ];
 
-        // Additional Sweat-Equity from post-baseline project deliverables (Weamis Money)
-        $deltaGross = [
-            'nda'  => 1000000, // Weamis Money (1.000.000₫ tổng giá trị dự án)
-        ];
+        // Additional Sweat-Equity from post-baseline project deliverables (nếu có dự án mới được phân bổ cổ phần)
+        $deltaGross = [];
 
         // Recovered Cash / Salary Withdrawn (W x 1.0)
-        // Khấu trừ phần thù lao đã rút tiền mặt bỏ túi ra khỏi Slices cống hiến
-        $recoveredCash = [
-            'nda' => 900000,  // Đức An đã rút 900.000₫ lương dự án Weamis Money
-        ];
+        $recoveredCash = [];
 
         $grossBalances = [];
         $netBalances   = [];
