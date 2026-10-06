@@ -260,7 +260,11 @@ class AnalyticsController extends Controller
         });
         $topPairs = array_slice($topPairs, 0, 5);
 
-        return view('analytics.networth', compact('grossData', 'netData', 'memberLedgers', 'treasuryCash', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects'));
+        // 3. System Health Audit
+        $auditService = app(\App\Services\Audit\ReconciliationService::class);
+        $auditResult = $auditService->reconcile(false); // Dry-run check
+
+        return view('analytics.networth', compact('grossData', 'netData', 'memberLedgers', 'treasuryCash', 'nodes', 'edges', 'edgeMap', 'topPairs', 'members', 'projects', 'auditResult'));
     }
 
     public function network()

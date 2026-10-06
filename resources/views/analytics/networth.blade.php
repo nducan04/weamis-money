@@ -43,6 +43,40 @@
         }
      }">
 
+    <!-- 0. System Health / Audit Callout -->
+    @if(isset($auditResult))
+        @if($auditResult['is_clean'])
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 p-4 rounded-r-xl shadow-sm mb-6 flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Hermes-Sentinel: Hệ thống ổn định</h3>
+                    <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-400">Không phát hiện sai lệch (drift) trong Sổ cái kép. Data Integrity 100%.</p>
+                </div>
+            </div>
+        @else
+            <div class="bg-rose-50 dark:bg-rose-900/20 border-l-4 border-rose-500 p-4 rounded-r-xl shadow-sm mb-6 flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="ml-3 w-full">
+                    <h3 class="text-sm font-semibold text-rose-800 dark:text-rose-300">Hermes-Sentinel: Cảnh báo Data Drift!</h3>
+                    <p class="mt-1 text-xs text-rose-700 dark:text-rose-400">Phát hiện {{ count($auditResult['drifts']) }} tài khoản lệch số dư so với Journal Entries.</p>
+                    <div class="mt-2 text-xs font-mono text-rose-800 dark:text-rose-300 max-h-32 overflow-y-auto">
+                        @foreach($auditResult['drifts'] as $drift)
+                            <div>- {{ $drift['name'] }}: Lệch {{ number_format($drift['diff']) }} ₫</div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
+
     <!-- 1. Google Finance Hero Card: Net Worth Overview -->
     <div class="bg-white dark:bg-[#1e1f20] rounded-3xl p-5 sm:p-7 border border-[#dadce0] dark:border-[#282a2c] shadow-sm transition-all">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#f1f3f4] dark:border-[#282a2c]">
