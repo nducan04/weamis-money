@@ -21,7 +21,11 @@ class ReconciliationService
             $in = JournalEntry::where('to_account_id', $acc->id)->sum('amount');
             $out = JournalEntry::where('from_account_id', $acc->id)->sum('amount');
             
-            $computed = round((float)$in - (float)$out, 2);
+            if ($acc->type === 'fund') {
+                $computed = round((float)\App\Models\Fund::syncBalance(), 2);
+            } else {
+                $computed = round((float)$in - (float)$out, 2);
+            }
             $stored = round((float)$acc->balance, 2);
 
             if ($computed !== $stored) {
